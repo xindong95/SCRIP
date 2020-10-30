@@ -102,7 +102,7 @@ def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_nei
         neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor)
         map_dict[cell] = neighbor_cells
         task = threading.Thread(target=generate_beds, args=(bg_bed_path + "/" + str(i) + ".bed", neighbor_cells, input_mat, peak_confidence)) 
-        threads.append(t)
+        threads.append(task)
     pool_sema = threading.BoundedSemaphore(value=n_thread)
     with pool_sema:
         for task in threads:
