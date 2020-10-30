@@ -38,37 +38,40 @@ def cal_p(fg_value, bg_area, bg_bins, bg_values):
     return pvalue
 
 def cal_fc(fg_value, bg_mean):
-    if bg_mean*value < 0: # if mean and value are opposite
-        fc = bg_mean / (bg_mean - value)
+    if bg_mean * fg_value > 0: # if mean and value are opposite
+        fc = fg_value / bg_mean
     elif bg_mean == 0:
-        fc = value
+        fc = fg_value
     else:
-        fc = value / bg_mean
+        fc = bg_mean / (bg_mean - fg_value)
     return fc
 
 # calculate p value by area at the right of curve
 # calculate fc by value / background average
-def cal_p_and_fc(fgtable, bgtable):
-    result_table_p = fgtable.copy()
-    result_table_fc = fgtable.copy()
-    start_time = datetime.now()
-    print(start_time)
-    cnt = 0
-    for factor in fgtable.index:
-        factor_bg = bgtable.loc[factor,:]
+def cal_p_and_fc(fg_table, bg_table):
+    print('INFO {time}, chunk calculation ...'.format(time=datetime.now()))
+    result_table_p = fg_table.copy()
+    result_table_fc = fg_table.copy()
+    for factor in fg_table.index:
+        factor_bg = bg_table.loc[factor,:]
         bg_mean = np.mean(factor_bg)
-        bg_area, bg_bins, bg_values = cal_hist_auc(factor_bg, bins=1000)
-        cnt += 1
-        if cnt%50 == 0:
-            print("INFO %s, finished %.2f %%" % (datetime.now(), cnt*100/fgtable.index.__len__()))
-        for c in fgtable.columns:
-            fg_value = fgtable.loc[factor, c]
-#           cal p
-            result_table_p.loc[factor, c] = cal_p(fg_value, bg_area, bg_bins, bg_values)
-#           cal fc
-            result_table_fc.loc[factor, c] = cal_fc(fg_value, bg_mean)
-    end_time = datetime.now()
-    print(end_time - start_time)
+        bg_std = np.std(factor_bg)
+        result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.cdf, args=(bg_mean, bg_std))
+        result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+    print('INFO {time}, chunk finished !'.format(time=datetime.now()))
+    return [1-result_table_p, result_table_fc]
+
+def cal_p_and_fc_batch(fg_table, bg_table, n_cores=8):
+    print("INFO {time}, Calculating enrichment and fold change, divide into {n} chunks...".format(time=datetime.now(), n=n_cores))
+    fg_table_split = np.array_split(fg_table, n_cores)
+    args = [[table, bg_table] for table in fg_table_split]
+    with Pool(n_cores) as p:
+        result = p.starmap(cal_p_and_fc, args)
+    print("INFO {time}, Generating P value table ...".format(time=datetime.now()))
+    result_table_p = pd.concat([i[0] for i in result])
+    print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
+    result_table_fc = pd.concat([i[1] for i in result])
+    print('INFO {time}, Finished calculation enrichment and fold change!'.format(time=datetime.now()))
     return result_table_p, result_table_fc
 
 def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-Hochberg"):                
