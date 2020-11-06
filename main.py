@@ -60,11 +60,78 @@ def check_para(processed_adata, feature_matrix,
     if search_chip != True and search_motif != True:
         print_log("One of search_chip or search_motif must be chosen!")
         sys.exit()
-    print('~~~~~\nWelcome to use SCRIPT. Here are your settings:')
-    print('There is UMAP information in processed_adata. The aggregate peaks method is {aggregate_peak_method}.')
+    information = '\n~~~~~\nWelcome to use SCRIPT. Here are your settings:\n\n'
+    information += 'There are UMAP information and cluster information in your processed_adata. '
+    information += 'The aggregate peaks method is {aggregate_peak_method}.\n'.format(aggregate_peak_method=aggregate_peak_method)
     if aggregate_peak_method == 'group':
-        print('This will aggregate {cell_number_per_group} cells from same cluster')
+        information += 'This will aggregate {cell_number_per_group} cells from the same cluster, '.format(cell_number_per_group=cell_number_per_group) 
+        information += 'the group with cell number less than {cell_cutoff} will not generate.\n'.format(cell_cutoff=cell_cutoff)
+        information += 'This setting is suitable for the background as well. '
+    else:
+        information += 'This will borrow peaks from {cell_number_per_group} nearest cells for every cell. '.format(cell_number_per_group=cell_number_per_group)
+        information += 'For each cell, peaks confidence with less than {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
+    information += 'SCRIPT randomly aggregates {cell_number_per_group} cells '.format(cell_number_per_group=cell_number_per_group)
+    information += 'and deletes the peaks confidence less than {peak_confidence}. '.format(peak_confidence=peak_confidence)
+    information += 'This will iterate {bg_iteration} times.\n'.format(bg_iteration=bg_iteration)
+    information += 'The background peaks will be stored in {bg_bed_path}, '.format(bg_bed_path=bg_bed_path)
+    information += 'foreground peaks will be stored in {fg_bed_path}.\n'.format(fg_bed_path=fg_bed_path)
+    if search_chip == True and search_motif == True:
+        information += 'SCRIPT will search ChIP-seq and motif index both.\n'
+        if integration == True:
+            information += 'After that, SCRIPT will integrate into one result based on variability from each result.\n'
+    elif search_chip == True:
+        information += 'SCRIPT will search ChIP-seq index.\n'
+    elif search_motif == True:
+        information += 'SCRIPT will search motif index.\n'
+    if search_chip == True:
+        information += 'ChIP-seq index locates at {chip_index}.\n'.format(chip_index=chip_index)
+        information += 'ChIP-seq background result will be stored in {bg_chip_result_path}, '.format(bg_chip_result_path=bg_chip_result_path)
+        information += 'foreground result will be stored in {fg_chip_result_path}.\n'.format(fg_chip_result_path=fg_chip_result_path)
+    if search_motif == True:
+        information += 'Motif index locates at {motif_index}.\n'.format(motif_index=motif_index)
+        information += 'Motif background result will be stored in {bg_motif_result_path}, '.format(bg_motif_result_path=bg_motif_result_path)
+        information += 'foreground result will be stored in {fg_motif_result_path}.\n'.format(fg_motif_result_path=fg_motif_result_path)
+    information += 'All folders will{not_string} be removed after processing. '.format(not_string='' if clean == True else ' not')
+    information += 'All processes will use {n_cores} cores.\n~~~~~\n'.format(n_cores=n_cores)
+    print(information)
         
+def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, index_prefix, n_cores, fg_map_dict):
+    if tp == 'chip':
+        log_list = [
+            'Start searching background beds from ChIP-seq index ...',
+            'Finished searching background beds from ChIP-seq index!',
+            'Start searching foreground beds from ChIP-seq index ...',
+            'Finished searching factors from ChIP-seq index!',
+            'Finished reading background ChIP-seq index search result!',
+            'Finished reading foreground ChIP-seq index search result!'
+        ]
+    else:
+        log_list = [
+            'Start searching background beds from motif index ...',
+            'Finished searching background beds from motif index!',
+            'Start searching foreground beds from motif index ...',
+            'Finished searching factors from motif index!',
+            'Finished reading background motif index search result!',
+            'Finished reading foreground motif index search result!'
+        ]
+    print_log(log_list[0])
+    search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores)
+    print_log(log_list[1])
+    print_log(log_list[2])
+    search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
+    print_log(log_list[3])
+    bg_result = read_giggle_result(bg_result_path, filename_split=".", index_prefix=index_prefix)
+    print_log(log_list[4])
+    result = read_giggle_result(fg_result_path, filename_split=".", index_prefix=index_prefix)
+    print_log(log_list[5])
+    result_p = cal_p_table_batch(result, bg_result, n_cores)
+    if aggregate_peak_method == "group":
+        result_p = extract_by_cell_cluster(result_p.copy(), fg_map_dict)
+    if tp == 'chip':
+        result_p = map_factor_on_ChIP(result_p).T
+    else:
+        result_p = result_p.T
+    return result_p
 
 def SCRIPT(processed_adata, feature_matrix, 
            aggregate_peak_method='group', cell_number_per_group=50, cell_cutoff=20, peak_confidence=5, 
@@ -87,7 +154,8 @@ def SCRIPT(processed_adata, feature_matrix,
     elapse, future_time = time_estimate(cell_number = feature_matrix.shape[1], bg_iteration_number=bg_iteration, 
                                         peak_methods=aggregate_peak_method, cell_number_per_group=cell_number_per_group, 
                                         chip_process=search_chip, motif_process=search_motif, core=n_cores)
-    print_log("It will take about {elapse} to process and finish at {future_time}.".format(elapse = elapse, future_time = future_time))
+    print_log("It will take about {elapse} to process and finish at {future_time}.\n".format(elapse = elapse, future_time = future_time))
+    
     if confirm == True:
         print('Type "Y" to continue processing, "N" to abort.')
         while True:
@@ -128,6 +196,7 @@ def SCRIPT(processed_adata, feature_matrix,
         print_log('Start generating group beds ...')
         fg_map_dict = generate_cluster_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, cell_number_per_group, cell_cutoff, peak_confidence)
         print_log('Finished generating group beds!')
+
     if aggregate_peak_method == "nearest":
         # generate foreground peaks, if length same as cell number, we consider it has estimated, skip generation.
         # if user generate same length background, but diff depth in same folder, may report unaccurate result.
@@ -150,43 +219,11 @@ def SCRIPT(processed_adata, feature_matrix,
             print_log('Finished generating nearest neighbor cells beds!')
             
     if search_chip == True:
-        print_log('Start searching background beds from ChIP-seq index ...')
-        search_giggle_batch(bg_bed_path, bg_chip_result_path, chip_index, n_cores)
-        print_log('Finished searching background beds from ChIP-seq index!')
-        
-        print_log('Start searching foreground beds from ChIP-seq index ...')
-        search_giggle_batch(fg_bed_path, fg_chip_result_path, chip_index, n_cores)
-        print_log('Finished searching factors from ChIP-seq index!')
-        
-        chip_bg_result = read_giggle_result(bg_chip_result_path, filename_split=".", index_prefix=chip_index_prefix)
-        print_log('Finished reading background ChIP-seq index search result!')
-        
-        chip_result = read_giggle_result(fg_chip_result_path, filename_split=".", index_prefix=chip_index_prefix)
-        print_log('Finished reading foreground ChIP-seq index search result!')
-        
-        chip_result_p = cal_p_table_batch(chip_result, chip_bg_result, n_cores)
-        if aggregate_peak_method == "group":
-            chip_result_p = extract_by_cell_cluster(chip_result_p.copy(), fg_map_dict)
-        chip_result_p = map_factor_on_ChIP(chip_result_p).T
+        chip_result_p = process('chip', bg_bed_path, bg_chip_result_path, fg_bed_path, fg_chip_result_path, 
+                                chip_index, chip_index_prefix, n_cores, fg_map_dict)
     if search_motif == True:
-        print_log('Start searching background beds from motif index ...')
-        search_giggle_batch(bg_bed_path, bg_motif_result_path, motif_index, n_cores)
-        print_log('Finished searching background beds from motif index!')
-        
-        print_log('Start searching foreground beds from motif index ...')
-        search_giggle_batch(fg_bed_path, fg_motif_result_path, motif_index, n_cores)
-        print_log('Finished searching factors from motif index!')
-        
-        motif_bg_result = read_giggle_result(bg_motif_result_path, filename_split=".", index_prefix=motif_index_prefix)
-        print_log('Finished reading background motif index search result!')
-        
-        motif_result = read_giggle_result(fg_motif_result_path, filename_split=".", index_prefix=motif_index_prefix)
-        print_log('Finished reading foreground motif index search result!')
-        
-        motif_result_p = cal_p_table_batch(motif_result, motif_bg_result, n_cores)
-        if aggregate_peak_method == "group":
-            motif_result_p = extract_by_cell_cluster(motif_result_p.copy(), fg_map_dict)
-        motif_result_p = motif_result_p.T
+        motif_result_p = process('motif', bg_bed_path, bg_motif_result_path, fg_bed_path, fg_motif_result_path, 
+                                motif_index, motif_index_prefix, n_cores, fg_map_dict)
     if search_chip == True and search_motif == True:
         if integration == True:
             regualtion_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'integration', motif_result_p)
@@ -207,4 +244,3 @@ def SCRIPT(processed_adata, feature_matrix,
             shutil.rmtree(fg_motif_result_path)
             shutil.rmtree(bg_motif_result_path)
     return regualtion_adata        
-        
