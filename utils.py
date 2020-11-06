@@ -1,5 +1,15 @@
 import os
 import sys
+import re
+import pickle
+import random
+import subprocess
+import time
+import threading
+import shutil
+from datetime import datetime, timedelta
+from multiprocessing import Process, Pool
+
 import numpy as np
 import pandas as pd
 import anndata as ad
@@ -11,13 +21,9 @@ import scipy as sp
 import scanpy as sc
 import episcanpy.api as epi
 # from giggle import Giggle
-import pickle
-import random
-import subprocess
-import time
-import threading
-from datetime import datetime
-from multiprocessing import Process, Pool
+
+
+
 
 sc.settings.verbosity = 3
 # sc.logging.print_header()
@@ -44,4 +50,12 @@ vals[:, 2] = np.linspace(220/256, 141/256, N)
 regulation_cmp = mpl.colors.ListedColormap(vals)
 
 
+def add_time(func):
+    def wrapper(*args, **kw):
+        sys.stdout.write('INFO {time} '.format(time=time.strftime("%Y-%m-%d %H:%M:%S")))
+        return func(*args, **kw)
+    return wrapper
 
+@add_time
+def print_log(string, end="\n"):
+    print(string, end=end)

@@ -8,7 +8,7 @@ def search_giggle(bed_path, result_path, index_path):
         cmd += 'rm {bed_path}'.format(bed_path=bed_path)
     subprocess.run(cmd, shell=True, check=True)
 
-def search_giggle_batch(bed_folder, result_folder, index_path, thread=8):
+def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8):
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
     beds = os.listdir(bed_folder)
@@ -16,15 +16,19 @@ def search_giggle_batch(bed_folder, result_folder, index_path, thread=8):
     for bed in beds:
         barcodes = bed.split('.')[0]
         args.append((bed_folder + '/' + bed, result_folder + '/' + barcodes + '.txt', index_path))
-    with Pool(thread) as p:
+    with Pool(n_cores) as p:
         p.starmap(search_giggle, args)
 
-def read_giggle_result(path, filename_split="_", index_prefix="top10k/"):
+
+def read_giggle_result(path, filename_split=".", index_prefix="top10k/"):
     """For giggle stored path, return a table, col is cell cluster / cell and row is factor"""
-    for i in range(len(os.listdir(path))):
-        giggle_result = os.listdir(path)[i]
+    file_list = os.listdir(path)
+    print_log('Reading search result in {path}, in total {number} files.'.format(path=path, number=len(file_list)))
+    for i in range(len(file_list)):
+        if i%50 == 0:
+            print_log("finished {percentage:.2f} %".format(percentage = i*100/file_list.__len__()), end="\r")
+        giggle_result = file_list[i]
         cell_bc = giggle_result.split(filename_split)[0]
-#         print(cell_bc)
         dtframe = pd.read_csv(os.path.join(path, giggle_result), sep="\t", index_col=None, comment="#", header=None)
         dtframe.columns = ["file", "file_size","overlaps","odds_ratio","fishers_two_tail","fishers_left_tail","fishers_right_tail","combo_score","NA"]
         if i == 0:
@@ -32,11 +36,8 @@ def read_giggle_result(path, filename_split="_", index_prefix="top10k/"):
             total = dtframe.rename(columns={'combo_score':cell_bc}).copy()
         else:
             newcol = dtframe[["combo_score"]]
-#             print(newcol)
             total[cell_bc] = newcol
-    idList=[]
-    for i in total['file']:
-        idList.append(i.replace(index_prefix,"").replace(".bed.gz",""))
+    idList = [i.replace(index_prefix,"").replace(".bed.gz","") for i in total['file']]
     total = total.rename(columns={"file":"id"})
     total["id"] = idList
     total = total.set_index("id")

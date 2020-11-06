@@ -48,31 +48,34 @@ def cal_fc(fg_value, bg_mean):
 
 # calculate p value by area at the right of curve
 # calculate fc by value / background average
-def cal_p_and_fc(fg_table, bg_table):
-    print('INFO {time}, chunk calculation ...'.format(time=datetime.now()))
+def cal_p_table(fg_table, bg_table, i):
+    print_log('chunk {i} calculation ...'.format(i=i))
     result_table_p = fg_table.copy()
-    result_table_fc = fg_table.copy()
+#     result_table_fc = fg_table.copy()
     for factor in fg_table.index:
         factor_bg = bg_table.loc[factor,:]
         bg_mean = np.mean(factor_bg)
         bg_std = np.std(factor_bg)
-        result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.cdf, args=(bg_mean, bg_std))
-        result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
-    print('INFO {time}, chunk finished !'.format(time=datetime.now()))
-    return [1-result_table_p, result_table_fc]
+        if bg_mean != 0 and bg_std != 0:
+            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.cdf, args=(bg_mean, bg_std))
+        else:
+            result_table_p.loc[factor,:] = [1.0 if i == 0 else 0.0 for i in fg_table.loc[factor,:] ]
+#         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+    print_log('chunk {i} finished !'.format(i=i))
+    return 1-result_table_p
 
-def cal_p_and_fc_batch(fg_table, bg_table, n_cores=8):
-    print("INFO {time}, Calculating enrichment and fold change, divide into {n} chunks...".format(time=datetime.now(), n=n_cores))
+def cal_p_table_batch(fg_table, bg_table, n_cores=8):
+    print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
     fg_table_split = np.array_split(fg_table, n_cores)
-    args = [[table, bg_table] for table in fg_table_split]
+    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
     with Pool(n_cores) as p:
-        result = p.starmap(cal_p_and_fc, args)
-    print("INFO {time}, Generating P value table ...".format(time=datetime.now()))
-    result_table_p = pd.concat([i[0] for i in result])
-    print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
-    result_table_fc = pd.concat([i[1] for i in result])
-    print('INFO {time}, Finished calculation enrichment and fold change!'.format(time=datetime.now()))
-    return result_table_p, result_table_fc
+        result = p.starmap(cal_p_table, args)
+    print_log("Generating P value table ...")
+    result_table_p = pd.concat([i for i in result])
+#     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
+#     result_table_fc = pd.concat([i[1] for i in result])
+    print_log('Finished calculation enrichment!')
+    return result_table_p
 
 def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-Hochberg"):                
     """                                                                                                   
@@ -80,7 +83,7 @@ def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-H
     derive from https://stackoverflow.com/questions/7450957/how-to-implement-rs-p-adjust-in-python/7453313
     """
     pvalues = np.array(pvalues) 
-    n = float(pvalues.shape[0])     
+    n = pvalues.shape[0]     
     new_pvalues = np.empty(n)
     if correction_type == "Bonferroni":   
         new_pvalues = n * pvalues

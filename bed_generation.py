@@ -14,17 +14,23 @@ def generate_beds(file_path, cells, input_mat, peak_confidence):
     peaks = pd.DataFrame([p.split("_") for p in peaks])
     peaks.to_csv(file_path, sep="\t", header= None, index=None)
 
-def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50, iteration=1000, peak_confidence=5, n_thread=8):
+def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50, iteration=1000, peak_confidence=5, n_cores=8):
     map_dict = {}
     if not os.path.exists(bg_bed_path):
         os.makedirs(bg_bed_path)
     cl_name = input_mat.columns.to_list()
+#     args = []
+#     for i in range(0,iteration):
+#         map_dict[i] = random.sample(cl_name, step)
+#         args.append((bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence))
+#     with Pool(n_cores) as p:
+#         p.starmap(generate_beds, args)
     threads = []
     for i in range(0,iteration): 
         map_dict[i] = random.sample(cl_name, step)
         task = threading.Thread(target=generate_beds, args=(bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence)) 
-        threads.append(t)
-    pool_sema = threading.BoundedSemaphore(value=n_thread)
+        threads.append(task)
+    pool_sema = threading.BoundedSemaphore(value=n_cores)
     with pool_sema:
         for task in threads:
             task.start()
@@ -47,10 +53,10 @@ def generate_cluster_bed(adata, input_mat, bed_path, map_dict_store_path, step=5
             key = str(i) + "_" + str(j)
             map_dict[key] = cl_name
             if len(cl_name) < cell_cutoff:
-                print(key + " only have " + str(len(cl_name)), "cells, skip generate bed file.")
+                print_log(key + " only have " + str(len(cl_name)), " cells, skip generate bed file.\n")
                 continue
             else:
-                generate_background_bed(bg_bed_path + "/" + str(i) + ".bed", map_dict[key], input_mat, peak_confidence)
+                generate_beds(bed_path + "/" + str(key) + ".bed", map_dict[key], input_mat, peak_confidence)
                 j = j+1
     with open(map_dict_store_path, "wb") as map_dict_file:
         pickle.dump(map_dict, map_dict_file)
@@ -89,7 +95,7 @@ def find_nearest_cells(cell, coor_table, n_neighbor=20, step=None):
     neighbor_bcs = tmp.index[0:n_neighbor].tolist()
     return neighbor_bcs
 
-def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_neighbor=50, peak_confidence=5, n_thread=8):
+def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_neighbor=50, peak_confidence=5, n_cores=8):
     coor_table = pd.DataFrame(adata.obsm['X_umap'], index = adata.obs.index, columns=["X","Y"])
     width = coor_table.max().X - coor_table.min().X
     height = coor_table.max().Y - coor_table.min().Y
@@ -97,13 +103,20 @@ def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_nei
     map_dict = {}
     if not os.path.exists(bed_path):
         os.makedirs(bed_path)
+#     args = []
+#     for cell in adata.obs.index:
+#         neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor)
+#         map_dict[cell] = neighbor_cells
+#         args.append((bg_bed_path + "/" + str(i) + ".bed", neighbor_cells, input_mat, peak_confidence))
+#     with Pool(n_cores) as p:
+#         p.starmap(generate_beds, args)
     threads = []
     for cell in adata.obs.index:
         neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor)
         map_dict[cell] = neighbor_cells
-        task = threading.Thread(target=generate_beds, args=(bg_bed_path + "/" + str(i) + ".bed", neighbor_cells, input_mat, peak_confidence)) 
+        task = threading.Thread(target=generate_beds, args=(bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence)) 
         threads.append(task)
-    pool_sema = threading.BoundedSemaphore(value=n_thread)
+    pool_sema = threading.BoundedSemaphore(value=n_cores)
     with pool_sema:
         for task in threads:
             task.start()
