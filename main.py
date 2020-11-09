@@ -95,7 +95,7 @@ def check_para(processed_adata, feature_matrix,
     information += 'All processes will use {n_cores} cores.\n~~~~~\n'.format(n_cores=n_cores)
     print(information)
         
-def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, index_prefix, n_cores, fg_map_dict):
+def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, index_prefix, n_cores, fg_map_dict, aggregate_peak_method):
     if tp == 'chip':
         log_list = [
             'Start searching background beds from ChIP-seq index ...',
@@ -220,10 +220,10 @@ def SCRIPT(processed_adata, feature_matrix,
             
     if search_chip == True:
         chip_result_p = process('chip', bg_bed_path, bg_chip_result_path, fg_bed_path, fg_chip_result_path, 
-                                chip_index, chip_index_prefix, n_cores, fg_map_dict)
+                                chip_index, chip_index_prefix, n_cores, fg_map_dict, aggregate_peak_method)
     if search_motif == True:
         motif_result_p = process('motif', bg_bed_path, bg_motif_result_path, fg_bed_path, fg_motif_result_path, 
-                                motif_index, motif_index_prefix, n_cores, fg_map_dict)
+                                motif_index, motif_index_prefix, n_cores, fg_map_dict, aggregate_peak_method)
     if search_chip == True and search_motif == True:
         if integration == True:
             regualtion_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'integration', motif_result_p)
