@@ -1,26 +1,27 @@
 def time_estimate(cell_number, bg_iteration_number, peak_methods, cell_number_per_group, chip_process, motif_process, core):
-#   generate bed: 0.5 second per cell,  search index: 5 seconds per cell, cal p: 2 seconds per factor
+#   generate bed: 0.5 second per cell,  search index: 10 seconds per cell, cal p: 2 seconds per factor
     if peak_methods == "group":
         bed_number = int(cell_number/cell_number_per_group) + bg_iteration_number
-        seconds = 1.5 * bed_number
+        seconds = 3 * bed_number
         if chip_process == True:
-            seconds += 5 * bed_number
+            seconds += 10 * bed_number
         if motif_process == True:
-            seconds += 5 * bed_number
+            seconds += 10 * bed_number
     elif peak_methods == "nearest":
+        seconds = int(cell_number * core / 50) # single core process, find nearest cells function
         bed_number = cell_number + bg_iteration_number
-        seconds = 1.5 * bed_number
+        seconds += 3 * bed_number
         if chip_process == True:
-            seconds += 5 * bed_number
+            seconds += 10 * bed_number
         if motif_process == True:
-            seconds += 5 * bed_number
-    chip_factor_number = 5084
-    motif_factor_number = 1147
+            seconds += 10 * bed_number
+    chip_factor_number = 5069
+    motif_factor_number = 1143
     if chip_process == True:
         seconds += 2 * chip_factor_number
     if motif_process == True:
         seconds += 2 * motif_factor_number
-    seconds = seconds/core
+    seconds = seconds / core
     now_time = datetime.now()
     future_time = (datetime.now() + timedelta(seconds=seconds)).strftime("%Y-%m-%d %H:%M:%S")
     m, s = divmod(seconds, 60)
@@ -32,8 +33,8 @@ def check_para(processed_adata, feature_matrix,
                aggregate_peak_method, cell_number_per_group, cell_cutoff, peak_confidence, 
                fg_bed_path, fg_map_dict_path, 
                bg_bed_path, bg_map_dict_path, bg_iteration, 
-               search_chip, chip_index, chip_index_prefix, fg_chip_result_path, bg_chip_result_path,
-               search_motif, motif_index, motif_index_prefix, fg_motif_result_path, bg_motif_result_path, 
+               search_chip, chip_index, fg_chip_result_path, bg_chip_result_path,
+               search_motif, motif_index, fg_motif_result_path, bg_motif_result_path, 
                integration, confirm, clean, n_cores):
     if processed_adata.shape[0] > feature_matrix.shape[1]:
         print_log('WARNING: There are more cells in anndata than input feature matrix.')
@@ -41,8 +42,8 @@ def check_para(processed_adata, feature_matrix,
         if 'seurat_clusters' not in processed_adata.obs:
             print_log('There is no cluster infomation in anndata. "seurat_clusters in .obs is necessary."')
             sys.exit()
-    if bg_iteration * cell_number_per_group < feature_matrix.shape[1] * 10:
-        print_log('WARNING: Background iteration number less than 10 times number of cell. May be not enough to estimate background.')
+    if bg_iteration * cell_number_per_group < feature_matrix.shape[1] * 5:
+        print_log('WARNING: Background iteration number less than 5 times number of cell. May be not enough to estimate background.')
     if re.match(r'chr.*_\d*_\d*', feature_matrix.index[0]) == None:
         print_log("feature_matrix's index should be like this: chr1_222222_333333. Each row is a feature and each column is a cell.")
         sys.exit()
@@ -95,7 +96,7 @@ def check_para(processed_adata, feature_matrix,
     information += 'All processes will use {n_cores} cores.\n~~~~~\n'.format(n_cores=n_cores)
     print(information)
         
-def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, index_prefix, n_cores, fg_map_dict, aggregate_peak_method):
+def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, n_cores, fg_map_dict, aggregate_peak_method):
     if tp == 'chip':
         log_list = [
             'Start searching background beds from ChIP-seq index ...',
@@ -114,15 +115,33 @@ def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index,
             'Finished reading background motif index search result!',
             'Finished reading foreground motif index search result!'
         ]
-    print_log(log_list[0])
-    search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores)
-    print_log(log_list[1])
-    print_log(log_list[2])
-    search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
-    print_log(log_list[3])
-    bg_result = read_giggle_result(bg_result_path, filename_split=".", index_prefix=index_prefix)
+    try:
+        if os.listdir(bg_bed_path).__len__() != os.listdir(bg_result_path).__len__():
+            shutil.rmtree(bg_result_path)
+            print_log(log_list[0])
+            search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores)
+            print_log(log_list[1])
+        else:
+            print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {bg_result_path}'.format(bg_result_path=bg_result_path))
+    except FileNotFoundError:
+        print_log(log_list[0])
+        search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores)
+        print_log(log_list[1])
+    try:
+        if os.listdir(fg_bed_path).__len__() != os.listdir(fg_result_path).__len__():
+            shutil.rmtree(fg_result_path)
+            print_log(log_list[2])
+            search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
+            print_log(log_list[3])
+        else:
+            print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {fg_result_path}'.format(fg_result_path=fg_result_path))
+    except FileNotFoundError:
+        print_log(log_list[2])
+        search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
+        print_log(log_list[3])
+    bg_result = read_giggle_result(bg_result_path, filename_split=".")
     print_log(log_list[4])
-    result = read_giggle_result(fg_result_path, filename_split=".", index_prefix=index_prefix)
+    result = read_giggle_result(fg_result_path, filename_split=".")
     print_log(log_list[5])
     result_p = cal_p_table_batch(result, bg_result, n_cores)
     if aggregate_peak_method == "group":
@@ -133,29 +152,36 @@ def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index,
         result_p = result_p.T
     return result_p
 
+
+
 def SCRIPT(processed_adata, feature_matrix, 
            aggregate_peak_method='group', cell_number_per_group=50, cell_cutoff=20, peak_confidence=5, 
-           fg_bed_path='', fg_map_dict_path='', 
-           bg_bed_path='', bg_map_dict_path='', bg_iteration='auto', 
-           search_chip=True, chip_index='', chip_index_prefix='', fg_chip_result_path='', bg_chip_result_path='',
-           search_motif=True, motif_index='', motif_index_prefix='', fg_motif_result_path='', bg_motif_result_path='', 
-           integration=True, confirm=True, clean=True, n_cores=8):
+           fg_bed_path='.SCRIPT_temp/fg_bed', fg_map_dict_path='.SCRIPT_temp/fg_bed.pk', 
+           bg_bed_path='.SCRIPT_temp/bg_bed', bg_map_dict_path='.SCRIPT_temp/bg_bed.pk', bg_iteration='auto', 
+           search_chip=True, chip_index='', 
+           fg_chip_result_path='.SCRIPT_temp/fg_chip_result', bg_chip_result_path='.SCRIPT_temp/bg_chip_result',
+           search_motif=True, motif_index='', 
+           fg_motif_result_path='.SCRIPT_temp/fg_motif_result', bg_motif_result_path='.SCRIPT_temp/bg_motif_result', 
+           integration=True, result_store_path='SCRIPT_computed.adata',
+           confirm=True, clean=True, n_cores=8):
+    ##################################
+    ### pre-check
+    ##################################
     print_log('Checking paramaters ...')
     if bg_iteration == "auto":
-        bg_iteration = int(feature_matrix.shape[1] * 10 / cell_number_per_group) + 1
+        bg_iteration = int(feature_matrix.shape[1] * 5 / cell_number_per_group) + 1
     check_para(processed_adata, feature_matrix, 
                aggregate_peak_method, cell_number_per_group, cell_cutoff, peak_confidence, 
                fg_bed_path, fg_map_dict_path, 
                bg_bed_path, bg_map_dict_path, bg_iteration, 
-               search_chip, chip_index, chip_index_prefix, fg_chip_result_path, bg_chip_result_path,
-               search_motif, motif_index, motif_index_prefix, fg_motif_result_path, bg_motif_result_path, 
+               search_chip, chip_index, fg_chip_result_path, bg_chip_result_path,
+               search_motif, motif_index, fg_motif_result_path, bg_motif_result_path, 
                integration, confirm, clean, n_cores)
     print_log('Estimating running time ...')
     elapse, future_time = time_estimate(cell_number = feature_matrix.shape[1], bg_iteration_number=bg_iteration, 
                                         peak_methods=aggregate_peak_method, cell_number_per_group=cell_number_per_group, 
                                         chip_process=search_chip, motif_process=search_motif, core=n_cores)
     print_log("It will take about {elapse} to process and finish at {future_time}.\n".format(elapse = elapse, future_time = future_time))
-    
     if confirm == True:
         print('Type "Y" to continue processing, "N" to abort.')
         while True:
@@ -167,7 +193,9 @@ def SCRIPT(processed_adata, feature_matrix,
                 sys.exit(0)
             else:
                 print('Please type Y / N.')
-    
+    ##################################
+    ### bed generation
+    ##################################
     # generate background peak, if length same as iteration, we consider it has estimated, skip generation.
     # if user generate same length background, but diff depth, may report unaccurate result.
     try:
@@ -178,14 +206,13 @@ def SCRIPT(processed_adata, feature_matrix,
             bg_map_dict = generate_background_bed(feature_matrix, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
             print_log('Finished generating background beds!')
         else:
-            print_log('WARNING: Using existing results, might wrong.')
+            print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {bg_bed_path}'.format(bg_bed_path=bg_bed_path))
             with open(bg_map_dict_path, "rb") as map_dict_file:
                 bg_map_dict = pickle.load(map_dict_file)
     except FileNotFoundError:
         print_log('Start generating background beds ...')
         bg_map_dict = generate_background_bed(feature_matrix, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
         print_log('Finished generating background beds!')
-
     # if user generated foregroud, but diff depth in same folder, may report unaccurate result.
     # this is fast, we just remove it.
     if aggregate_peak_method == "group":
@@ -196,10 +223,9 @@ def SCRIPT(processed_adata, feature_matrix,
         print_log('Start generating group beds ...')
         fg_map_dict = generate_cluster_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, cell_number_per_group, cell_cutoff, peak_confidence)
         print_log('Finished generating group beds!')
-
+    # generate foreground peaks, if length same as cell number, we consider it has estimated, skip generation.
+    # if user generate same length background, but diff depth in same folder, may report unaccurate result.
     if aggregate_peak_method == "nearest":
-        # generate foreground peaks, if length same as cell number, we consider it has estimated, skip generation.
-        # if user generate same length background, but diff depth in same folder, may report unaccurate result.
         try:
             tmp_files_list = os.listdir(fg_bed_path)
             if tmp_files_list.__len__() != feature_matrix.shape[1]:
@@ -209,7 +235,7 @@ def SCRIPT(processed_adata, feature_matrix,
                                                     cell_number_per_group, peak_confidence, n_cores)
                 print_log('Finished generating nearest neighbor cells beds!')
             else:
-                print_log('WARNING: Using existing results, might wrong.')
+                print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {fg_bed_path}'.format(fg_bed_path=fg_bed_path))
                 with open(fg_map_dict_path, "rb") as map_dict_file:
                     fg_map_dict = pickle.load(map_dict_file)
         except FileNotFoundError:
@@ -217,13 +243,18 @@ def SCRIPT(processed_adata, feature_matrix,
             fg_map_dict = generate_neighbor_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, 
                                                 cell_number_per_group, peak_confidence, n_cores)
             print_log('Finished generating nearest neighbor cells beds!')
-            
+    ##################################
+    ### Search giggle and compute enrich score
+    ##################################
     if search_chip == True:
         chip_result_p = process('chip', bg_bed_path, bg_chip_result_path, fg_bed_path, fg_chip_result_path, 
-                                chip_index, chip_index_prefix, n_cores, fg_map_dict, aggregate_peak_method)
+                                chip_index, n_cores, fg_map_dict, aggregate_peak_method)
     if search_motif == True:
         motif_result_p = process('motif', bg_bed_path, bg_motif_result_path, fg_bed_path, fg_motif_result_path, 
-                                motif_index, motif_index_prefix, n_cores, fg_map_dict, aggregate_peak_method)
+                                motif_index, n_cores, fg_map_dict, aggregate_peak_method)
+    ##################################
+    ### Summary results
+    ##################################
     if search_chip == True and search_motif == True:
         if integration == True:
             regualtion_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'integration', motif_result_p)
@@ -234,13 +265,21 @@ def SCRIPT(processed_adata, feature_matrix,
         regualtion_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'ChIP-seq')
     else:
         regualtion_adata = merge_giggle_singlecell_experiment(processed_adata, motif_result_p, 'motif')
+    if result_store_path:
+        regualtion_adata.write(result_store_path)
+    ##################################
+    ### Clean files
+    ##################################
     if clean == True:
-        shutil.rmtree(fg_bed_path)
-        shutil.rmtree(bg_bed_path)
-        if search_chip == True:
-            shutil.rmtree(fg_chip_result_path)
-            shutil.rmtree(bg_chip_result_path)
-        if search_motif == True:
-            shutil.rmtree(fg_motif_result_path)
-            shutil.rmtree(bg_motif_result_path)
+        try:
+            shutil.rmtree(fg_bed_path)
+            shutil.rmtree(bg_bed_path)
+            if search_chip == True:
+                shutil.rmtree(fg_chip_result_path)
+                shutil.rmtree(bg_chip_result_path)
+            if search_motif == True:
+                shutil.rmtree(fg_motif_result_path)
+                shutil.rmtree(bg_motif_result_path)
+        except:
+            pass
     return regualtion_adata        

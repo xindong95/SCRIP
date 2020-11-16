@@ -59,3 +59,4 @@ def add_time(func):
 @add_time
 def print_log(string, end="\n"):
     print(string, end=end)
+    

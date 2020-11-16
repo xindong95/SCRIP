@@ -49,7 +49,7 @@ def cal_fc(fg_value, bg_mean):
 # calculate p value by area at the right of curve
 # calculate fc by value / background average
 def cal_p_table(fg_table, bg_table, i):
-    print_log('chunk {i} calculation ...'.format(i=i))
+    print_log('chunk {i} calculating ...'.format(i=i))
     result_table_p = fg_table.copy()
 #     result_table_fc = fg_table.copy()
     for factor in fg_table.index:
@@ -61,7 +61,7 @@ def cal_p_table(fg_table, bg_table, i):
         else:
             result_table_p.loc[factor,:] = [1.0 if i == 0 else 0.0 for i in fg_table.loc[factor,:] ]
 #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
-    print_log('chunk {i} finished !'.format(i=i))
+    print_log('chunk {i} finished calculation!'.format(i=i))
     return 1-result_table_p
 
 def cal_p_table_batch(fg_table, bg_table, n_cores=8):
@@ -80,7 +80,7 @@ def cal_p_table_batch(fg_table, bg_table, n_cores=8):
 def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-Hochberg"):                
     """                                                                                                   
     consistent with R - print correct_pvalues_for_multiple_testing([0.0, 0.01, 0.029, 0.03, 0.031, 0.05, 0.069, 0.07, 0.071, 0.09, 0.1]) 
-    derive from https://stackoverflow.com/questions/7450957/how-to-implement-rs-p-adjust-in-python/7453313
+    modified from https://stackoverflow.com/questions/7450957/how-to-implement-rs-p-adjust-in-python/7453313
     """
     pvalues = np.array(pvalues) 
     n = pvalues.shape[0]     
@@ -109,3 +109,5 @@ def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-H
             pvalue, index = vals
             new_pvalues[index] = new_values[i]                                                                                                                  
     return new_pvalues
+
+

@@ -19,8 +19,7 @@ def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8):
     with Pool(n_cores) as p:
         p.starmap(search_giggle, args)
 
-
-def read_giggle_result(path, filename_split=".", index_prefix="top10k/"):
+def read_giggle_result(path, filename_split="."):
     """For giggle stored path, return a table, col is cell cluster / cell and row is factor"""
     file_list = os.listdir(path)
     print_log('Reading search result in {path}, in total {number} files.'.format(path=path, number=len(file_list)))
@@ -37,8 +36,10 @@ def read_giggle_result(path, filename_split=".", index_prefix="top10k/"):
         else:
             newcol = dtframe[["combo_score"]]
             total[cell_bc] = newcol
-    idList = [i.replace(index_prefix,"").replace(".bed.gz","") for i in total['file']]
+    idList = [i.replace(".bed.gz","") for i in total['file']]
     total = total.rename(columns={"file":"id"})
     total["id"] = idList
     total = total.set_index("id")
     return total
+
+
