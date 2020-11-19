@@ -10,15 +10,14 @@ def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50
     if not os.path.exists(bg_bed_path):
         os.makedirs(bg_bed_path)
     cl_name = input_mat.columns.to_list()
-    cnt = 0
     total_cnt = iteration
     executor = ThreadPoolExecutor(max_workers=n_cores)
+    all_task = []
     for i in range(0,iteration): 
+        random.seed(i)
         map_dict[i] = random.sample(cl_name, step)
-        executor.submit(generate_beds, bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence)
-        if cnt%50 == 0:
-            print_log("Finished {percentage:.2f} %".format(percentage = cnt*100/total_cnt), end="\r")
-        cnt += 1    
+        all_task.append(executor.submit(generate_beds, bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence))
+    wait(all_task, return_when=ALL_COMPLETED)
     with open(map_dict_store_path, "wb") as map_dict_file:
         pickle.dump(map_dict, map_dict_file)
     return map_dict
@@ -37,7 +36,7 @@ def generate_cluster_bed(adata, input_mat, bed_path, map_dict_store_path, step=5
             cl_name = cluster_cell_name[s:(s + step)]
             key = str(i) + "_" + str(j)
             map_dict[key] = cl_name
-            if len(cl_name) < cell_cutoff:
+            if len(cl_name) <= cell_cutoff:
                 print_log(key + " only have " + str(len(cl_name)), " cells, skip generate bed file.\n")
                 continue
             else:
@@ -80,7 +79,7 @@ def find_nearest_cells(cell, coor_table, n_neighbor=20, step=None):
     neighbor_bcs = tmp.index[0:n_neighbor].tolist()
     return neighbor_bcs
 
-def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_neighbor=50, peak_confidence=5, n_cores=8):
+def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_neighbor=10, peak_confidence=2, n_cores=8):
     coor_table = pd.DataFrame(adata.obsm['X_umap'], index = adata.obs.index, columns=["X","Y"])
     width = coor_table.max().X - coor_table.min().X
     height = coor_table.max().Y - coor_table.min().Y
@@ -88,16 +87,17 @@ def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_nei
     map_dict = {}
     if not os.path.exists(bed_path):
         os.makedirs(bed_path)
-    cnt = 0
     total_cnt = adata.obs.index.__len__()
     executor = ThreadPoolExecutor(max_workers=n_cores)
+    all_task = []
+#     for clstr in adata.obs['seurat_clusters'].unique().to_list()
+#         clstr_cell_list = adata.obs.index[adata.obs['seurat_clusters'] == clstr].to_list()
+#         coor_table = coor_table_all.loc[clstr_cell_list,]
     for cell in adata.obs.index:
-        neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor)
+        neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor, step)
         map_dict[cell] = neighbor_cells
-        executor.submit(generate_beds, bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence)
-        if cnt%50 == 0:
-            print_log("Finished {percentage:.2f} %".format(percentage = cnt*100/total_cnt), end="\r")
-        cnt += 1    
+        all_task.append(executor.submit(generate_beds, bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence))
+    wait(all_task, return_when=ALL_COMPLETED)
     with open(map_dict_store_path, "wb") as map_dict_file:
         pickle.dump(map_dict, map_dict_file)
     return map_dict

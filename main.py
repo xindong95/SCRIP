@@ -35,7 +35,7 @@ def check_para(processed_adata, feature_matrix,
                bg_bed_path, bg_map_dict_path, bg_iteration, 
                search_chip, chip_index, fg_chip_result_path, bg_chip_result_path,
                search_motif, motif_index, fg_motif_result_path, bg_motif_result_path, 
-               integration, confirm, clean, n_cores):
+               integration, store, result_store_path, confirm, clean, n_cores):
     if processed_adata.shape[0] > feature_matrix.shape[1]:
         print_log('WARNING: There are more cells in anndata than input feature matrix.')
     if aggregate_peak_method == 'group':
@@ -61,18 +61,22 @@ def check_para(processed_adata, feature_matrix,
     if search_chip != True and search_motif != True:
         print_log("One of search_chip or search_motif must be chosen!")
         sys.exit()
+    if store == True and (type(result_store_path) != str or not result_store_path.endswith('.h5ad')):
+        print_log("The result_store_path must be set as .h5ad file when store is True!")
+        sys.exit()
     information = '\n~~~~~\nWelcome to use SCRIPT. Here are your settings:\n\n'
     information += 'There are UMAP information and cluster information in your processed_adata. '
     information += 'The aggregate peaks method is {aggregate_peak_method}.\n'.format(aggregate_peak_method=aggregate_peak_method)
     if aggregate_peak_method == 'group':
         information += 'This will aggregate {cell_number_per_group} cells from the same cluster, '.format(cell_number_per_group=cell_number_per_group) 
-        information += 'the group with cell number less than {cell_cutoff} will not generate.\n'.format(cell_cutoff=cell_cutoff)
+        information += 'the group that cell number is less than or equals to {cell_cutoff} will not generate.\n'.format(cell_cutoff=cell_cutoff)
+        information += 'For each group, peaks that confidence is less than or equals to {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
         information += 'This setting is suitable for the background as well. '
     else:
         information += 'This will borrow peaks from {cell_number_per_group} nearest cells for every cell. '.format(cell_number_per_group=cell_number_per_group)
-        information += 'For each cell, peaks confidence with less than {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
-    information += 'SCRIPT randomly aggregates {cell_number_per_group} cells '.format(cell_number_per_group=cell_number_per_group)
-    information += 'and deletes the peaks confidence less than {peak_confidence}. '.format(peak_confidence=peak_confidence)
+        information += 'For each cell, peaks that confidence is less than or equals to {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
+    information += 'SCRIPT randomly aggregates {cell_number_per_group} cells peaks '.format(cell_number_per_group=cell_number_per_group)
+    information += 'and deletes the peaks that confidence less than or equals to {peak_confidence}. '.format(peak_confidence=peak_confidence)
     information += 'This will iterate {bg_iteration} times.\n'.format(bg_iteration=bg_iteration)
     information += 'The background peaks will be stored in {bg_bed_path}, '.format(bg_bed_path=bg_bed_path)
     information += 'foreground peaks will be stored in {fg_bed_path}.\n'.format(fg_bed_path=fg_bed_path)
@@ -92,6 +96,10 @@ def check_para(processed_adata, feature_matrix,
         information += 'Motif index locates at {motif_index}.\n'.format(motif_index=motif_index)
         information += 'Motif background result will be stored in {bg_motif_result_path}, '.format(bg_motif_result_path=bg_motif_result_path)
         information += 'foreground result will be stored in {fg_motif_result_path}.\n'.format(fg_motif_result_path=fg_motif_result_path)
+    if store == True:
+        information += 'Computed result will be stored in {result_store_path}.\n'.format(result_store_path=result_store_path)
+    else:
+        information += 'Computed result will not be stored.\n'.format(result_store_path=result_store_path)
     information += 'All folders will{not_string} be removed after processing. '.format(not_string='' if clean == True else ' not')
     information += 'All processes will use {n_cores} cores.\n~~~~~\n'.format(n_cores=n_cores)
     print(information)
@@ -154,16 +162,31 @@ def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index,
 
 
 
-def SCRIPT(processed_adata, feature_matrix, 
-           aggregate_peak_method='group', cell_number_per_group=50, cell_cutoff=20, peak_confidence=5, 
-           fg_bed_path='.SCRIPT_temp/fg_bed', fg_map_dict_path='.SCRIPT_temp/fg_bed.pk', 
-           bg_bed_path='.SCRIPT_temp/bg_bed', bg_map_dict_path='.SCRIPT_temp/bg_bed.pk', bg_iteration='auto', 
-           search_chip=True, chip_index='', 
-           fg_chip_result_path='.SCRIPT_temp/fg_chip_result', bg_chip_result_path='.SCRIPT_temp/bg_chip_result',
-           search_motif=True, motif_index='', 
-           fg_motif_result_path='.SCRIPT_temp/fg_motif_result', bg_motif_result_path='.SCRIPT_temp/bg_motif_result', 
-           integration=True, result_store_path='SCRIPT_computed.adata',
+def SCRIPT(processed_adata, feature_matrix, project='',
+           aggregate_peak_method='group', cell_number_per_group=50, cell_cutoff=20, peak_confidence=5, bg_iteration='auto', 
+           search_chip=True, chip_index='', search_motif=True, motif_index='',            
+           integration=True, store=False, result_store_path='SCRIPT_computed.h5ad',
            confirm=True, clean=True, n_cores=8):
+    if project == '':
+        tmp_chr_list = [chr(i) for i in range(ord("A"), ord("Z") + 1)] + [chr(i) for i in range(ord("a"), ord("z") + 1)] + [chr(i) for i in range(ord("0"), ord("9") + 1)]
+        tmp_prefix = ''.join(random.sample(tmp_chr_list, 10))
+        fg_bed_path='.SCRIPT_temp/{tmp_prefix}/fg_bed'.format(tmp_prefix = tmp_prefix)
+        fg_map_dict_path='.SCRIPT_temp/{tmp_prefix}/fg_bed.pk'.format(tmp_prefix = tmp_prefix)
+        bg_bed_path='.SCRIPT_temp/{tmp_prefix}/bg_bed'.format(tmp_prefix = tmp_prefix)
+        bg_map_dict_path='.SCRIPT_temp/{tmp_prefix}/bg_bed.pk'.format(tmp_prefix = tmp_prefix)
+        fg_chip_result_path='.SCRIPT_temp/{tmp_prefix}/fg_chip_result'.format(tmp_prefix = tmp_prefix)
+        bg_chip_result_path='.SCRIPT_temp/{tmp_prefix}/bg_chip_result'.format(tmp_prefix = tmp_prefix)
+        fg_motif_result_path='.SCRIPT_temp/{tmp_prefix}/fg_motif_result'.format(tmp_prefix = tmp_prefix)
+        bg_motif_result_path='.SCRIPT_temp/{tmp_prefix}/bg_motif_result'.format(tmp_prefix = tmp_prefix)
+    else:
+        fg_bed_path='{project}/fg_bed'.format(project = project)
+        fg_map_dict_path='{project}/fg_bed.pk'.format(project = project)
+        bg_bed_path='{project}/bg_bed'.format(project = project)
+        bg_map_dict_path='{project}/bg_bed.pk'.format(project = project)
+        fg_chip_result_path='{project}/fg_chip_result'.format(project = project)
+        bg_chip_result_path='{project}/bg_chip_result'.format(project = project)
+        fg_motif_result_path='{project}/fg_motif_result'.format(project = project)
+        bg_motif_result_path='{project}/bg_motif_result'.format(project = project)
     ##################################
     ### pre-check
     ##################################
@@ -176,7 +199,7 @@ def SCRIPT(processed_adata, feature_matrix,
                bg_bed_path, bg_map_dict_path, bg_iteration, 
                search_chip, chip_index, fg_chip_result_path, bg_chip_result_path,
                search_motif, motif_index, fg_motif_result_path, bg_motif_result_path, 
-               integration, confirm, clean, n_cores)
+               integration, store, result_store_path, confirm, clean, n_cores)
     print_log('Estimating running time ...')
     elapse, future_time = time_estimate(cell_number = feature_matrix.shape[1], bg_iteration_number=bg_iteration, 
                                         peak_methods=aggregate_peak_method, cell_number_per_group=cell_number_per_group, 
@@ -202,6 +225,7 @@ def SCRIPT(processed_adata, feature_matrix,
         tmp_files_list = os.listdir(bg_bed_path)
         if tmp_files_list.__len__() != bg_iteration:
             shutil.rmtree(bg_bed_path)
+            print_log('Not empty folder, removed existing files!')
             print_log('Start generating background beds ...')
             bg_map_dict = generate_background_bed(feature_matrix, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
             print_log('Finished generating background beds!')
@@ -229,6 +253,7 @@ def SCRIPT(processed_adata, feature_matrix,
         try:
             tmp_files_list = os.listdir(fg_bed_path)
             if tmp_files_list.__len__() != feature_matrix.shape[1]:
+                print_log('Not empty folder, removed existing files!')
                 shutil.rmtree(fg_bed_path)
                 print_log('Start generating nearest neighbor cells beds ...')
                 fg_map_dict = generate_neighbor_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, 
