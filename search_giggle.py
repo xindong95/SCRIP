@@ -1,11 +1,11 @@
 def search_giggle(bed_path, result_path, index_path):
-    bed = bed_path.split("/")[-1]
-    if bed_path.endswith('gz'):
-        cmd = 'giggle search -i {index_path} -s -q {bed_path} > {result_path}\n'.format(index_path=index_path, result_path=result_path, bed_path=bed_path)
-    else:
-        cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_path)
-        cmd += 'giggle search -i {index_path} -s -q {bed_path}.gz > {result_path}\n'.format(index_path=index_path, result_path=result_path, bed_path=bed_path)
-        cmd += 'rm {bed_path}'.format(bed_path=bed_path)
+#     bed = bed_path.split("/")[-1]
+#     if bed_path.endswith('gz'):
+    cmd = 'giggle search -i {index_path} -s -q {bed_path} > {result_path}\n'.format(index_path=index_path, result_path=result_path, bed_path=bed_path)
+#     else:
+#         cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_path)
+#         cmd += 'giggle search -i {index_path} -s -q {bed_path}.gz > {result_path}\n'.format(index_path=index_path, result_path=result_path, bed_path=bed_path)
+#         cmd += 'rm {bed_path}'.format(bed_path=bed_path)
     subprocess.run(cmd, shell=True, check=True)
 
 def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8):
@@ -41,5 +41,3 @@ def read_giggle_result(path, filename_split="."):
     total["id"] = idList
     total = total.set_index("id")
     return total
-
-

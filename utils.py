@@ -60,4 +60,16 @@ def add_time(func):
 @add_time
 def print_log(string, end="\n"):
     print(string, end=end)
-    
+
+def excute_info(start_info=None, end_info=None):
+    def call(func):
+        def wrapper(*args, **kwargs):
+            if start_info:
+                print_log(start_info)
+            ret = func(*args, **kwargs)
+            if end_info:
+                print_log(end_info)
+            return ret
+        return wrapper
+    return call
+

@@ -36,15 +36,15 @@ def check_para(processed_adata, feature_matrix,
                search_chip, chip_index, fg_chip_result_path, bg_chip_result_path,
                search_motif, motif_index, fg_motif_result_path, bg_motif_result_path, 
                integration, store, result_store_path, confirm, clean, n_cores):
-    if processed_adata.shape[0] > feature_matrix.shape[1]:
+    if processed_adata.shape[0] > feature_matrix.shape[0]:
         print_log('WARNING: There are more cells in anndata than input feature matrix.')
     if aggregate_peak_method == 'group':
         if 'seurat_clusters' not in processed_adata.obs:
             print_log('There is no cluster infomation in anndata. "seurat_clusters in .obs is necessary."')
             sys.exit()
-    if bg_iteration * cell_number_per_group < feature_matrix.shape[1] * 5:
+    if bg_iteration * cell_number_per_group < feature_matrix.shape[0] * 5:
         print_log('WARNING: Background iteration number less than 5 times number of cell. May be not enough to estimate background.')
-    if re.match(r'chr.*_\d*_\d*', feature_matrix.index[0]) == None:
+    if re.match(r'chr.*_\d*_\d*', feature_matrix.var_names[0]) == None:
         print_log("feature_matrix's index should be like this: chr1_222222_333333. Each row is a feature and each column is a cell.")
         sys.exit()
     if cell_cutoff >= cell_number_per_group or peak_confidence >= cell_number_per_group:
@@ -64,19 +64,20 @@ def check_para(processed_adata, feature_matrix,
     if store == True and (type(result_store_path) != str or not result_store_path.endswith('.h5ad')):
         print_log("The result_store_path must be set as .h5ad file when store is True!")
         sys.exit()
+    # prepare information
     information = '\n~~~~~\nWelcome to use SCRIPT. Here are your settings:\n\n'
     information += 'There are UMAP information and cluster information in your processed_adata. '
     information += 'The aggregate peaks method is {aggregate_peak_method}.\n'.format(aggregate_peak_method=aggregate_peak_method)
     if aggregate_peak_method == 'group':
         information += 'This will aggregate {cell_number_per_group} cells from the same cluster, '.format(cell_number_per_group=cell_number_per_group) 
-        information += 'the group that cell number is less than or equals to {cell_cutoff} will not generate.\n'.format(cell_cutoff=cell_cutoff)
-        information += 'For each group, peaks that confidence is less than or equals to {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
+        information += 'the group that cell number is less than {cell_cutoff} will not generate.\n'.format(cell_cutoff=cell_cutoff)
+        information += 'For each group, peaks that confidence is less than {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
         information += 'This setting is suitable for the background as well. '
     else:
         information += 'This will borrow peaks from {cell_number_per_group} nearest cells for every cell. '.format(cell_number_per_group=cell_number_per_group)
-        information += 'For each cell, peaks that confidence is less than or equals to {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
+        information += 'For each cell, peaks that confidence is less than {peak_confidence} will be deleted.\n'.format(peak_confidence=peak_confidence)
     information += 'SCRIPT randomly aggregates {cell_number_per_group} cells peaks '.format(cell_number_per_group=cell_number_per_group)
-    information += 'and deletes the peaks that confidence less than or equals to {peak_confidence}. '.format(peak_confidence=peak_confidence)
+    information += 'and deletes the peaks that confidence less than {peak_confidence}. '.format(peak_confidence=peak_confidence)
     information += 'This will iterate {bg_iteration} times.\n'.format(bg_iteration=bg_iteration)
     information += 'The background peaks will be stored in {bg_bed_path}, '.format(bg_bed_path=bg_bed_path)
     information += 'foreground peaks will be stored in {fg_bed_path}.\n'.format(fg_bed_path=fg_bed_path)
@@ -161,7 +162,6 @@ def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index,
     return result_p
 
 
-
 def SCRIPT(processed_adata, feature_matrix, project='',
            aggregate_peak_method='group', cell_number_per_group=50, cell_cutoff=20, peak_confidence=5, bg_iteration='auto', 
            search_chip=True, chip_index='', search_motif=True, motif_index='',            
@@ -169,7 +169,8 @@ def SCRIPT(processed_adata, feature_matrix, project='',
            confirm=True, clean=True, n_cores=8):
     if project == '':
         tmp_chr_list = [chr(i) for i in range(ord("A"), ord("Z") + 1)] + [chr(i) for i in range(ord("a"), ord("z") + 1)] + [chr(i) for i in range(ord("0"), ord("9") + 1)]
-        tmp_prefix = ''.join(random.sample(tmp_chr_list, 10))
+        random.seed(time.time())
+        tmp_prefix = str(time.time())[6:13].replace('.','') + '_' + ''.join(random.sample(tmp_chr_list, 4))
         fg_bed_path='.SCRIPT_temp/{tmp_prefix}/fg_bed'.format(tmp_prefix = tmp_prefix)
         fg_map_dict_path='.SCRIPT_temp/{tmp_prefix}/fg_bed.pk'.format(tmp_prefix = tmp_prefix)
         bg_bed_path='.SCRIPT_temp/{tmp_prefix}/bg_bed'.format(tmp_prefix = tmp_prefix)
@@ -192,7 +193,7 @@ def SCRIPT(processed_adata, feature_matrix, project='',
     ##################################
     print_log('Checking paramaters ...')
     if bg_iteration == "auto":
-        bg_iteration = int(feature_matrix.shape[1] * 5 / cell_number_per_group) + 1
+        bg_iteration = int(feature_matrix.shape[0] * 5 / cell_number_per_group) + 1
     check_para(processed_adata, feature_matrix, 
                aggregate_peak_method, cell_number_per_group, cell_cutoff, peak_confidence, 
                fg_bed_path, fg_map_dict_path, 
@@ -201,7 +202,7 @@ def SCRIPT(processed_adata, feature_matrix, project='',
                search_motif, motif_index, fg_motif_result_path, bg_motif_result_path, 
                integration, store, result_store_path, confirm, clean, n_cores)
     print_log('Estimating running time ...')
-    elapse, future_time = time_estimate(cell_number = feature_matrix.shape[1], bg_iteration_number=bg_iteration, 
+    elapse, future_time = time_estimate(cell_number = feature_matrix.shape[0], bg_iteration_number=bg_iteration, 
                                         peak_methods=aggregate_peak_method, cell_number_per_group=cell_number_per_group, 
                                         chip_process=search_chip, motif_process=search_motif, core=n_cores)
     print_log("It will take about {elapse} to process and finish at {future_time}.\n".format(elapse = elapse, future_time = future_time))
@@ -221,53 +222,39 @@ def SCRIPT(processed_adata, feature_matrix, project='',
     ##################################
     # generate background peak, if length same as iteration, we consider it has estimated, skip generation.
     # if user generate same length background, but diff depth, may report unaccurate result.
-    try:
-        tmp_files_list = os.listdir(bg_bed_path)
-        if tmp_files_list.__len__() != bg_iteration:
+    if os.path.exists(bg_bed_path):
+        if os.listdir(bg_bed_path).__len__() != bg_iteration:
             shutil.rmtree(bg_bed_path)
             print_log('Not empty folder, removed existing files!')
-            print_log('Start generating background beds ...')
             bg_map_dict = generate_background_bed(feature_matrix, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
-            print_log('Finished generating background beds!')
         else:
             print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {bg_bed_path}'.format(bg_bed_path=bg_bed_path))
             with open(bg_map_dict_path, "rb") as map_dict_file:
                 bg_map_dict = pickle.load(map_dict_file)
-    except FileNotFoundError:
-        print_log('Start generating background beds ...')
+    else:
         bg_map_dict = generate_background_bed(feature_matrix, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
-        print_log('Finished generating background beds!')
     # if user generated foregroud, but diff depth in same folder, may report unaccurate result.
     # this is fast, we just remove it.
     if aggregate_peak_method == "group":
-        try:
+        if os.path.exists(fg_bed_path):
             shutil.rmtree(fg_bed_path)
-        except:
-            pass
-        print_log('Start generating group beds ...')
         fg_map_dict = generate_cluster_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, cell_number_per_group, cell_cutoff, peak_confidence)
-        print_log('Finished generating group beds!')
     # generate foreground peaks, if length same as cell number, we consider it has estimated, skip generation.
     # if user generate same length background, but diff depth in same folder, may report unaccurate result.
     if aggregate_peak_method == "nearest":
-        try:
-            tmp_files_list = os.listdir(fg_bed_path)
-            if tmp_files_list.__len__() != feature_matrix.shape[1]:
-                print_log('Not empty folder, removed existing files!')
+        if os.path.exists(fg_bed_path):
+            if os.listdir(fg_bed_path).__len__() != feature_matrix.shape[0]:
                 shutil.rmtree(fg_bed_path)
-                print_log('Start generating nearest neighbor cells beds ...')
+                print_log('Not empty folder, removed existing files!')
                 fg_map_dict = generate_neighbor_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, 
                                                     cell_number_per_group, peak_confidence, n_cores)
-                print_log('Finished generating nearest neighbor cells beds!')
             else:
                 print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {fg_bed_path}'.format(fg_bed_path=fg_bed_path))
                 with open(fg_map_dict_path, "rb") as map_dict_file:
                     fg_map_dict = pickle.load(map_dict_file)
-        except FileNotFoundError:
-            print_log('Start generating nearest neighbor cells beds ...')
+        else:
             fg_map_dict = generate_neighbor_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, 
                                                 cell_number_per_group, peak_confidence, n_cores)
-            print_log('Finished generating nearest neighbor cells beds!')
     ##################################
     ### Search giggle and compute enrich score
     ##################################

@@ -1,5 +1,5 @@
+@excute_info('Summary result from dataset level to factor level.') 
 def map_factor_on_ChIP(table):
-    print_log('Summary result from dataset level to factor level.')
     # map factor by id "_"
     factor_index_list = []
     for i in table.index:
@@ -15,8 +15,8 @@ def map_factor_on_ChIP(table):
     table["Factor"] = factor_index_list
     return table.groupby("Factor").min()
 
+@excute_info('Extract cell by map dictionary ...', 'Finished all clusters!')
 def extract_by_cell_cluster(result_table, map_dict):
-    print_log('Extract cell by map dictionary ...')
     r_table = pd.DataFrame()
     for key in result_table.columns:
         key_cell_number = len(map_dict[key])
@@ -25,27 +25,26 @@ def extract_by_cell_cluster(result_table, map_dict):
         new_table_np = np.tile(result_table[key].to_numpy(),[key_cell_number,1]).T
         tmp_table = pd.DataFrame(new_table_np, index = table_index, columns=cell_bc)
         r_table = pd.concat([r_table, tmp_table], axis=1)
-    print_log('Finished all clusters!')
     return r_table
 
+@excute_info('Generating merged anndata ... ', 'Finished Generating merged anndata!')
 def merge_giggle_singlecell_experiment(adata, table, data_type, table2=''):
-    print('Generating merged anndata ... ')
     # table : each row is a cell, each column is a TF/Gene
     new_adata = adata.copy()
     tmp_table = table.copy()
     if data_type == 'integration':
         tmp_table2 = table2.copy()
-        new_adata.uns['table'] = tmp_table
-        new_adata.uns['table2'] = tmp_table2
+        new_adata.uns['ChIP_p'] = tmp_table
+        new_adata.uns['motif_p'] = tmp_table2
         # tmp table, usually chip_table
 #         tmp_table = tmp_table.T.apply(correct_pvalues_for_multiple_testing, axis=0)
         tmp_table = -np.log10(tmp_table.T + 0.000001).apply(sp.stats.zscore, axis=0).T
-        new_adata.uns['table_z'] = tmp_table
+        new_adata.uns['ChIP_z'] = tmp_table
         # tmp table, usually motif table
         tmp_table2 = tmp_table2.reindex(index = tmp_table.index)
 #         tmp_table2 = tmp_table2.T.apply(correct_pvalues_for_multiple_testing, axis=0)
         tmp_table2 = -np.log10(tmp_table2.T + 0.000001).apply(sp.stats.zscore, axis=0).T
-        new_adata.uns['table2_z'] = tmp_table2
+        new_adata.uns['motif_z'] = tmp_table2
         # extract factor
         chip_tfs = tmp_table.columns.tolist()
         motif_tfs = tmp_table2.columns.tolist()
@@ -76,5 +75,4 @@ def merge_giggle_singlecell_experiment(adata, table, data_type, table2=''):
 #         tmp_table = tmp_table.T.apply(correct_pvalues_for_multiple_testing, axis=0)
         tmp_table = -np.log10(tmp_table.T + 0.000001).apply(sp.stats.zscore, axis=0).T
         new_adata.obs = pd.concat([new_adata.obs, tmp_table.reindex(new_adata.obs.index.tolist())], axis=1)
-    print_log('Finished Generating merged anndata!')
     return new_adata
