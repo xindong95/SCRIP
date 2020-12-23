@@ -59,7 +59,7 @@ def cal_p_table(fg_table, bg_table, i):
         if bg_mean != 0 and bg_std != 0:
             result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.cdf, args=(bg_mean, bg_std))
         else:
-            result_table_p.loc[factor,:] = [1.0 if i == 0 else 0.0 for i in fg_table.loc[factor,:] ]
+            result_table_p.loc[factor,:] = 1.0
 #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
     print_log('chunk {i} finished calculation!'.format(i=i))
     return 1-result_table_p

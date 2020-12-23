@@ -27,24 +27,28 @@ def extract_by_cell_cluster(result_table, map_dict):
         r_table = pd.concat([r_table, tmp_table], axis=1)
     return r_table
 
+def p_to_z_transform(p_table):
+    z_table = -np.log10(np.sqrt(p_table+1e-8)).T.apply(sp.stats.zscore, axis=0).T.copy()
+    return z_table
+
 @excute_info('Generating merged anndata ... ', 'Finished Generating merged anndata!')
 def merge_giggle_singlecell_experiment(adata, table, data_type, table2=''):
     # table : each row is a cell, each column is a TF/Gene
     new_adata = adata.copy()
-    tmp_table = table.copy()
     if data_type == 'integration':
-        tmp_table2 = table2.copy()
-        new_adata.uns['ChIP_p'] = tmp_table
-        new_adata.uns['motif_p'] = tmp_table2
+        p_table = table.copy()
+        p_table2 = table2.copy()
+        new_adata.uns['ChIP_p'] = p_table
+        new_adata.uns['motif_p'] = p_table2
         # tmp table, usually chip_table
 #         tmp_table = tmp_table.T.apply(correct_pvalues_for_multiple_testing, axis=0)
-        tmp_table = -np.log10(tmp_table.T + 0.000001).apply(sp.stats.zscore, axis=0).T
-        new_adata.uns['ChIP_z'] = tmp_table
+#         tmp_table = -np.log10(tmp_table + 1e-10).apply(sp.stats.zscore, axis=0)
+        new_adata.uns['ChIP_z'] = p_to_z_transform(p_table)
         # tmp table, usually motif table
-        tmp_table2 = tmp_table2.reindex(index = tmp_table.index)
+        p_table2 = p_table2.reindex(index = p_table.index)
 #         tmp_table2 = tmp_table2.T.apply(correct_pvalues_for_multiple_testing, axis=0)
-        tmp_table2 = -np.log10(tmp_table2.T + 0.000001).apply(sp.stats.zscore, axis=0).T
-        new_adata.uns['motif_z'] = tmp_table2
+#         tmp_table2 = -np.log10(tmp_table2 + 1e-10).apply(sp.stats.zscore, axis=0)
+        new_adata.uns['motif_z'] = p_to_z_transform(p_table2)
         # extract factor
         chip_tfs = tmp_table.columns.tolist()
         motif_tfs = tmp_table2.columns.tolist()
@@ -63,16 +67,24 @@ def merge_giggle_singlecell_experiment(adata, table, data_type, table2=''):
                 ovlp_final_table[ovlp_factor] = ovlp_motif_table[ovlp_factor]
         final_table = pd.concat([ovlp_final_table,unique_chip_table,unique_motif_table], axis=1)
         final_table.columns = ['I_' + tf for tf in final_table.columns.tolist()]
-        new_adata.uns['integrated_TF'] = final_table
+        new_adata.uns['integrated_TF_z'] = final_table
         new_adata.obs = pd.concat([new_adata.obs, final_table.reindex(new_adata.obs.index.tolist())], axis=1)
+        new_adata.uns['integrated_TF_quantile'] = pd.DataFrame(quantile_transform(final_table, axis=0, output_distribution='normal'), index=final_table.index, columns=final_table.columns)
     else:
+        tmp_table = table.copy()
         if data_type == 'ChIP-seq':
             new_adata.uns['ChIP_p'] = tmp_table
             tmp_table.columns = ['C_' + tf for tf in tmp_table.columns.tolist()]
+            tmp_table = -np.log10(np.sqrt(tmp_table+1e-8)).T.apply(sp.stats.zscore, axis=0).T.copy()
+            new_adata.uns['ChIP_z'] = tmp_table
         elif data_type == 'motif':
             new_adata.uns['motif_p'] = tmp_table
             tmp_table.columns = ['M_' + tf for tf in tmp_table.columns.tolist()]
-#         tmp_table = tmp_table.T.apply(correct_pvalues_for_multiple_testing, axis=0)
-        tmp_table = -np.log10(tmp_table.T + 0.000001).apply(sp.stats.zscore, axis=0).T
+            tmp_table = -np.log10(np.sqrt(tmp_table+1e-8)).T.apply(sp.stats.zscore, axis=0).T.copy()
+            new_adata.uns['ChIP_z'] = tmp_table
+        
         new_adata.obs = pd.concat([new_adata.obs, tmp_table.reindex(new_adata.obs.index.tolist())], axis=1)
+        new_adata.uns['integrated_TF_quantile'] = pd.DataFrame(quantile_transform(final_table, axis=0, output_distribution='normal'), index=final_table.index, columns=final_table.columns)
     return new_adata
+
+

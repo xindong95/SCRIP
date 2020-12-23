@@ -14,26 +14,13 @@ def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50
         os.makedirs(bg_bed_path)
     cl_name = input_mat.obs_names.to_list()
     total_cnt = iteration
-    '''
-    threads version
-    '''
-    executor = ProcessPoolExecutor(max_workers=n_cores)
+    executor = ThreadPoolExecutor(max_workers=n_cores)
     all_task = []
     for i in range(0,iteration): 
         random.seed(i)
         map_dict[i] = random.sample(cl_name, step)
         all_task.append(executor.submit(generate_beds, bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence))
     wait(all_task, return_when=ALL_COMPLETED)
-    '''
-    processor version
-    '''
-#     args = []
-#     for i in range(0,iteration):
-#         random.seed(i)
-#         map_dict[i] = random.sample(cl_name, step)
-#         args.append((bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence))
-#     with Pool(n_cores) as p:
-#         p.starmap(generate_beds, args)
     with open(map_dict_store_path, "wb") as map_dict_file:
         pickle.dump(map_dict, map_dict_file)
     return map_dict
@@ -106,10 +93,7 @@ def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_nei
     if not os.path.exists(bed_path):
         os.makedirs(bed_path)
     total_cnt = adata.obs.index.__len__()
-    '''
-    threads version
-    '''
-    executor = ProcessPoolExecutor(max_workers=n_cores)
+    executor = ThreadPoolExecutor(max_workers=n_cores)
     all_task = []
 #     for clstr in adata.obs['seurat_clusters'].unique().to_list()
 #         clstr_cell_list = adata.obs.index[adata.obs['seurat_clusters'] == clstr].to_list()
@@ -119,16 +103,6 @@ def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_nei
         map_dict[cell] = neighbor_cells
         all_task.append(executor.submit(generate_beds, bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence))
     wait(all_task, return_when=ALL_COMPLETED)
-    '''
-    processor version
-    '''
-#     args = []
-#     for cell in adata.obs.index:
-#         neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor, step)
-#         map_dict[cell] = neighbor_cells
-#         args.append((bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence))
-#     with Pool(n_cores) as p:
-#         p.starmap(generate_beds, args)
     with open(map_dict_store_path, "wb") as map_dict_file:
         pickle.dump(map_dict, map_dict_file)
     return map_dict

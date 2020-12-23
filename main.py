@@ -148,9 +148,9 @@ def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index,
         print_log(log_list[2])
         search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
         print_log(log_list[3])
-    bg_result = read_giggle_result(bg_result_path, filename_split=".")
+    bg_result = read_giggle_result_batch(bg_result_path, n_cores)
     print_log(log_list[4])
-    result = read_giggle_result(fg_result_path, filename_split=".")
+    result = read_giggle_result_batch(fg_result_path, n_cores)
     print_log(log_list[5])
     result_p = cal_p_table_batch(result, bg_result, n_cores)
     if aggregate_peak_method == "group":
@@ -193,7 +193,7 @@ def SCRIPT(processed_adata, feature_matrix, project='',
     ##################################
     print_log('Checking paramaters ...')
     if bg_iteration == "auto":
-        bg_iteration = int(feature_matrix.shape[0] * 5 / cell_number_per_group) + 1
+        bg_iteration = int(processed_adata.shape[0] * 5 / cell_number_per_group) + 1
     check_para(processed_adata, feature_matrix, 
                aggregate_peak_method, cell_number_per_group, cell_cutoff, peak_confidence, 
                fg_bed_path, fg_map_dict_path, 
@@ -243,7 +243,7 @@ def SCRIPT(processed_adata, feature_matrix, project='',
     # if user generate same length background, but diff depth in same folder, may report unaccurate result.
     if aggregate_peak_method == "nearest":
         if os.path.exists(fg_bed_path):
-            if os.listdir(fg_bed_path).__len__() != feature_matrix.shape[0]:
+            if os.listdir(fg_bed_path).__len__() != processed_adata.shape[0]:
                 shutil.rmtree(fg_bed_path)
                 print_log('Not empty folder, removed existing files!')
                 fg_map_dict = generate_neighbor_bed(processed_adata, feature_matrix, fg_bed_path, fg_map_dict_path, 
@@ -294,4 +294,4 @@ def SCRIPT(processed_adata, feature_matrix, project='',
                 shutil.rmtree(bg_motif_result_path)
         except:
             pass
-    return regualtion_adata        
+    return regualtion_adata
