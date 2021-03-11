@@ -91,7 +91,6 @@ def read_SingleCellExperiment_rds(input_RDS):
     return adata
 
 def read_config():
-
     yaml = ruamel.yaml.YAML()
     CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','conf','config.yml'))
     with open(CONFIG_PATH,'r') as config_file:

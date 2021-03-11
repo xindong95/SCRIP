@@ -12,7 +12,7 @@ defalut_params:
   clean: False
 
 index:
-  human_chip: ''
-  human_motif: ''
-  mouse_chip: ''
-  mouse_motif: ''
+  human_chip_index: ''
+  human_motif_index: ''
+  mouse_chip_index: ''
+  mouse_motif_index: ''

@@ -1,3 +1,10 @@
+import subprocess
+import scipy as sp
+import numpy as np
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
+from SCRIPT.utilities.utils import print_log, excute_info
+
+
 @excute_info('Summary result from dataset level to factor level.') 
 def map_factor_on_ChIP(table):
     # map factor by id "_"

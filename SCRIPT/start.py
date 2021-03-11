@@ -4,10 +4,11 @@ import sys
 import ruamel.yaml
 from pkg_resources import resource_filename
 from SCRIPT.Constants import *
-from SCRIPT.utils.utils import read_config
+from SCRIPT.utilities.utils import read_config
 yaml = ruamel.yaml.YAML()
 
 CONFIG, CONFIG_PATH = read_config()
+
 
 def main():
     argparser = prepare_argparser()
@@ -70,11 +71,13 @@ def add_enrich_parser( subparsers ):
     group_input.add_argument( "-e", "--processed_experiment", dest = "processed_experiment", type = str, required = True, 
                               help = "A processed single cell experiment anndata. Seurat or scanpy or MAESTRO. REQUIRED." )
     group_input.add_argument( "-i", "--input_feature_matrix", dest = "feature_matrix", type = str, required = True, 
-                              help = "A cell by peak matrix . REQUIRED." )        
+                              help = "A cell by peak matrix . REQUIRED." )
+    group_input.add_argument( "-s", "--species", dest = "species", choices= ['hs', 'mm'], required = True, 
+                              help = "species. REQUIRED." )
     # group for output files
     group_output = argparser_enrich.add_argument_group( "Output arguments" )
     group_output.add_argument( "-p", "--project", dest = "project", type = str,
-                               help = "Project name, which will be used to generate output file names. DEFAULT: Random generate", 
+                               help = "Project name, which will be used to generate output files folder. DEFAULT: Random generate", 
                                default = "" )
     group_output.add_argument( "--result_adata_path", dest = "result_adata_path", type = str, default = 'SCRIPT_computed.h5ad',
                                 help = "default SCRIPT_computed.h5ad" )

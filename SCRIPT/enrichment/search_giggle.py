@@ -1,3 +1,7 @@
+import subprocess
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
+from SCRIPT.utilities.utils import print_log, excute_info
+
 def search_giggle(bed_path, result_path, index_path):
 #     bed = bed_path.split("/")[-1]
 #     if bed_path.endswith('gz'):
