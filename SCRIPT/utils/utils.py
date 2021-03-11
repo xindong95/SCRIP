@@ -1,33 +1,34 @@
 import os
 import sys
-import re
-import pickle
-import random
-import subprocess
+# import re
+# import pickle
+# import random
+# import subprocess
 import time
-import threading
-import shutil
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
-from datetime import datetime, timedelta
-from multiprocessing import Process, Pool
+# import threading
+# import shutil
+# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
+# from datetime import datetime, timedelta
+# from multiprocessing import Process, Pool
 
-import numpy as np
-import pandas as pd
-import anndata as ad
-# import h5py
-import Bio
-from Bio import motifs
-import pysam
-import pyranges
-import pybedtools
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import seaborn as sns
-import sklearn
-from sklearn.preprocessing import quantile_transform
-import scipy as sp
-import scanpy as sc
-from adjustText import adjust_text
+import ruamel.yaml
+# import numpy as np
+# import pandas as pd
+# import anndata as ad
+# # import h5py
+# import Bio
+# from Bio import motifs
+# import pysam
+# import pyranges
+# import pybedtools
+# import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# import seaborn as sns
+# import sklearn
+# from sklearn.preprocessing import quantile_transform
+# import scipy as sp
+# import scanpy as sc
+# from adjustText import adjust_text
 # import episcanpy
 
 # from giggle import Giggle
@@ -89,4 +90,11 @@ def read_SingleCellExperiment_rds(input_RDS):
     adata = r(rscript)
     return adata
 
+def read_config():
+
+    yaml = ruamel.yaml.YAML()
+    CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','conf','config.yml'))
+    with open(CONFIG_PATH,'r') as config_file:
+        CONFIG = yaml.load(config_file.read())
+    return CONFIG, CONFIG_PATH
 

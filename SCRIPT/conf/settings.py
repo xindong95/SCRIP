@@ -1,0 +1,24 @@
+import sys
+from SCRIPT.utils.utils import read_config
+import ruamel.yaml
+
+def update_setting( args ):
+    yaml = ruamel.yaml.YAML()
+    yaml.default_flow_style = False
+    CONFIG, CONFIG_PATH = read_config()
+    if args.show:
+        sys.stdout('The reference indices you set:\n')
+        yaml.dump(CONFIG['index'], sys.stdout)
+        sys.stdout('\n')
+    if args.human_chip_index:
+        CONFIG['index']['human_chip'] = args.human_chip_index
+    if args.human_motif_index:
+        CONFIG['index']['human_motif'] = args.human_motif_index
+    if args.mouse_chip_index:
+        CONFIG['index']['mouse_chip'] = args.mouse_chip_index
+    if args.mouse_motif_index:
+        CONFIG['index']['mouse_motif'] = args.mouse_motif_index
+    with open(CONFIG_PATH, 'w+') as config_file:
+        yaml.dump(CONFIG, config_file)
+
+

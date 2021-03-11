@@ -31,23 +31,47 @@ def area_after_val(values, bins, val):
     area = sum(np.diff(bins)[left_bin_edge_index:] * values[left_bin_edge_index:])
     return area
 
-def cal_p(fg_value, bg_area, bg_bins, bg_values):
-    pvalue = area_after_val(bg_values, bg_bins, fg_value)/bg_area
-    if pvalue > 1:
-        pvalue = 1.0
-    return pvalue
+# def cal_p(fg_value, bg_area, bg_bins, bg_values):
+#     pvalue = area_after_val(bg_values, bg_bins, fg_value)/bg_area
+#     if pvalue > 1:
+#         pvalue = 1.0
+#     return pvalue
 
-def cal_fc(fg_value, bg_mean):
-    if bg_mean * fg_value > 0: # if mean and value are opposite
-        fc = fg_value / bg_mean
-    elif bg_mean == 0:
-        fc = fg_value
-    else:
-        fc = bg_mean / (bg_mean - fg_value)
-    return fc
+# def cal_fc(fg_value, bg_mean):
+#     if bg_mean * fg_value > 0: # if mean and value are opposite
+#         fc = fg_value / bg_mean
+#     elif bg_mean == 0:
+#         fc = fg_value
+#     else:
+#         fc = bg_mean / (bg_mean - fg_value)
+#     return fc
 
 # calculate p value by area at the right of curve
 # calculate fc by value / background average
+
+def cal_rank(val, bg):
+    rank = [i for i in bg if i >= val].__len__()
+    if rank == 0:
+        rank = 1
+    ret = rank/bg.__len__()
+    return ret
+
+def cal_rank_table(fg_table, bg_table, i):
+    print_log('chunk {i} calculating ...'.format(i=i))
+    result_table_p = fg_table.copy()
+#     result_table_fc = fg_table.copy()
+    for factor in fg_table.index:
+        factor_bg = bg_table.loc[factor,:].tolist()
+        bg_mean = np.mean(factor_bg)
+        bg_std = np.std(factor_bg)
+        if bg_mean != 0 and bg_std != 0:
+            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(cal_rank, **{'bg':factor_bg})
+        else:
+            result_table_p.loc[factor,:] = 1
+#         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+    print_log('chunk {i} finished calculation!'.format(i=i))
+    return result_table_p
+
 def cal_p_table(fg_table, bg_table, i):
     print_log('chunk {i} calculating ...'.format(i=i))
     result_table_p = fg_table.copy()
@@ -59,17 +83,36 @@ def cal_p_table(fg_table, bg_table, i):
         if bg_mean != 0 and bg_std != 0:
             result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.cdf, args=(bg_mean, bg_std))
         else:
-            result_table_p.loc[factor,:] = 1.0
+            result_table_p.loc[factor,:] = 0
 #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
     print_log('chunk {i} finished calculation!'.format(i=i))
     return 1-result_table_p
+
+# def cal_z(score, mean, std):
+#     return (score-mean)/std
+
+# def cal_z_table(fg_table, bg_table, i):
+#     print_log('chunk {i} calculating ...'.format(i=i))
+#     result_table_z = fg_table.copy()
+# #     result_table_fc = fg_table.copy()
+#     for factor in fg_table.index:
+#         factor_bg = bg_table.loc[factor,:]
+#         bg_mean = np.mean(factor_bg)
+#         bg_std = np.std(factor_bg)
+#         if bg_mean != 0 and bg_std != 0:
+#             result_table_z.loc[factor,:] = fg_table.loc[factor,:].apply(cal_z, args=(bg_mean, bg_std))
+#         else:
+#             result_table_z.loc[factor,:] = 0
+# #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+#     print_log('chunk {i} finished calculation!'.format(i=i))
+#     return result_table_z
 
 def cal_p_table_batch(fg_table, bg_table, n_cores=8):
     print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
     fg_table_split = np.array_split(fg_table, n_cores)
     args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
     with Pool(n_cores) as p:
-        result = p.starmap(cal_p_table, args)
+        result = p.starmap(cal_rank_table, args)
     print_log("Generating P value table ...")
     result_table_p = pd.concat([i for i in result])
 #     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))

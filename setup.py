@@ -8,12 +8,19 @@ def main():
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
-        packages=['SCRIPT', 'SCRIPT.enrich', 'SCRIPT.utils'],
+        packages=['SCRIPT', 'SCRIPT.enrichment', 'SCRIPT.conf', 'SCRIPT.utils'],
+        package_data={
+        'SCRIPT': [
+            'conf/config.yml',
+            ],
+        },
         install_requires=[
             'numpy',
             'pandas',
             'cython==0.29.22',
+            'ruamel.yaml',
             'anndata',
+            'anndata2ri',
             'Bio',
             'pyranges==0.0.95',
             'pybedtools==0.8.1',

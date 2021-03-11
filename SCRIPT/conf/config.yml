@@ -1,0 +1,18 @@
+defalut_params:
+  project: '' # comment
+  result_adata_path: 'SCRIPT_computed.h5ad'
+  aggregate_peak_method: 'nearest'
+  cell_number_per_group: 50
+  cell_cutoff: 20
+  peak_confidence: 5
+  bg_iter: 'auto'
+  reference: True
+  thread: 16
+  yes_confirm: False
+  clean: False
+
+index:
+  human_chip: ''
+  human_motif: ''
+  mouse_chip: ''
+  mouse_motif: ''
