@@ -5,73 +5,68 @@ import pickle
 import shutil
 import scanpy as sc
 import anndata as ad
+from SCRIPT.enrichment.bed_generation import generate_background_bed, generate_neighbor_bed, generate_cluster_bed
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
-from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, excute_info
+from SCRIPT.enrichment.post_processing import extract_by_cell_cluster, map_factor_on_ChIP, merge_giggle_adata
+from SCRIPT.enrichment.calculation import cal_rank_table
+from SCRIPT.enrichment.search_giggle import search_giggle_batch, read_giggle_result_batch
+from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle
 from SCRIPT.Constants import *
 
+def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, n_cores, fg_map_dict, aggregate_peak_method):
+    # tp is 'ChIP-seq' or 'motif'
+    if tp == 'ChIP-seq':
+        if run_info.info['progress']['bg_bed_chip_search'] == 'No':
+            search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores, tp)
+            run_info.finish_stage('bg_bed_chip_search')
+        if run_info.info['progress']['fg_bed_chip_search'] == 'No':
+            search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores, tp)
+            run_info.finish_stage('fg_bed_chip_search')
+    else:
+        if run_info.info['progress']['bg_bed_motif_search'] == 'No':
+            search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores, tp)
+            run_info.finish_stage('bg_bed_motif_search')
+        if run_info.info['progress']['fg_bed_motif_search'] == 'No':
+            search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores, tp)
+            run_info.finish_stage('fg_bed_motif_search')
 
-def process(tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, n_cores, fg_map_dict, aggregate_peak_method):
-    if tp == 'chip':
-        log_list = [
-            'Start searching background beds from ChIP-seq index ...',
-            'Finished searching background beds from ChIP-seq index!',
-            'Start searching foreground beds from ChIP-seq index ...',
-            'Finished searching factors from ChIP-seq index!',
-            'Finished reading background ChIP-seq index search result!',
-            'Finished reading foreground ChIP-seq index search result!'
-        ]
-    else:
-        log_list = [
-            'Start searching background beds from motif index ...',
-            'Finished searching background beds from motif index!',
-            'Start searching foreground beds from motif index ...',
-            'Finished searching factors from motif index!',
-            'Finished reading background motif index search result!',
-            'Finished reading foreground motif index search result!'
-        ]
+    bg_dataset_cell_raw_score_df = read_giggle_result_batch(bg_result_path, n_cores, 'background {tp}'.format(tp=tp))
+    store_to_pickle(bg_dataset_cell_raw_score_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_dataset_cell_raw_score_df.pk'))
     
-    # try:
-    #     if os.listdir(bg_bed_path).__len__() != os.listdir(bg_result_path).__len__():
-    #         shutil.rmtree(bg_result_path)
-    #         print_log(log_list[0])
-    #         search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores)
-    #         print_log(log_list[1])
-    #     else:
-    #         print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {bg_result_path}'.format(bg_result_path=bg_result_path))
-    # except FileNotFoundError:
-    #     print_log(log_list[0])
-    #     search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores)
-    #     print_log(log_list[1])
-    try:
-        if os.listdir(fg_bed_path).__len__() != os.listdir(fg_result_path).__len__():
-            shutil.rmtree(fg_result_path)
-            print_log(log_list[2])
-            search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
-            print_log(log_list[3])
-        else:
-            print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {fg_result_path}'.format(fg_result_path=fg_result_path))
-    except FileNotFoundError:
-        print_log(log_list[2])
-        search_giggle_batch(fg_bed_path, fg_result_path, index, n_cores)
-        print_log(log_list[3])
-    bg_result = read_giggle_result_batch(bg_result_path, n_cores)
-    print_log(log_list[4])
-    result = read_giggle_result_batch(fg_result_path, n_cores)
-    print_log(log_list[5])
-    result_p = cal_p_table_batch(result, bg_result, n_cores)
-    if aggregate_peak_method == "group":
-        result_p = extract_by_cell_cluster(result_p.copy(), fg_map_dict)
-    if tp == 'chip':
-        result_p = map_factor_on_ChIP(result_p).T
+    if tp == 'ChIP-seq':
+        if run_info.info['progress']['fg_dataset_cell_raw_score_chip_df_store'] == 'No':
+            fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
+            store_to_pickle(fg_dataset_cell_raw_score_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_ChIP.pk'))
+            run_info.finish_stage('fg_dataset_cell_raw_score_chip_df_store')
+        if run_info.info['progress']['fg_dataset_cell_percent_chip_df_store'] == 'No':
+            fg_dataset_cell_percent_df = cal_p_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
+            store_to_pickle(fg_dataset_cell_percent_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_ChIP.pk'))
+            run_info.finish_stage('fg_dataset_cell_percent_chip_df_store')
     else:
-        result_p = result_p.T
-    return result_p
+        if run_info.info['progress']['fg_dataset_cell_raw_score_motif_df_store'] == 'No':
+            fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
+            store_to_pickle(fg_dataset_cell_raw_score_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_motif.pk'))
+            run_info.finish_stage('fg_dataset_cell_raw_score_motif_df_store')
+        if run_info.info['progress']['fg_dataset_cell_percent_motif_df_store'] == 'No':
+            fg_dataset_cell_percent_df = cal_p_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
+            store_to_pickle(fg_dataset_cell_percent_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_motif.pk'))
+            run_info.finish_stage('fg_dataset_cell_percent_motif_df_store')
+    
+
+    if aggregate_peak_method == "group":
+        fg_dataset_cell_percent_df = extract_by_cell_cluster(fg_dataset_cell_percent_df.copy(), fg_map_dict)
+    # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
+    if tp == 'ChIP-seq':
+        fg_cell_factor_percent_df = map_factor_on_ChIP(fg_dataset_cell_percent_df).T
+    else:
+        fg_cell_factor_percent_df = fg_dataset_cell_percent_df.T # motif's dataset is same to factor
+    return fg_cell_factor_percent_df, run_info
 
 
 def enrich(processed_adata, cell_feature_adata, project='',
            aggregate_peak_method='group', cell_number_per_group=50, cell_cutoff=20, peak_confidence=5, bg_iteration='auto', 
-           chip_index='', motif_index='', reference_method='integration', result_adata_path='SCRIPT_computed.h5ad',
+           chip_index='', motif_index='', reference_method='integration', store_result_adata=True,
            yes=False, clean=True, n_cores=8, 
            processed_adata_path='NA', cell_feature_adata_path='NA', species='NA'):
 
@@ -99,7 +94,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
         'chip_index':chip_index,
         'motif_index':motif_index,
         'reference_method':reference_method,
-        'result_adata_path':result_adata_path,
+        'store_result_adata':store_result_adata,
         'clean':clean,
         'processed_adata_path':os.path.abspath(processed_adata_path),
         'cell_feature_adata_path':os.path.abspath(cell_feature_adata_path),
@@ -119,14 +114,15 @@ def enrich(processed_adata, cell_feature_adata, project='',
             else:
                 print('Please type Y / N.')
 
-    fg_bed_path = os.path.join(project, 'fg_files', 'fg_bed')
-    fg_map_dict_path = os.path.join(project, 'fg_files', 'fg_bed.pk')
-    fg_motif_result_path = os.path.join(project, 'fg_files', 'fg_motif_result')
-    fg_chip_result_path = os.path.join(project, 'fg_files', 'fg_chip_result')
-    bg_bed_path = os.path.join(project, 'fg_files', 'bg_bed')
-    bg_map_dict_path = os.path.join(project, 'fg_files', 'bg_bed.pk')
-    bg_chip_result_path = os.path.join(project, 'fg_files', 'bg_chip_result') 
-    bg_motif_result_path = os.path.join(project, 'fg_files', 'bg_motif_result')
+    fg_bed_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_bed')
+    fg_map_dict_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_bed.pk')
+    fg_motif_result_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_motif_result')
+    fg_chip_result_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_chip_result')
+    bg_bed_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_bed')
+    bg_map_dict_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_bed.pk')
+    bg_chip_result_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_chip_result') 
+    bg_motif_result_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_motif_result')
+    result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.h5ad')
 
     ##################################
     ### pre-check
@@ -134,19 +130,16 @@ def enrich(processed_adata, cell_feature_adata, project='',
     print_log('Checking parameters ...')
     if bg_iteration == "auto":
         bg_iteration = int(processed_adata.shape[0] * 5 / cell_number_per_group) + 1
-        check_para(processed_adata, cell_feature_adata, project,
-                    aggregate_peak_method, cell_number_per_group, cell_cutoff, peak_confidence, bg_iteration, 
-                    chip_index, motif_index, reference_method, result_adata_path,
-                    yes, clean, n_cores)
+    check_para(processed_adata, cell_feature_adata, project,
+                aggregate_peak_method, cell_number_per_group, cell_cutoff, peak_confidence, bg_iteration, 
+                chip_index, motif_index, reference_method, result_store_path,
+                yes, clean, n_cores)
     print_log('Estimating running time ...')
-    if reference_method in ['integration', 'both', 'chip']:
-        search_chip = True
-    if reference_method in ['integration', 'both', 'motif']:
-        search_motif = True
     elapse, future_time = time_estimate(cell_number = cell_feature_adata.shape[0], bg_iteration_number=bg_iteration, 
                                         peak_methods=aggregate_peak_method, cell_number_per_group=cell_number_per_group, 
-                                        chip_process=search_chip, motif_process=search_motif, core=n_cores)
+                                        reference_method=reference_method, core=n_cores)
     print_log("It will take about {elapse} to process and finish at {future_time}.\n".format(elapse = elapse, future_time = future_time))
+
     if yes == False:
         print('Type "Y" to continue processing, "N" to abort.')
         while True:
@@ -163,29 +156,16 @@ def enrich(processed_adata, cell_feature_adata, project='',
     ##################################
     # generate background peak, if length same as iteration, we consider it has estimated, skip generation.
     # if user generate same length background, but diff depth, may report unaccurate result.
-    if run_info['progress']['bg_bed_generation'] == 'No':
+    if run_info.info['progress']['bg_bed_generation'] == 'No':
         if os.path.exists(bg_bed_path):
             shutil.rmtree(bg_bed_path)
         bg_map_dict = generate_background_bed(cell_feature_adata, bg_bed_path, bg_map_dict_path, 
                                               cell_number_per_group, bg_iteration, peak_confidence, n_cores)
         run_info.finish_stage('bg_bed_generation')
-    else:  # run_info['progress']['bg_bed_generation'] == 'Finish'
+    else:  # run_info.info['progress']['bg_bed_generation'] == 'Finish'
         with open(bg_map_dict_path, "rb") as map_dict_file:
             bg_map_dict = pickle.load(map_dict_file)
-    
-    # if os.path.exists(bg_bed_path):
-    #     if os.listdir(bg_bed_path).__len__() != bg_iteration:
-    #         shutil.rmtree(bg_bed_path)
-    #         print_log('Not empty folder, removed existing files!')
-    #         bg_map_dict = generate_background_bed(cell_feature_adata, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
-    #     else:
-    #         print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {bg_bed_path}'.format(bg_bed_path=bg_bed_path))
-    #         with open(bg_map_dict_path, "rb") as map_dict_file:
-    #             bg_map_dict = pickle.load(map_dict_file)
-    # else:
-    #     bg_map_dict = generate_background_bed(cell_feature_adata, bg_bed_path, bg_map_dict_path, cell_number_per_group, bg_iteration, peak_confidence, n_cores)
-
-    if run_info['progress']['fg_bed_generation'] == 'No':
+    if run_info.info['progress']['fg_bed_generation'] == 'No':
         if os.path.exists(fg_bed_path):
             shutil.rmtree(fg_bed_path)
         if aggregate_peak_method == "group":
@@ -197,51 +177,39 @@ def enrich(processed_adata, cell_feature_adata, project='',
     else:
         with open(fg_map_dict_path, "rb") as map_dict_file:
             fg_map_dict = pickle.load(map_dict_file)
-    # if user generated foregroud, but diff depth in same folder, may report unaccurate result.
-    # this is fast, we just remove it.
-    # if aggregate_peak_method == "group":
-    #     if os.path.exists(fg_bed_path):
-    #         shutil.rmtree(fg_bed_path)
-    #     fg_map_dict = generate_cluster_bed(processed_adata, cell_feature_adata, fg_bed_path, fg_map_dict_path, cell_number_per_group, cell_cutoff, peak_confidence)
-    # # generate foreground peaks, if length same as cell number, we consider it has estimated, skip generation.
-    # # if user generate same length background, but diff depth in same folder, may report unaccurate result.
-    # if aggregate_peak_method == "nearest":
-    #     if os.path.exists(fg_bed_path):
-    #         if os.listdir(fg_bed_path).__len__() != processed_adata.shape[0]:
-    #             shutil.rmtree(fg_bed_path)
-    #             print_log('Not empty folder, removed existing files!')
-    #             fg_map_dict = generate_neighbor_bed(processed_adata, cell_feature_adata, fg_bed_path, fg_map_dict_path, 
-    #                                                 cell_number_per_group, peak_confidence, n_cores)
-    #         else:
-    #             print_log('WARNING: Using existing results, might wrong. If you want to rerun all results, press Ctrl-C to abort and delete {fg_bed_path}'.format(fg_bed_path=fg_bed_path))
-    #             with open(fg_map_dict_path, "rb") as map_dict_file:
-    #                 fg_map_dict = pickle.load(map_dict_file)
-    #     else:
-    #         fg_map_dict = generate_neighbor_bed(processed_adata, cell_feature_adata, fg_bed_path, fg_map_dict_path, 
-    #                                             cell_number_per_group, peak_confidence, n_cores)
+
     ##################################
     ### Search giggle and compute enrich score
     ##################################
-    if search_chip == True:
-        chip_result_p = process('chip', bg_bed_path, bg_chip_result_path, fg_bed_path, fg_chip_result_path, 
-                                chip_index, n_cores, fg_map_dict, aggregate_peak_method)
-    if search_motif == True:
-        motif_result_p = process('motif', bg_bed_path, bg_motif_result_path, fg_bed_path, fg_motif_result_path, 
-                                motif_index, n_cores, fg_map_dict, aggregate_peak_method)
+    if reference_method in ['integration', 'both', 'chip']: # need to search chip
+        fg_cell_factor_percent_df_chip, run_info = search_and_read_giggle(run_info, 'ChIP-seq', bg_bed_path, bg_chip_result_path, fg_bed_path, fg_chip_result_path, 
+                                                                          chip_index, n_cores, fg_map_dict, aggregate_peak_method)
+    if reference_method in ['integration', 'both', 'motif']: # need to search motif
+        fg_cell_factor_percent_df_motif, run_info = search_and_read_giggle(run_info, 'motif', bg_bed_path, bg_motif_result_path, fg_bed_path, fg_motif_result_path, 
+                                                                           motif_index, n_cores, fg_map_dict, aggregate_peak_method)
     ##################################
     ### Summary results
     ##################################
-    if search_chip == True and search_motif == True:
-        if integration == True:
-            regulation_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'integration', motif_result_p)
-        else:
-            regulation_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'ChIP-seq')
-            regulation_adata = merge_giggle_singlecell_experiment(regulation_adata, motif_result_p, 'motif')
-    elif search_chip == True and search_motif != True:
-        regulation_adata = merge_giggle_singlecell_experiment(processed_adata, chip_result_p, 'ChIP-seq')
-    else:
-        regulation_adata = merge_giggle_singlecell_experiment(processed_adata, motif_result_p, 'motif')
-    if result_store_path:
+    if reference_method == 'integration':
+        regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'integration', motif_result_p)
+    elif reference_method == 'both':
+        regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
+        regulation_adata = merge_giggle_adata(regulation_adata, motif_result_p, 'motif')
+    elif reference_method == 'chip':
+        regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
+    elif reference_method == 'motif':
+        regulation_adata = merge_giggle_adata(processed_adata, motif_result_p, 'motif')
+    # if search_chip == True and search_motif == True:
+    #     if integration == True:
+    #         regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'integration', motif_result_p)
+    #     else:
+    #         regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
+    #         regulation_adata = merge_giggle_adata(regulation_adata, motif_result_p, 'motif')
+    # elif search_chip == True and search_motif != True:
+    #     regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
+    # else:
+    #     regulation_adata = merge_giggle_adata(processed_adata, motif_result_p, 'motif')
+    if store_result_adata == True:
         regulation_adata.write(result_store_path)
     ##################################
     ### Clean files
@@ -266,7 +234,6 @@ def run( args ):
     feature_matrix_path = args.feature_matrix
     species = args.species
     project = args.project
-    result_adata_path = args.result_adata_path
     aggregate_peak_method = args.aggregate_peak_method
     cell_number_per_group = args.cell_number_per_group
     cell_cutoff = args.cell_cutoff
@@ -301,7 +268,7 @@ def run( args ):
            chip_index=chip_index, 
            motif_index=motif_index, 
            reference_method=reference_method, 
-           result_adata_path=result_adata_path,
+           store_result_adata=True,
            yes=yes, 
            clean=clean, 
            n_cores=n_cores,

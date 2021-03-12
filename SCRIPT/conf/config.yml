@@ -1,6 +1,5 @@
 defalut_params:
   project: '' # comment
-  result_adata_path: 'SCRIPT_computed.h5ad'
   aggregate_peak_method: 'nearest'
   cell_number_per_group: 50
   cell_cutoff: 20

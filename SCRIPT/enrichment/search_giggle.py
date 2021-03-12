@@ -1,6 +1,10 @@
 import subprocess
+import os
+import sys
+import pandas as pd
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 from SCRIPT.utilities.utils import print_log, excute_info
+from multiprocessing import Process, Pool
 
 def search_giggle(bed_path, result_path, index_path):
 #     bed = bed_path.split("/")[-1]
@@ -13,7 +17,8 @@ def search_giggle(bed_path, result_path, index_path):
 #         cmd += 'rm {bed_path}'.format(bed_path=bed_path)
     subprocess.run(cmd, shell=True, check=True)
 
-def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8):
+def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
+    print_log('Start searching foreground beds from {tp} index ...'.format(tp=tp))
     if not os.path.exists(result_folder):
         os.makedirs(result_folder)
     beds = os.listdir(bed_folder)
@@ -23,6 +28,7 @@ def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8):
         args.append((bed_folder + '/' + bed, result_folder + '/' + barcodes + '.txt', index_path))
     with Pool(n_cores) as p:
         p.starmap(search_giggle, args)
+    print_log('Finished searching foreground beds from {tp} index ...'.format(tp=tp))
 
 # def read_giggle_result(path):
 #     """For giggle stored path, return a table, col is cell cluster / cell and row is factor"""
@@ -58,22 +64,23 @@ def read_giggle_result(files, i):
         dtframe = pd.read_csv(files[i], sep="\t", index_col=False)
         if i == 0:
             dtframe = dtframe.loc[:,["#file", "combo_score"]]
-            total = dtframe.rename(columns={'combo_score':cell_bc}).copy()
+            dataset_cell_score_df = dtframe.rename(columns={'combo_score':cell_bc}).copy()
         else:
             newcol = dtframe[["combo_score"]]
-            total[cell_bc] = newcol
-    idList = [i[:-7] for i in total['#file']] # remove suffix '.bed.gz'
-    total = total.rename(columns={"#file":"id"})
-    total["id"] = idList
-    total = total.set_index("id")
-    return total
+            dataset_cell_score_df[cell_bc] = newcol
+    idList = [i[:-7] for i in dataset_cell_score_df['#file']] # remove suffix '.bed.gz'
+    dataset_cell_score_df = dataset_cell_score_df.rename(columns={"#file":"id"})
+    dataset_cell_score_df["id"] = idList
+    dataset_cell_score_df = dataset_cell_score_df.set_index("id")
+    return dataset_cell_score_df
 
-def read_giggle_result_batch(path, n_cores=8):
+def read_giggle_result_batch(path, n_cores=8, tp=''):
     print_log("Reading searching results, using {n} cores...".format(n=n_cores))
     file_list = os.listdir(path)
     result_split = np.array_split(file_list, n_cores)
     args = [[[os.path.join(path, j) for j in list_chunk], i] for (i, list_chunk) in enumerate(result_split)]
     with Pool(n_cores) as p:
         result = p.starmap(read_giggle_result, args)
-    total = pd.concat([i for i in result], axis=1)
-    return total
+    dataset_cell_score_df = pd.concat([i for i in result], axis=1)
+    print_log("Finished reading {tp} index search result!".format(tp=tp))
+    return dataset_cell_score_df

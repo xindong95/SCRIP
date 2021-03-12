@@ -5,8 +5,10 @@ import json
 from SCRIPT.Constants import *
 from SCRIPT.utilities.utils import print_log
 
-def time_estimate(cell_number, bg_iteration_number, peak_methods, cell_number_per_group, chip_process, motif_process, core):
+def time_estimate(cell_number, bg_iteration_number, peak_methods, cell_number_per_group, reference_method, core):
 #   generate bed: 0.5 second per cell,  search index: 10 seconds per cell, cal p: 2 seconds per factor
+    chip_process = True if reference_method in ['integration', 'both', 'chip'] else False
+    motif_process = True if reference_method in ['integration', 'both', 'motif'] else False
     if peak_methods == "group":
         bed_number = int(cell_number/cell_number_per_group) + bg_iteration_number
         seconds = 3 * bed_number
@@ -22,12 +24,14 @@ def time_estimate(cell_number, bg_iteration_number, peak_methods, cell_number_pe
             seconds += 10 * bed_number
         if motif_process == True:
             seconds += 10 * bed_number
+            
     chip_factor_number = 5069
     motif_factor_number = 1143
     if chip_process == True:
         seconds += 2 * chip_factor_number
     if motif_process == True:
         seconds += 2 * motif_factor_number
+
     seconds = seconds / core
     now_time = datetime.now()
     future_time = (datetime.now() + timedelta(seconds=seconds)).strftime("%Y-%m-%d %H:%M:%S")
@@ -54,7 +58,14 @@ class EnrichRunInfo(object):
                 'bg_bed_motif_search': 'No',
                 'bg_bed_chip_search': 'No',
                 'fg_bed_motif_search': 'No',
-                'fg_bed_chip_search': 'No'
+                'fg_bed_chip_search': 'No',
+                'bg_dataset_cell_raw_score_chip_df_store': 'No',
+                'fg_dataset_cell_raw_score_chip_df_store': 'No',
+                'fg_dataset_cell_percent_chip_df_store': 'No',
+                'bg_dataset_cell_raw_score_motif_df_store': 'No',
+                'fg_dataset_cell_raw_score_motif_df_store': 'No',
+                'fg_dataset_cell_percent_motif_df_store': 'No',
+                'enrich_adata_store':'No'
             }
         self.version = info['version']
         self.file_path = info['file_path']
@@ -68,14 +79,14 @@ class EnrichRunInfo(object):
 
     def finish_stage(self, stage):
         self.progress[stage] = 'Finish'
-        self.info['progress'] = 'Finish'
-        with open(file_path, 'w') as jf:
+        self.info['progress'][stage] = 'Finish'
+        with open(self.file_path, 'w') as jf:
             json.dump(self.info, jf, indent=2)
 
     def reset_stage(self, stage):
         self.progress[stage] = 'No'
-        self.info['progress'] = 'No'
-        with open(file_path, 'w') as jf:
+        self.info['progress'][stage] = 'No'
+        with open(self.file_path, 'w') as jf:
             json.dump(self.info, jf, indent=2)
     
     def check_consist(self, parameters_dict):
@@ -83,9 +94,12 @@ class EnrichRunInfo(object):
             return False
         inconsistent_key = []
         for k in self.parameters.keys():
-            if self.parameters[k] == parameters_dict[k]:
-                continue
-            else:
+            try:
+                if self.parameters[k] == parameters_dict[k]:
+                    continue
+                else:
+                    inconsistent_key.append(k)
+            except KeyError:
                 inconsistent_key.append(k)
         if inconsistent_key.__len__() != 0:
             return False

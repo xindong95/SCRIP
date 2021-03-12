@@ -97,3 +97,6 @@ def read_config():
         CONFIG = yaml.load(config_file.read())
     return CONFIG, CONFIG_PATH
 
+def store_to_pickle(object, path):
+    with open(os.path.join(path), 'wb+') as f:
+        pickle.dump(object, f)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 
+# install giggle tabix
+
 def main():
     setup(
         name='SCRIPT',

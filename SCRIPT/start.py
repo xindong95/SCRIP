@@ -79,8 +79,6 @@ def add_enrich_parser( subparsers ):
     group_output.add_argument( "-p", "--project", dest = "project", type = str,
                                help = "Project name, which will be used to generate output files folder. DEFAULT: Random generate", 
                                default = "" )
-    group_output.add_argument( "--result_adata_path", dest = "result_adata_path", type = str, default = 'SCRIPT_computed.h5ad',
-                                help = "default SCRIPT_computed.h5ad" )
     # group for impute
     group_impute = argparser_enrich.add_argument_group( "Peak aggregation paramater arguments" )
     group_impute.add_argument( "--peak_method", dest = "aggregate_peak_method", type = str, default = 'group',

@@ -9,8 +9,6 @@ import pickle
 import anndata as ad
 from SCRIPT.utilities.utils import print_log, excute_info
 
-
-
 def generate_beds(file_path, cells, input_mat, peak_confidence):
     cell_above_cutoff_index = sc.pp.filter_genes(input_mat[cells,:], min_cells=peak_confidence, inplace=False)[0]
     peaks = input_mat.var_names[cell_above_cutoff_index].to_list()
