@@ -147,7 +147,8 @@ def enrich(processed_adata, cell_feature_adata, project='',
     bg_chip_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_chip_result') 
     bg_motif_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_motif_result')
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.h5ad')
-
+    os.makedirs(fg_bed_path)
+    os.makedirs(bg_bed_path)
     ##################################
     ### pre-check
     ##################################
