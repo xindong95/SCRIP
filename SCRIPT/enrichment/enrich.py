@@ -35,14 +35,14 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
     
     
     if tp == 'ChIP-seq':
-        bg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_dataset_cell_raw_score_df_ChIP.pk')
+        bg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_files', 'bg_dataset_cell_raw_score_df_ChIP.pk')
         if run_info.info['progress']['bg_dataset_cell_raw_score_chip_df_store'] == 'No':
             store_to_pickle(bg_dataset_cell_raw_score_df, bg_raw_score_path)
             run_info.finish_stage('bg_dataset_cell_raw_score_chip_df_store')
         else:
             bg_dataset_cell_raw_score_df = read_pickle(bg_raw_score_path)
-        fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_ChIP.pk')
-        fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_ChIP.pk')
+        fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_raw_score_df_ChIP.pk')
+        fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_percent_df_ChIP.pk')
         if run_info.info['progress']['fg_dataset_cell_raw_score_chip_df_store'] == 'No':
             fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
             store_to_pickle(fg_dataset_cell_raw_score_df, fg_raw_score_path)
@@ -56,14 +56,14 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
         else:
             fg_dataset_cell_percent_df = read_pickle(fg_percent_score_path)
     else:
-        bg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_dataset_cell_raw_score_df_motif.pk')
+        bg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_files', 'bg_dataset_cell_raw_score_df_motif.pk')
         if run_info.info['progress']['bg_dataset_cell_raw_score_motif_df_store'] == 'No':
             store_to_pickle(bg_dataset_cell_raw_score_df, bg_raw_score_path)
             run_info.finish_stage('bg_dataset_cell_raw_score_motif_df_store')
         else:
             bg_dataset_cell_raw_score_df = read_pickle(bg_raw_score_path)
-        fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_motif.pk')
-        fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_motif.pk')
+        fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_raw_score_df_motif.pk')
+        fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_percent_df_motif.pk')
         if run_info.info['progress']['fg_dataset_cell_raw_score_motif_df_store'] == 'No':
             fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
             store_to_pickle(fg_dataset_cell_raw_score_df, fg_raw_score_path)
@@ -142,10 +142,10 @@ def enrich(processed_adata, cell_feature_adata, project='',
     fg_map_dict_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_bed.pk')
     fg_motif_result_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_motif_result')
     fg_chip_result_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_chip_result')
-    bg_bed_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_bed')
-    bg_map_dict_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_bed.pk')
-    bg_chip_result_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_chip_result') 
-    bg_motif_result_path = os.path.join(project, 'enrichment', 'fg_files', 'bg_motif_result')
+    bg_bed_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_bed')
+    bg_map_dict_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_bed.pk')
+    bg_chip_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_chip_result') 
+    bg_motif_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_motif_result')
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.h5ad')
 
     ##################################
