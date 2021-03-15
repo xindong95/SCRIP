@@ -1,7 +1,7 @@
 import os
 import sys
 # import re
-# import pickle
+import pickle
 # import random
 # import subprocess
 import time
@@ -100,3 +100,9 @@ def read_config():
 def store_to_pickle(object, path):
     with open(os.path.join(path), 'wb+') as f:
         pickle.dump(object, f)
+
+
+def read_pickle(path):
+    with open(os.path.join(path), 'rb+') as f:
+        ret = pickle.load(f)
+    return ret

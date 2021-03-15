@@ -2,6 +2,7 @@ import subprocess
 import os
 import sys
 import pandas as pd
+import numpy as np
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 from SCRIPT.utilities.utils import print_log, excute_info
 from multiprocessing import Process, Pool

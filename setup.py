@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 
-# install giggle tabix
+# install giggle, tabix
 
 def main():
     setup(

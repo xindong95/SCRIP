@@ -9,9 +9,9 @@ from SCRIPT.enrichment.bed_generation import generate_background_bed, generate_n
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
 from SCRIPT.enrichment.post_processing import extract_by_cell_cluster, map_factor_on_ChIP, merge_giggle_adata
-from SCRIPT.enrichment.calculation import cal_rank_table
+from SCRIPT.enrichment.calculation import cal_rank_table_batch
 from SCRIPT.enrichment.search_giggle import search_giggle_batch, read_giggle_result_batch
-from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle
+from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle
 from SCRIPT.Constants import *
 
 def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, n_cores, fg_map_dict, aggregate_peak_method):
@@ -32,26 +32,50 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             run_info.finish_stage('fg_bed_motif_search')
 
     bg_dataset_cell_raw_score_df = read_giggle_result_batch(bg_result_path, n_cores, 'background {tp}'.format(tp=tp))
-    store_to_pickle(bg_dataset_cell_raw_score_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_dataset_cell_raw_score_df.pk'))
+    
     
     if tp == 'ChIP-seq':
+        bg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_dataset_cell_raw_score_df_ChIP.pk')
+        if run_info.info['progress']['bg_dataset_cell_raw_score_chip_df_store'] == 'No':
+            store_to_pickle(bg_dataset_cell_raw_score_df, bg_raw_score_path)
+            run_info.finish_stage('bg_dataset_cell_raw_score_chip_df_store')
+        else:
+            bg_dataset_cell_raw_score_df = read_pickle(bg_raw_score_path)
+        fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_ChIP.pk')
+        fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_ChIP.pk')
         if run_info.info['progress']['fg_dataset_cell_raw_score_chip_df_store'] == 'No':
             fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
-            store_to_pickle(fg_dataset_cell_raw_score_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_ChIP.pk'))
+            store_to_pickle(fg_dataset_cell_raw_score_df, fg_raw_score_path)
             run_info.finish_stage('fg_dataset_cell_raw_score_chip_df_store')
+        else:
+            fg_dataset_cell_raw_score_df = read_pickle(fg_raw_score_path)
         if run_info.info['progress']['fg_dataset_cell_percent_chip_df_store'] == 'No':
-            fg_dataset_cell_percent_df = cal_p_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
-            store_to_pickle(fg_dataset_cell_percent_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_ChIP.pk'))
+            fg_dataset_cell_percent_df = cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
+            store_to_pickle(fg_dataset_cell_percent_df, fg_percent_score_path)
             run_info.finish_stage('fg_dataset_cell_percent_chip_df_store')
+        else:
+            fg_dataset_cell_percent_df = read_pickle(fg_percent_score_path)
     else:
+        bg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_dataset_cell_raw_score_df_motif.pk')
+        if run_info.info['progress']['bg_dataset_cell_raw_score_motif_df_store'] == 'No':
+            store_to_pickle(bg_dataset_cell_raw_score_df, bg_raw_score_path)
+            run_info.finish_stage('bg_dataset_cell_raw_score_motif_df_store')
+        else:
+            bg_dataset_cell_raw_score_df = read_pickle(bg_raw_score_path)
+        fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_motif.pk')
+        fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_motif.pk')
         if run_info.info['progress']['fg_dataset_cell_raw_score_motif_df_store'] == 'No':
             fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
-            store_to_pickle(fg_dataset_cell_raw_score_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_raw_score_df_motif.pk'))
+            store_to_pickle(fg_dataset_cell_raw_score_df, fg_raw_score_path)
             run_info.finish_stage('fg_dataset_cell_raw_score_motif_df_store')
+        else:
+            fg_dataset_cell_raw_score_df = read_pickle(fg_raw_score_path)
         if run_info.info['progress']['fg_dataset_cell_percent_motif_df_store'] == 'No':
-            fg_dataset_cell_percent_df = cal_p_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
-            store_to_pickle(fg_dataset_cell_percent_df, os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_dataset_cell_percent_df_motif.pk'))
+            fg_dataset_cell_percent_df = cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
+            store_to_pickle(fg_dataset_cell_percent_df, fg_percent_score_path)
             run_info.finish_stage('fg_dataset_cell_percent_motif_df_store')
+        else:
+            fg_dataset_cell_percent_df = read_pickle(fg_percent_score_path)
     
 
     if aggregate_peak_method == "group":
@@ -191,14 +215,15 @@ def enrich(processed_adata, cell_feature_adata, project='',
     ### Summary results
     ##################################
     if reference_method == 'integration':
-        regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'integration', motif_result_p)
+        regulation_adata = merge_giggle_adata(processed_adata, fg_cell_factor_percent_df_chip, 'integration', fg_cell_factor_percent_df_motif)
     elif reference_method == 'both':
-        regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
-        regulation_adata = merge_giggle_adata(regulation_adata, motif_result_p, 'motif')
+        regulation_adata = merge_giggle_adata(processed_adata, fg_cell_factor_percent_df_chip, 'ChIP-seq')
+        regulation_adata = merge_giggle_adata(regulation_adata, fg_cell_factor_percent_df_motif, 'motif')
     elif reference_method == 'chip':
-        regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
+        regulation_adata = merge_giggle_adata(processed_adata, fg_cell_factor_percent_df_chip, 'ChIP-seq')
     elif reference_method == 'motif':
-        regulation_adata = merge_giggle_adata(processed_adata, motif_result_p, 'motif')
+        regulation_adata = merge_giggle_adata(processed_adata, fg_cell_factor_percent_df_motif, 'motif')
+    run_info.finish_stage('enrich_adata_store')
     # if search_chip == True and search_motif == True:
     #     if integration == True:
     #         regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'integration', motif_result_p)
