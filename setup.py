@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-
+import os
+import sys
+import subprocess
 
 # install giggle, tabix
 
 def main():
+
     setup(
         name='SCRIPT',
         version='0.0.210308',
@@ -23,7 +26,7 @@ def main():
             'ruamel.yaml',
             'anndata',
             'anndata2ri',
-            'Bio',
+            # 'Bio',
             'pyranges==0.0.95',
             'pybedtools==0.8.1',
             'matplotlib',
@@ -32,7 +35,7 @@ def main():
             'scipy',
             'scanpy==1.7.1',
         ],
-        python_requires='>=3.6.*, !=3.9.*',
+        python_requires='>=3.8.*, !=3.9.*',
         entry_points={
             'console_scripts': [
                 'SCRIPT=SCRIPT.start:main'
