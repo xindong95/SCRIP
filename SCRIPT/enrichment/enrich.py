@@ -3,6 +3,7 @@ import sys
 import time
 import pickle
 import shutil
+import random
 import scanpy as sc
 import anndata as ad
 from SCRIPT.enrichment.bed_generation import generate_background_bed, generate_neighbor_bed, generate_cluster_bed
