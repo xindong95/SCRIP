@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*-coding:utf-8 -*-
+'''
+@File    :   validation.py
+@Time    :   2021/04/16 12:34:48
+@Author  :   Xin Dong 
+@Contact :   xindong9511@gmail.com
+@License :   (C)Copyright 2020-2021, XinDong
+'''
+
 from SCRIPT.utilities.utils import print_log
 import re
 import os

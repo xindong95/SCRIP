@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*-coding:utf-8 -*-
+'''
+@File    :   enrich.py
+@Time    :   2021/04/16 12:34:09
+@Author  :   Xin Dong 
+@Contact :   xindong9511@gmail.com
+@License :   (C)Copyright 2020-2021, XinDong
+'''
+
 import os
 import sys
 import time
@@ -12,11 +22,11 @@ from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
 from SCRIPT.enrichment.post_processing import extract_by_cell_cluster, map_factor_on_ChIP, merge_giggle_adata
 from SCRIPT.enrichment.calculation import cal_rank_table_batch
 from SCRIPT.enrichment.search_giggle import search_giggle_batch, read_giggle_result_batch
-from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle
+from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
 from SCRIPT.Constants import *
 
 def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, index, n_cores, fg_map_dict, aggregate_peak_method):
-    # tp is 'ChIP-seq' or 'motif'
+    # tp(type) is 'ChIP-seq' or 'motif'
     if tp == 'ChIP-seq':
         if run_info.info['progress']['bg_bed_chip_search'] == 'No':
             search_giggle_batch(bg_bed_path, bg_result_path, index, n_cores, tp)
@@ -42,14 +52,17 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             run_info.finish_stage('bg_dataset_cell_raw_score_chip_df_store')
         else:
             bg_dataset_cell_raw_score_df = read_pickle(bg_raw_score_path)
+
         fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_raw_score_df_ChIP.pk')
         fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_percent_df_ChIP.pk')
+
         if run_info.info['progress']['fg_dataset_cell_raw_score_chip_df_store'] == 'No':
             fg_dataset_cell_raw_score_df = read_giggle_result_batch(fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp))
             store_to_pickle(fg_dataset_cell_raw_score_df, fg_raw_score_path)
             run_info.finish_stage('fg_dataset_cell_raw_score_chip_df_store')
         else:
             fg_dataset_cell_raw_score_df = read_pickle(fg_raw_score_path)
+
         if run_info.info['progress']['fg_dataset_cell_percent_chip_df_store'] == 'No':
             fg_dataset_cell_percent_df = cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
             store_to_pickle(fg_dataset_cell_percent_df, fg_percent_score_path)
@@ -63,6 +76,7 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             run_info.finish_stage('bg_dataset_cell_raw_score_motif_df_store')
         else:
             bg_dataset_cell_raw_score_df = read_pickle(bg_raw_score_path)
+
         fg_raw_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_raw_score_df_motif.pk')
         fg_percent_score_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_cell_percent_df_motif.pk')
         if run_info.info['progress']['fg_dataset_cell_raw_score_motif_df_store'] == 'No':
@@ -71,6 +85,7 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             run_info.finish_stage('fg_dataset_cell_raw_score_motif_df_store')
         else:
             fg_dataset_cell_raw_score_df = read_pickle(fg_raw_score_path)
+            
         if run_info.info['progress']['fg_dataset_cell_percent_motif_df_store'] == 'No':
             fg_dataset_cell_percent_df = cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
             store_to_pickle(fg_dataset_cell_percent_df, fg_percent_score_path)
@@ -101,8 +116,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
         tmp_prefix = str(time.time())[6:13].replace('.','') + '_' + ''.join(random.sample(tmp_chr_list, 4))
         project = 'SCRIPT_' + tmp_prefix
 
-    if not os.path.exists(project):
-        os.makedirs(project)
+    safe_makedirs(project)
     project_abs_path = os.path.abspath(project)
     if bg_iteration != 'auto':
         bg_iteration = int(bg_iteration)
@@ -148,8 +162,8 @@ def enrich(processed_adata, cell_feature_adata, project='',
     bg_chip_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_chip_result') 
     bg_motif_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_motif_result')
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.h5ad')
-    os.makedirs(fg_bed_path)
-    os.makedirs(bg_bed_path)
+    safe_makedirs(fg_bed_path)
+    safe_makedirs(bg_bed_path)
     ##################################
     ### pre-check
     ##################################

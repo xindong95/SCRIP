@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*-coding:utf-8 -*-
+'''
+@File    :   utils.py
+@Time    :   2021/04/16 12:29:39
+@Author  :   Xin Dong 
+@Contact :   xindong9511@gmail.com
+@License :   (C)Copyright 2020-2021, XinDong
+'''
+
 import os
 import sys
 # import re
@@ -106,3 +116,7 @@ def read_pickle(path):
     with open(os.path.join(path), 'rb+') as f:
         ret = pickle.load(f)
     return ret
+
+def safe_makedirs(path):
+    if not os.path.exists(path):
+        os.makedirs(path)

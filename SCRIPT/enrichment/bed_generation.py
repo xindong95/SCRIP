@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# -*-coding:utf-8 -*-
+'''
+@File    :   bed_generation.py
+@Time    :   2021/04/16 12:34:55
+@Author  :   Xin Dong 
+@Contact :   xindong9511@gmail.com
+@License :   (C)Copyright 2020-2021, XinDong
+'''
+
 import scanpy as sc
 import subprocess
 import os
@@ -7,7 +17,7 @@ import pandas as pd
 import random
 import pickle
 import anndata as ad
-from SCRIPT.utilities.utils import print_log, excute_info
+from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
 
 def generate_beds(file_path, cells, input_mat, peak_confidence):
     cell_above_cutoff_index = sc.pp.filter_genes(input_mat[cells,:], min_cells=peak_confidence, inplace=False)[0]
@@ -21,8 +31,7 @@ def generate_beds(file_path, cells, input_mat, peak_confidence):
 @excute_info('Start generating background beds ...', 'Finished generating background beds!')
 def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50, iteration=1000, peak_confidence=5, n_cores=8):
     map_dict = {}
-    if not os.path.exists(bg_bed_path):
-        os.makedirs(bg_bed_path)
+    safe_makedirs(bg_bed_path)
     cl_name = input_mat.obs_names.to_list()
     total_cnt = iteration
     executor = ThreadPoolExecutor(max_workers=n_cores)
@@ -40,8 +49,7 @@ def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50
 def generate_cluster_bed(adata, input_mat, bed_path, map_dict_store_path, step=50, cell_cutoff=20, peak_confidence=5):
     metadata = adata.obs
     map_dict = {}
-    if not os.path.exists(bed_path):
-        os.makedirs(bed_path)
+    safe_makedirs(bed_path)
     cluster_info = metadata["seurat_clusters"].unique().to_list()
     for i in cluster_info:
         cluster_cell_name = metadata[metadata['seurat_clusters'] == i].index.to_list()
@@ -101,8 +109,7 @@ def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, n_nei
     height = coor_table.max().Y - coor_table.min().Y
     step = min(width, height)/200
     map_dict = {}
-    if not os.path.exists(bed_path):
-        os.makedirs(bed_path)
+    safe_makedirs(bed_path)
     total_cnt = adata.obs.index.__len__()
     executor = ThreadPoolExecutor(max_workers=n_cores)
     all_task = []

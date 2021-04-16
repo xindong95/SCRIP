@@ -1,10 +1,21 @@
+#!/usr/bin/env python
+# -*-coding:utf-8 -*-
+'''
+@File    :   search_giggle.py
+@Time    :   2021/04/16 12:34:35
+@Author  :   Xin Dong 
+@Contact :   xindong9511@gmail.com
+@License :   (C)Copyright 2020-2021, XinDong
+'''
+
+
 import subprocess
 import os
 import sys
 import pandas as pd
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
-from SCRIPT.utilities.utils import print_log, excute_info
+from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
 from multiprocessing import Process, Pool
 
 def search_giggle(bed_path, result_path, index_path):
@@ -20,8 +31,7 @@ def search_giggle(bed_path, result_path, index_path):
 
 def search_giggle_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
     print_log('Start searching foreground beds from {tp} index ...'.format(tp=tp))
-    if not os.path.exists(result_folder):
-        os.makedirs(result_folder)
+    safe_makedirs(result_folder)
     beds = os.listdir(bed_folder)
     args = []
     for bed in beds:
