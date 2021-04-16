@@ -13,9 +13,9 @@ import sys
 import subprocess
 
 # install giggle, tabix
+# https://github.com/ryanlayer/giggle
 
 def main():
-
     setup(
         name='SCRIPT',
         version='0.0.210308',
@@ -29,9 +29,10 @@ def main():
             ],
         },
         install_requires=[
+            'numba>=0.51.2',
             'numpy',
-            'pandas',
-            'cython==0.29.22',
+            'pandas>=1.1.1',
+            'cython>=0.29.22',
             'ruamel.yaml',
             'anndata',
             'anndata2ri',
@@ -50,8 +51,6 @@ def main():
                 'SCRIPT=SCRIPT.start:main'
             ]
         },
-
-
     )
 
 
