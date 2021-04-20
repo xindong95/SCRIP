@@ -21,4 +21,6 @@ def read_SingleCellExperiment_rds(input_RDS):
     anndata2ri.activate()
     rscript = 'readRDS("{RDS_file_path}")'.format(RDS_file_path = input_RDS)
     adata = r(rscript)
+    adata.var.columns = [str(i) for i in adata.var.columns]
+    adata.obs.columns = [str(i) for i in adata.obs.columns]
     return adata

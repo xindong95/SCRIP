@@ -22,11 +22,14 @@ from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
 def generate_beds(file_path, cells, input_mat, peak_confidence):
     cell_above_cutoff_index = sc.pp.filter_genes(input_mat[cells,:], min_cells=peak_confidence, inplace=False)[0]
     peaks = input_mat.var_names[cell_above_cutoff_index].to_list()
-    peaks = pd.DataFrame([p.split("_") for p in peaks])
-    peaks.to_csv(file_path, sep="\t", header= None, index=None)
-    cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=file_path)
-    cmd += 'rm {bed_path}'.format(bed_path=file_path)
-    subprocess.run(cmd, shell=True, check=True)
+    if peaks.__len__() == 0:
+        print_log('Warning: No peaks in {bed_path}, skip generation'.format(bed_path = file_path[:-7]))
+    else:
+        peaks = pd.DataFrame([p.split("_") for p in peaks])
+        peaks.to_csv(file_path, sep="\t", header= None, index=None)
+        cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=file_path)
+        cmd += 'rm {bed_path}'.format(bed_path=file_path)
+        subprocess.run(cmd, shell=True, check=True)
 
 @excute_info('Start generating background beds ...', 'Finished generating background beds!')
 def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50, iteration=1000, peak_confidence=5, n_cores=8):
