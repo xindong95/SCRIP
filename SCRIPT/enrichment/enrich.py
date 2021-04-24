@@ -20,7 +20,7 @@ from SCRIPT.enrichment.bed_generation import generate_background_bed, generate_n
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
 from SCRIPT.enrichment.post_processing import extract_by_cell_cluster, map_factor_on_ChIP, merge_giggle_adata
-from SCRIPT.enrichment.calculation import cal_rank_table_batch
+from SCRIPT.enrichment.calculation import cal_rank_table_batch, cal_p_table_batch
 from SCRIPT.enrichment.search_giggle import search_giggle_batch, read_giggle_result_batch
 from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
 from SCRIPT.Constants import *
@@ -64,7 +64,7 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             fg_dataset_cell_raw_score_df = read_pickle(fg_raw_score_path)
 
         if run_info.info['progress']['fg_dataset_cell_percent_chip_df_store'] == 'No':
-            fg_dataset_cell_percent_df = cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
+            fg_dataset_cell_percent_df = cal_p_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
             store_to_pickle(fg_dataset_cell_percent_df, fg_percent_score_path)
             run_info.finish_stage('fg_dataset_cell_percent_chip_df_store')
         else:
@@ -87,7 +87,7 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             fg_dataset_cell_raw_score_df = read_pickle(fg_raw_score_path)
             
         if run_info.info['progress']['fg_dataset_cell_percent_motif_df_store'] == 'No':
-            fg_dataset_cell_percent_df = cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
+            fg_dataset_cell_percent_df = cal_p_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores)
             store_to_pickle(fg_dataset_cell_percent_df, fg_percent_score_path)
             run_info.finish_stage('fg_dataset_cell_percent_motif_df_store')
         else:
