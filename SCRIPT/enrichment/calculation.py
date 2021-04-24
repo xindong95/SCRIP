@@ -71,37 +71,37 @@ def cal_rank(val, bg):
     ret = rank/bg.__len__()
     return ret
 
-def cal_rank_table(fg_dataset_cell_df, bg_dataset_cell_df, i):
+def cal_rank_table(fg_table, bg_table, i):
     print_log('chunk {i} calculating ...'.format(i=i))
-    fg_dataset_cell_percent_df = fg_dataset_cell_df.copy()
-#     result_table_fc = fg_dataset_cell_df.copy()
-    for factor in fg_dataset_cell_df.index:
-        factor_bg_vector = bg_dataset_cell_df.loc[factor,:].tolist()
-        bg_mean = np.mean(factor_bg_vector)
-        bg_std = np.std(factor_bg_vector)
+    result_table_p = fg_table.copy()
+#     result_table_fc = fg_table.copy()
+    for factor in fg_table.index:
+        factor_bg = bg_table.loc[factor,:].tolist()
+        bg_mean = np.mean(factor_bg)
+        bg_std = np.std(factor_bg)
         if bg_mean != 0 and bg_std != 0:
-            fg_dataset_cell_percent_df.loc[factor,:] = fg_dataset_cell_df.loc[factor,:].apply(cal_rank, **{'bg':factor_bg_vector})
+            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(cal_rank, **{'bg':factor_bg})
         else:
-            fg_dataset_cell_percent_df.loc[factor,:] = 1
-#         result_table_fc.loc[factor,:] = fg_dataset_cell_df.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+            result_table_p.loc[factor,:] = 1
+#         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
     print_log('chunk {i} finished calculation!'.format(i=i))
-    return fg_dataset_cell_percent_df
+    return result_table_p
 
-# def cal_p_table(fg_table, bg_table, i):
-#     print_log('chunk {i} calculating ...'.format(i=i))
-#     result_table_p = fg_table.copy()
-# #     result_table_fc = fg_table.copy()
-#     for factor in fg_table.index:
-#         factor_bg = bg_table.loc[factor,:]
-#         bg_mean = np.mean(factor_bg)
-#         bg_std = np.std(factor_bg)
-#         if bg_mean != 0 and bg_std != 0:
-#             result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.cdf, args=(bg_mean, bg_std))
-#         else:
-#             result_table_p.loc[factor,:] = 0
-# #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
-#     print_log('chunk {i} finished calculation!'.format(i=i))
-#     return 1-result_table_p
+def cal_rank_table_batch(fg_table, bg_table, n_cores=8):
+    print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
+    fg_table_split = np.array_split(fg_table, n_cores)
+    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
+    with Pool(n_cores) as p:
+        result = p.starmap(cal_rank_table, args)
+    print_log("Generating P value table ...")
+    result_table_p = pd.concat([i for i in result])
+#     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
+#     result_table_fc = pd.concat([i[1] for i in result])
+    print_log('Finished calculation enrichment!')
+    return result_table_p
+
+
+
 
 # def cal_z(score, mean, std):
 #     return (score-mean)/std
@@ -122,16 +122,34 @@ def cal_rank_table(fg_dataset_cell_df, bg_dataset_cell_df, i):
 #     print_log('chunk {i} finished calculation!'.format(i=i))
 #     return result_table_z
 
-def cal_rank_table_batch(fg_dataset_cell_raw_score_df, bg_dataset_cell_raw_score_df, n_cores=8):
+def cal_p_table(fg_table, bg_table, i):
+    print_log('chunk {i} calculating ...'.format(i=i))
+    result_table_p = fg_table.copy()
+#     result_table_fc = fg_table.copy()
+    for factor in fg_table.index:
+        factor_bg = bg_table.loc[factor,:]
+        bg_mean = np.mean(factor_bg)
+        bg_std = np.std(factor_bg)
+        if bg_mean != 0 and bg_std != 0:
+            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.sf, args=(bg_mean, bg_std)) # sf is more accurate than cdf, return 1-cdf
+        else:
+            result_table_p.loc[factor,:] = 0
+#         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+    print_log('chunk {i} finished calculation!'.format(i=i))
+    return result_table_p
+
+def cal_p_table_batch(fg_table, bg_table, n_cores=8):
     print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
-    fg_dataset_cell_raw_score_df_split = np.array_split(fg_dataset_cell_raw_score_df, n_cores)
-    args = [[table, bg_dataset_cell_raw_score_df, i] for (i, table) in enumerate(fg_dataset_cell_raw_score_df_split)]
+    fg_table_split = np.array_split(fg_table, n_cores)
+    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
     with Pool(n_cores) as p:
-        dataset_cell_split = p.starmap(cal_rank_table, args)
-    print_log("Generating percentile table ...")
-    fg_dataset_cell_percent_df = pd.concat([i for i in dataset_cell_split])
+        result = p.starmap(cal_p_table, args)
+    print_log("Generating P value table ...")
+    result_table_p = pd.concat([i for i in result])
+#     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
+#     result_table_fc = pd.concat([i[1] for i in result])
     print_log('Finished calculation enrichment!')
-    return fg_dataset_cell_percent_df
+    return result_table_p
 
 # def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-Hochberg"):                
 #     """                                                                                                   
