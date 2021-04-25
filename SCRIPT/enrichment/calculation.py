@@ -10,6 +10,7 @@
 
 import numpy as np
 import pandas as pd
+import scipy
 from SCRIPT.utilities.utils import print_log
 from multiprocessing import Process, Pool
 
@@ -131,7 +132,7 @@ def cal_p_table(fg_table, bg_table, i):
         bg_mean = np.mean(factor_bg)
         bg_std = np.std(factor_bg)
         if bg_mean != 0 and bg_std != 0:
-            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(sp.stats.norm.sf, args=(bg_mean, bg_std)) # sf is more accurate than cdf, return 1-cdf
+            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(scipy.stats.norm.sf, args=(bg_mean, bg_std)) # sf is more accurate than cdf, return 1-cdf
         else:
             result_table_p.loc[factor,:] = 0
 #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})

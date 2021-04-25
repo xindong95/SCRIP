@@ -146,6 +146,8 @@ def enrich(processed_adata, cell_feature_adata, project='',
             confirm_info = input()
             if confirm_info == 'y' or confirm_info == 'Y':
                 shutil.rmtree(project)
+                safe_makedirs(project)
+                run_info = EnrichRunInfo(os.path.join(project,'run_info.json'), params)
                 break
             elif confirm_info == 'N' or confirm_info == 'n':
                 print_log('Good Bye!')
