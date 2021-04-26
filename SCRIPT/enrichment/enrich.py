@@ -296,7 +296,8 @@ def run( args ):
         motif_index = CONFIG['index']['mouse_motif_index']
     else:
         pass
-
+    
+    print_log('Reading Files, Please wait ...')
     processed_adata = ad.read_h5ad(processed_adata_path)
     feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
 

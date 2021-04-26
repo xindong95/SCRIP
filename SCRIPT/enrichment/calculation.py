@@ -102,8 +102,6 @@ def cal_rank_table_batch(fg_table, bg_table, n_cores=8):
     return result_table_p
 
 
-
-
 # def cal_z(score, mean, std):
 #     return (score-mean)/std
 
