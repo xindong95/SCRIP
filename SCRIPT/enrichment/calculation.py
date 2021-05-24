@@ -65,41 +65,41 @@ from multiprocessing import Process, Pool
 # calculate p value by area at the right of curve
 # calculate fc by value / background average
 
-def cal_rank(val, bg):
-    rank = [i for i in bg if i >= val].__len__()
-    if rank == 0:
-        rank = 1
-    ret = rank/bg.__len__()
-    return ret
+# def cal_rank(val, bg):
+#     rank = [i for i in bg if i >= val].__len__()
+#     if rank == 0:
+#         rank = 1
+#     ret = rank/bg.__len__()
+#     return ret
 
-def cal_rank_table(fg_table, bg_table, i):
-    print_log('chunk {i} calculating ...'.format(i=i))
-    result_table_p = fg_table.copy()
-#     result_table_fc = fg_table.copy()
-    for factor in fg_table.index:
-        factor_bg = bg_table.loc[factor,:].tolist()
-        bg_mean = np.mean(factor_bg)
-        bg_std = np.std(factor_bg)
-        if bg_mean != 0 and bg_std != 0:
-            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(cal_rank, **{'bg':factor_bg})
-        else:
-            result_table_p.loc[factor,:] = 1
-#         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
-    print_log('chunk {i} finished calculation!'.format(i=i))
-    return result_table_p
+# def cal_rank_table(fg_table, bg_table, i):
+#     print_log('chunk {i} calculating ...'.format(i=i))
+#     result_table_p = fg_table.copy()
+# #     result_table_fc = fg_table.copy()
+#     for factor in fg_table.index:
+#         factor_bg = bg_table.loc[factor,:].tolist()
+#         bg_mean = np.mean(factor_bg)
+#         bg_std = np.std(factor_bg)
+#         if bg_mean != 0 and bg_std != 0:
+#             result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(cal_rank, **{'bg':factor_bg})
+#         else:
+#             result_table_p.loc[factor,:] = 1
+# #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+#     print_log('chunk {i} finished calculation!'.format(i=i))
+#     return result_table_p
 
-def cal_rank_table_batch(fg_table, bg_table, n_cores=8):
-    print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
-    fg_table_split = np.array_split(fg_table, n_cores)
-    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
-    with Pool(n_cores) as p:
-        result = p.starmap(cal_rank_table, args)
-    print_log("Generating P value table ...")
-    result_table_p = pd.concat([i for i in result])
-#     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
-#     result_table_fc = pd.concat([i[1] for i in result])
-    print_log('Finished calculation enrichment!')
-    return result_table_p
+# def cal_rank_table_batch(fg_table, bg_table, n_cores=8):
+#     print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
+#     fg_table_split = np.array_split(fg_table, n_cores)
+#     args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
+#     with Pool(n_cores) as p:
+#         result = p.starmap(cal_rank_table, args)
+#     print_log("Generating P value table ...")
+#     result_table_p = pd.concat([i for i in result])
+# #     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
+# #     result_table_fc = pd.concat([i[1] for i in result])
+#     print_log('Finished calculation enrichment!')
+#     return result_table_p
 
 
 # def cal_z(score, mean, std):
@@ -121,34 +121,34 @@ def cal_rank_table_batch(fg_table, bg_table, n_cores=8):
 #     print_log('chunk {i} finished calculation!'.format(i=i))
 #     return result_table_z
 
-def cal_p_table(fg_table, bg_table, i):
-    print_log('chunk {i} calculating ...'.format(i=i))
-    result_table_p = fg_table.copy()
-#     result_table_fc = fg_table.copy()
-    for factor in fg_table.index:
-        factor_bg = bg_table.loc[factor,:]
-        bg_mean = np.mean(factor_bg)
-        bg_std = np.std(factor_bg)
-        if bg_mean != 0 and bg_std != 0:
-            result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(scipy.stats.norm.sf, args=(bg_mean, bg_std)) # sf is more accurate than cdf, return 1-cdf
-        else:
-            result_table_p.loc[factor,:] = 0
-#         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
-    print_log('chunk {i} finished calculation!'.format(i=i))
-    return result_table_p
+# def cal_p_table(fg_table, bg_table, i):
+#     print_log('chunk {i} calculating ...'.format(i=i))
+#     result_table_p = fg_table.copy()
+# #     result_table_fc = fg_table.copy()
+#     for factor in fg_table.index:
+#         factor_bg = bg_table.loc[factor,:]
+#         bg_mean = np.mean(factor_bg)
+#         bg_std = np.std(factor_bg)
+#         if bg_mean != 0 and bg_std != 0:
+#             result_table_p.loc[factor,:] = fg_table.loc[factor,:].apply(scipy.stats.norm.sf, args=(bg_mean, bg_std)) # sf is more accurate than cdf, return 1-cdf
+#         else:
+#             result_table_p.loc[factor,:] = 0
+# #         result_table_fc.loc[factor,:] = fg_table.loc[factor,:].apply(cal_fc, **{'bg_mean': bg_mean})
+#     print_log('chunk {i} finished calculation!'.format(i=i))
+#     return result_table_p
 
-def cal_p_table_batch(fg_table, bg_table, n_cores=8):
-    print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
-    fg_table_split = np.array_split(fg_table, n_cores)
-    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
-    with Pool(n_cores) as p:
-        result = p.starmap(cal_p_table, args)
-    print_log("Generating P value table ...")
-    result_table_p = pd.concat([i for i in result])
-#     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
-#     result_table_fc = pd.concat([i[1] for i in result])
-    print_log('Finished calculation enrichment!')
-    return result_table_p
+# def cal_p_table_batch(fg_table, bg_table, n_cores=8):
+#     print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
+#     fg_table_split = np.array_split(fg_table, n_cores)
+#     args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
+#     with Pool(n_cores) as p:
+#         result = p.starmap(cal_p_table, args)
+#     print_log("Generating P value table ...")
+#     result_table_p = pd.concat([i for i in result])
+# #     print("INFO {time}, Generating FC value table ...".format(time=datetime.now()))
+# #     result_table_fc = pd.concat([i[1] for i in result])
+#     print_log('Finished calculation enrichment!')
+#     return result_table_p
 
 # def correct_pvalues_for_multiple_testing(pvalues, correction_type = "Benjamini-Hochberg"):                
 #     """                                                                                                   
@@ -182,3 +182,36 @@ def cal_p_table_batch(fg_table, bg_table, n_cores=8):
 #             pvalue, index = vals
 #             new_pvalues[index] = new_values[i]                                                                                                                  
 #     return new_pvalues
+
+
+def cal_deviation(val, mean, std):
+    return (val-mean)/std
+
+
+def cal_deviation_table(fg_table, bg_table, i):
+    print_log('chunk {i} calculating ...'.format(i=i))
+    dts_cell_result_table_deviation = fg_table.copy()
+    for factor in fg_table.index:
+        factor_bg = bg_table.loc[factor, :].tolist()
+        bg_mean = np.mean(factor_bg)
+        bg_std = np.std(factor_bg)
+        if bg_mean != 0 and bg_std != 0:
+            dts_cell_result_table_deviation.loc[factor, :] = fg_table.loc[factor, :].apply(
+                cal_deviation, **{'mean': bg_mean, 'std': bg_std})
+        else:
+            dts_cell_result_table_deviation.loc[factor, :] = 0
+    print_log('chunk {i} finished calculation!'.format(i=i))
+    return dts_cell_result_table_deviation
+
+
+def cal_deviation_table_batch(fg_table, bg_table, n_cores=8):
+    print_log(
+        "Calculating deviation, divide into {n} chunks...".format(n=n_cores))
+    fg_table_split = np.array_split(fg_table, n_cores)
+    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
+    with Pool(n_cores) as p:
+        result = p.starmap(cal_deviation_table, args)
+    print_log("Generating P value table ...")
+    dts_cell_result_table_deviation = pd.concat([i for i in result])
+    print_log('Finished calculation enrichment!')
+    return dts_cell_result_table_deviation

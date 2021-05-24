@@ -91,14 +91,14 @@ def add_enrich_parser( subparsers ):
                                default = "" )
     # group for impute
     group_impute = argparser_enrich.add_argument_group( "Peak aggregation paramater arguments" )
-    group_impute.add_argument( "--peak_method", dest = "aggregate_peak_method", type = str, default = 'group',
-                                help = "group or nearest" )
-    group_impute.add_argument( "--cell_number", dest = "cell_number_per_group", type = int, default = 50,
-                                help = "default 50 " )
-    group_impute.add_argument( "--cell_cutoff", dest = "cell_cutoff", type = int, default = 20,
-                                help = "default 20 " )
-    group_impute.add_argument( "--peak_confidence", dest = "peak_confidence", type = int, default = 5,
-                                help = "default 5 " )
+    # group_impute.add_argument("--peak_method", dest="aggregate_peak_method", type=str, default='nearest',
+    #                             help = "group or nearest" )
+    group_impute.add_argument( "--cell_number", dest = "cell_number_per_group", type = str, default = 'auto',
+                               help="Number of cell of each group when imputation. Default 'auto'.")
+    # group_impute.add_argument( "--cell_cutoff", dest = "cell_cutoff", type = str, default = 'auto',
+    #                            help="Only use when peak_method is set as 'group'. Won't generate the group that cell number less than this number. Default 'auto'. Recommand 0.2*cell_number_per_group. ")
+    group_impute.add_argument("--peak_confidence", dest="peak_confidence", type=str, default='auto',
+                               help="Default 'auto'. Recommand 0.1*cell_number_per_group. Remove peak that confidence less than this number. (Not including equal to.) ")
     # processing options
     group_processing = argparser_enrich.add_argument_group( "Processing options" )
     group_processing.add_argument( "--bg_iter", dest = "bg_iter", type = str, default = 'auto',
@@ -108,11 +108,11 @@ def add_enrich_parser( subparsers ):
 
     group_other = argparser_enrich.add_argument_group( "Other options" )
     group_other.add_argument( "-t", '--thread', dest='n_cores', type = int, default = 16,
-                              help = "default 16 " )
+                              help = "default 16." )
     group_other.add_argument( "-y", "--yes", dest='yes', action = 'store_true', default = False,
-                              help = "default False" )
+                              help = "default False." )
     group_other.add_argument( "--clean", dest = "clean", action = 'store_true', default = False,
-                                help = "default False" )
+                                help = "default False." )
     return
 
 

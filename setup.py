@@ -18,7 +18,7 @@ import subprocess
 def main():
     setup(
         name='SCRIPT',
-        version='0.0.210308',
+        version='0.0.210520',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
