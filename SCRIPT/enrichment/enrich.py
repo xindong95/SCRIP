@@ -21,10 +21,11 @@ import pandas as pd
 from SCRIPT.enrichment.bed_generation import generate_background_bed, generate_neighbor_bed
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
-from SCRIPT.enrichment.post_processing import extract_by_cell_cluster, map_factor_on_ChIP, merge_giggle_adata
-from SCRIPT.enrichment.calculation import cal_deviation_table_batch
+from SCRIPT.enrichment.post_processing import map_factor_on_ChIP, merge_giggle_adata
+from SCRIPT.enrichment.calculation import cal_deviation_table_batch, score_normalization
 from SCRIPT.enrichment.search_giggle import search_giggle_batch, read_giggle_result_odds_batch, read_giggle_result_fisher_batch
 from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
+from SCRIPT.imputation.impute import determine_number_of_cells_per_group
 from SCRIPT.Constants import *
 
 def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_path, fg_result_path, fg_peaks_number_path, index, genome_length, n_cores, fg_map_dict):
@@ -76,6 +77,14 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
             run_info.finish_stage('fg_dataset_deviation_score_chip_df_store')
         else:
             fg_dataset_deviation_score_df = read_pickle(fg_dataset_deviation_score_df_path)
+
+        fg_dataset_cell_score_df_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_score_df_ChIP.pk')
+        if run_info.info['progress']['fg_dataset_score_chip_df_store'] == 'No':
+            fg_dataset_cell_score_df = score_normalization(fg_dataset_deviation_score_df, fg_dataset_fisher_df, os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path)
+            store_to_pickle(fg_dataset_cell_score_df, fg_dataset_cell_score_df_path)
+            run_info.finish_stage('fg_dataset_score_chip_df_store')
+        else:
+            fg_dataset_cell_score_df = read_pickle(fg_dataset_cell_score_df_path)
     else:
         bg_dataset_odds_ratio_df_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'bg_files', 'bg_dataset_odds_ratio_df_motif.pk')
         if run_info.info['progress']['bg_dataset_odds_ratio_motif_df_store'] == 'No':
@@ -101,42 +110,22 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, fg_bed_pat
         else:
             fg_dataset_fisher_df = read_pickle(fg_dataset_fisher_df_path)
 
-        fg_dataset_deviation_score_motif_df_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_fisher_df_motif.pk')
+        fg_dataset_deviation_score_df_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_fisher_df_motif.pk')
         if run_info.info['progress']['fg_dataset_deviation_score_motif_df_store'] == 'No':
-            fg_dataset_deviation_score_motif_df = cal_deviation_table_batch(fg_dataset_odds_ratio_df, bg_dataset_odds_ratio_df, n_cores)
-            store_to_pickle(fg_dataset_deviation_score_motif_df, fg_dataset_deviation_score_motif_df_path)
+            fg_dataset_deviation_score_df = cal_deviation_table_batch(fg_dataset_odds_ratio_df, bg_dataset_odds_ratio_df, n_cores)
+            store_to_pickle(fg_dataset_deviation_score_df, fg_dataset_deviation_score_df_path)
             run_info.finish_stage('fg_dataset_deviation_score_motif_df_store')
         else:
-            fg_dataset_fisher_df = read_pickle(fg_dataset_fisher_df_path)
+            fg_dataset_deviation_score_df = read_pickle(fg_dataset_deviation_score_df_path)
 
-    # fisher normalize matrix
-    fisher_log_foreground = -np.log10(fg_dataset_fisher_df)
-    fisher_log_foreground_true_table = (fisher_log_foreground.T/fisher_log_foreground.max(1)).T
-    fisher_log_foreground_true_table = fisher_log_foreground_true_table.reindex(
-        index=fg_dataset_deviation_score_df.index, columns=fg_dataset_deviation_score_df.columns)
-    
+        fg_dataset_cell_score_df_path = os.path.join(run_info.info['project_folder'], 'enrichment', 'fg_files', 'fg_dataset_score_df_motif.pk')
+        if run_info.info['progress']['fg_dataset_score_motif_df_store'] == 'No':
+            fg_dataset_cell_score_df = score_normalization(fg_dataset_deviation_score_df, fg_dataset_fisher_df, os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path)
+            store_to_pickle(fg_dataset_cell_score_df, fg_dataset_cell_score_df_path)
+            run_info.finish_stage('fg_dataset_score_motif_df_store')
+        else:
+            fg_dataset_cell_score_df = read_pickle(fg_dataset_cell_score_df_path)
 
-
-    # peak normalize matrix
-    index_peak_number = os.path.join(index, 'peaks_number.txt')
-    data_peak_number = pd.read_csv(fg_peaks_number_path, sep='\t', header=None, index_col=0)
-    peak_cell_index_norm_table = pd.DataFrame(np.zeros([index_peak_number.index.__len__(), data_peak_number.index.__len__()]), 
-                                              index=fg_dataset_deviation_score_df.index, columns=fg_dataset_deviation_score_df.columns)
-    for dts in peak_cell_index_norm_table.index:
-        dts_number = index_peak_number.loc[dts, 1]
-        peak_cell_index_norm_table.loc[dts, :] = [
-            i/dts_number if i <= dts_number else dts_number/i for i in data_peak_number[1]]
-    peak_cell_index_norm_table = peak_cell_index_norm_table.reindex(
-        index=fg_dataset_deviation_score_df.index, columns=fg_dataset_deviation_score_df.columns)
-    peak_number_dts_mean_value = data_peak_number[1].mean()
-    peak_number_dts_norm_series = data_peak_number[1].apply(lambda x: 2**-(abs(x-peak_number_dts_mean_value)/x))
-    peak_number_dts_norm_series = peak_number_dts_norm_series.reindex(index = fg_dataset_deviation_score_df.columns)
-    peak_number_norm_coef = peak_cell_index_norm_table * peak_number_dts_norm_series
-    
-    # key multiply
-    fg_dataset_cell_score_df = fg_dataset_deviation_score_df * fisher_log_foreground_true_table * peak_number_norm_coef
-    # if aggregate_peak_method == "group":
-    #     fg_dataset_cell_percent_df = extract_by_cell_cluster(fg_dataset_cell_percent_df.copy(), fg_map_dict)
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
     if tp == 'ChIP-seq':
         fg_cell_dataset_score_df = map_factor_on_ChIP(fg_dataset_cell_score_df).T
@@ -167,9 +156,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
     ##################################
     params = {
         'project':project_abs_path,
-        # 'aggregate_peak_method':aggregate_peak_method,
         'cell_number_per_group':cell_number_per_group,
-        # 'cell_cutoff':cell_cutoff,
         'peak_confidence':peak_confidence,
         'bg_iteration':bg_iteration,
         'chip_index':chip_index,
@@ -209,6 +196,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.h5ad')
     safe_makedirs(fg_bed_path)
     safe_makedirs(bg_bed_path)
+
     if species == 'hs':
         genome_length = '3088269832'
     if species == 'mm':
@@ -218,7 +206,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
     ##################################
     print_log('Checking parameters ...')
     if bg_iteration == "auto":
-        bg_iteration = int(processed_adata.shape[0] * 5 / cell_number_per_group) + 1
+        bg_iteration = int(processed_adata.shape[0] * 3 / cell_number_per_group) + 1
     check_para(processed_adata, cell_feature_adata, project,
                 cell_number_per_group, peak_confidence, bg_iteration, 
                 chip_index, motif_index, reference_method, result_store_path,
@@ -242,8 +230,6 @@ def enrich(processed_adata, cell_feature_adata, project='',
     ##################################
     ### bed generation
     ##################################
-    # generate background peak, if length same as iteration, we consider it has estimated, skip generation.
-    # if user generate same length background, but diff depth, may report unaccurate result.
     if run_info.info['progress']['bg_bed_generation'] == 'No':
         if os.path.exists(bg_bed_path):
             shutil.rmtree(bg_bed_path)
@@ -256,10 +242,6 @@ def enrich(processed_adata, cell_feature_adata, project='',
     if run_info.info['progress']['fg_bed_generation'] == 'No':
         if os.path.exists(fg_bed_path):
             shutil.rmtree(fg_bed_path)
-        # if aggregate_peak_method == "group":
-        #     fg_map_dict = generate_cluster_bed(processed_adata, cell_feature_adata, fg_bed_path, fg_map_dict_path, cell_number_per_group, cell_cutoff, peak_confidence)
-            # run_info.finish_stage('fg_bed_generation')
-        # if aggregate_peak_method == "nearest":
         fg_map_dict = generate_neighbor_bed(processed_adata, cell_feature_adata, fg_bed_path,
                                             fg_map_dict_path, fg_peaks_number_path, cell_number_per_group, peak_confidence, n_cores)
         run_info.finish_stage('fg_bed_generation')
@@ -292,16 +274,6 @@ def enrich(processed_adata, cell_feature_adata, project='',
     elif reference_method == 'motif':
         regulation_adata = merge_giggle_adata(processed_adata, fg_cell_factor_percent_df_motif, 'motif')
     run_info.finish_stage('enrich_adata_store')
-    # if search_chip == True and search_motif == True:
-    #     if integration == True:
-    #         regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'integration', motif_result_p)
-    #     else:
-    #         regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
-    #         regulation_adata = merge_giggle_adata(regulation_adata, motif_result_p, 'motif')
-    # elif search_chip == True and search_motif != True:
-    #     regulation_adata = merge_giggle_adata(processed_adata, chip_result_p, 'ChIP-seq')
-    # else:
-    #     regulation_adata = merge_giggle_adata(processed_adata, motif_result_p, 'motif')
     if store_result_adata == True:
         regulation_adata.write(result_store_path)
     ##################################
@@ -351,13 +323,28 @@ def run( args ):
     processed_adata = ad.read_h5ad(processed_adata_path)
     feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
 
+    if peak_confidence == 'auto':
+        if cell_number_per_group == 'auto':
+            print_log('Estimating the number of cells per group...')
+            cell_number_per_group = determine_number_of_cells_per_group(feature_matrix, start=1, end=70, iteration_time=30, aim_peak_number=10000, peak_confidence=None)
+            print_log('Merge {cell_number} neighbor cells as one!'.format(cell_number=cell_number_per_group))
+        else:
+            cell_number_per_group = int(cell_number_per_group)
+        peak_confidence = np.ceil(0.1*cell_number_per_group)
+    else:
+        peak_confidence = int(peak_confidence)
+        if cell_number_per_group == 'auto':
+            print_log('Estimating the number of cells per group...')
+            cell_number_per_group = determine_number_of_cells_per_group(feature_matrix, start=1, end=70, iteration_time=30, aim_peak_number=10000, peak_confidence=peak_confidence)
+            print_log('Merge {cell_number} neighbor cells as one!'.format(cell_number=cell_number_per_group))
+        else:
+            cell_number_per_group = int(cell_number_per_group)
+        
 
     enrich(processed_adata, 
            feature_matrix, 
            project=project,
-        #    aggregate_peak_method=aggregate_peak_method, 
            cell_number_per_group=cell_number_per_group, 
-        #    cell_cutoff=cell_cutoff, 
            peak_confidence=peak_confidence, 
            bg_iteration=bg_iteration, 
            chip_index=chip_index, 

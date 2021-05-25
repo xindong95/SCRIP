@@ -8,7 +8,9 @@
 @License :   (C)Copyright 2020-2021, XinDong
 '''
 
-import scanpy as sc
+import sys
+from SCRIPT.utilities.utils import print_log
+# import scanpy as sc
 import random
 import numpy as np
 from SCRIPT.enrichment.bed_generation import generate_peak_list
@@ -27,5 +29,7 @@ def determine_number_of_cells_per_group(input_mat, start=1, end=70, iteration_ti
             cells = random.sample(cell_pool, cell_number)
             tmp_peak_number.append(generate_peak_list(cells, input_mat, peak_confidence).__len__())
         peak_number = sum(tmp_peak_number)/iteration_time
-        print(tmp_peak_number)
-    print(cell_number)
+        if cell_number > end:
+            print_log('Can not find enough cells!')
+            sys.exit()
+    return cell_number

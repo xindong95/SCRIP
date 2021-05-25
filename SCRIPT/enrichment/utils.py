@@ -20,14 +20,6 @@ def time_estimate(cell_number, bg_iteration_number, reference_method, core, chip
 #   generate bed: 0.5 second per cell,  search index: 10 seconds per cell, cal p: 2 seconds per factor
     chip_process = True if reference_method in ['integration', 'both', 'chip'] else False
     motif_process = True if reference_method in ['integration', 'both', 'motif'] else False
-    # if peak_methods == "group":
-    #     bed_number = int(cell_number/cell_number_per_group) + bg_iteration_number
-    #     seconds = 3 * bed_number
-    #     if chip_process == True:
-    #         seconds += 10 * bed_number
-    #     if motif_process == True:
-    #         seconds += 10 * bed_number
-    # elif peak_methods == "nearest":
     seconds = int(cell_number * core / 50) # single core process, find nearest cells function
     bed_number = cell_number + bg_iteration_number
     seconds += 3 * bed_number
@@ -68,7 +60,6 @@ class EnrichRunInfo(object):
                 'bg_bed_chip_search': 'No',
                 'fg_bed_motif_search': 'No',
                 'fg_bed_chip_search': 'No',
-                'fg_peak_number_store': 'No',
                 
                 'bg_dataset_raw_odds_ratio_chip_df_store': 'No',
                 'fg_dataset_raw_odds_ratio_chip_df_store': 'No',
