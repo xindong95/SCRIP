@@ -10,10 +10,6 @@ defalut_params:
 
 index:
   human_chip_index: ''
-  human_chip_index_dataset_number: ''
   human_motif_index: ''
-  human_motif_index_dataset_number: ''
   mouse_chip_index: ''
-  mouse_chip_index_dataset_number: ''
   mouse_motif_index: ''
-  mouse_motif_index_dataset_number: ''
