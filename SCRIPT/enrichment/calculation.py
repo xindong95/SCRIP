@@ -218,7 +218,7 @@ def cal_deviation_table_batch(fg_table, bg_table, n_cores=8):
     return dts_cell_result_table_deviation
 
 
-def score_normalization(fg_dataset_deviation_score_df, fg_dataset_fisher_df, index_peak_number_path, fg_peaks_number_path, ):
+def score_normalization(fg_dataset_deviation_score_df, fg_dataset_fisher_df, index_peak_number_path, fg_peaks_number_path):
     # fisher normalize matrix
     fisher_log_foreground = -np.log10(fg_dataset_fisher_df)
     fisher_log_foreground_true_table = (fisher_log_foreground.T/fisher_log_foreground.max(1)).T
