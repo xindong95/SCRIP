@@ -25,12 +25,12 @@ def check_para(processed_adata, cell_feature_adata, project,
     if re.match(r'chr.*_\d*_\d*', cell_feature_adata.var_names[0]) == None:
         print_log("cell_feature_adata's index/rownames should be like this: chr1_222222_333333. Each row is a feature and each column is a cell.")
         sys.exit()
-    if reference_method == 'chip':
-        if not os.path.exists(chip_index):
+    if reference_method in ['chip' , 'integration' , 'both']:
+        if not os.path.exists(chip_index) or chip_index == '':
             print_log("chip_index do not exist!")
             sys.exit()
-    if reference_method == 'motif':
-        if not os.path.exists(motif_index):
+    if reference_method in ['motif', 'integration', 'both']:
+        if not os.path.exists(motif_index) or motif_index == '':
             print_log("motif_index do not exist!")
             sys.exit()
     # prepare information

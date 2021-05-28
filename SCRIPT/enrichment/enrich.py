@@ -330,7 +330,7 @@ def run( args ):
             print_log('Merge {cell_number} neighbor cells as one!'.format(cell_number=cell_number_per_group))
         else:
             cell_number_per_group = int(cell_number_per_group)
-        peak_confidence = np.ceil(0.1*cell_number_per_group)
+        peak_confidence = int(np.ceil(0.1*cell_number_per_group))
     else:
         peak_confidence = int(peak_confidence)
         if cell_number_per_group == 'auto':
