@@ -13,7 +13,7 @@ import sys
 from datetime import datetime, timedelta
 import json
 from SCRIPT.Constants import *
-from SCRIPT.utilities.utils import print_log
+from SCRIPT.utilities.utils import store_to_pickle, read_pickle
 
 
 def time_estimate(cell_number, bg_iteration_number, reference_method, core, chip_factor_number=5068, motif_factor_number=1112):
@@ -114,5 +114,20 @@ class EnrichRunInfo(object):
         else:
             return True
 
+    def safe_run_and_store(self, func, func_arg_list, store_path, stage):
+        if self.info['progress'][stage] == 'No':
+            ret = func(*func_arg_list)
+            store_to_pickle(ret, store_path)
+            self.finish_stage(stage)
+        else:
+            ret = read_pickle(store_path)
+        return ret
 
+    def safe_run(self, func, func_arg_list, stage):
+        if self.info['progress'][stage] == 'No':
+            func(*func_arg_list)
+            self.finish_stage(stage)
+        else:
+            pass
+        return
 
