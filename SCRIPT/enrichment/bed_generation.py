@@ -28,9 +28,9 @@ def generate_peak_list(cells, input_mat, peak_confidence=1):
 
 def generate_beds(file_path, cells, input_mat, peak_confidence):
     peaks = generate_peak_list(cells, input_mat, peak_confidence)
-    cell_barcode = os.path.basename(file_path)[:-7]
+    cell_barcode = os.path.basename(file_path)[:-4]# remove .bed
     if peaks.__len__() == 0:
-        print_log('Warning: No peaks in {bed_path}, skip generation'.format(bed_path = file_path[:-7]))
+        print_log('Warning: No peaks in {bed_path}, skip generation'.format(bed_path = file_path[:-4]))
     else:
         peaks = pd.DataFrame([p.split("_") for p in peaks])
         peaks.to_csv(file_path, sep="\t", header= None, index=None)
