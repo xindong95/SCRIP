@@ -1,4 +1,4 @@
-conda activate test
+git pull
 python setup.py install
 
 # SCRIPT -h
