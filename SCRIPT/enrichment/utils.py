@@ -67,8 +67,8 @@ class EnrichRunInfo(object):
                 'fg_dataset_deviation_score_chip_df_store': 'No',
                 'fg_dataset_score_chip_df_store': 'No',
 
-                'bg_dataset_odds_ratio_motif_df_store': 'No',
-                'fg_dataset_odds_ratio_motif_df_store': 'No',
+                'bg_dataset_raw_odds_ratio_motif_df_store': 'No',
+                'fg_dataset_raw_odds_ratio_motif_df_store': 'No',
                 'fg_dataset_fisher_motif_df_store': 'No',
                 'fg_dataset_deviation_score_motif_df_store': 'No',
                 'fg_dataset_score_motif_df_store': 'No',
