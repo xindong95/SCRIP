@@ -91,12 +91,12 @@ def add_enrich_parser( subparsers ):
     group_output.add_argument( "-p", "--project", dest = "project", type = str, default = "" ,
                                help = 'Project name, which will be used to generate output files folder. DEFAULT: Random generate.')
     
-    # group for preprocessing
-    group_preprocessing = argparser_enrich.add_argument_group( "Preprocessing paramater arguments" )
-    group_preprocessing.add_argument( "--cell_number", dest = "cell_number_per_group", type = str, default = 'auto',
-                                        help='Number of cell of each group when imputation. DEFAULT: "auto".')
-    group_preprocessing.add_argument("--peak_confidence", dest="peak_confidence", type=str, default='auto',
-                                        help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
+    # # group for preprocessing
+    # group_preprocessing = argparser_enrich.add_argument_group( "Preprocessing paramater arguments" )
+    # group_preprocessing.add_argument( "--cell_number", dest = "cell_number_per_group", type = str, default = 'auto',
+    #                                     help='Number of cell of each group when imputation. DEFAULT: "auto".')
+    # group_preprocessing.add_argument("--peak_confidence", dest="peak_confidence", type=str, default='auto',
+    #                                     help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
     
     # group for impute
     group_impute = argparser_enrich.add_argument_group( "Peak imputation paramater arguments" )

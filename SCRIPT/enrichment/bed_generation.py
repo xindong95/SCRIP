@@ -40,7 +40,7 @@ def generate_beds(file_path, cells, input_mat, peak_confidence):
     return [cell_barcode, peaks.__len__()]
 
 @excute_info('Start generating background beds ...', 'Finished generating background beds!')
-def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50, iteration=1000, peak_confidence=5, n_cores=8):
+def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, peaks_number_store_path, step=50, iteration=1000, peak_confidence=5, n_cores=8):
     map_dict = {}
     safe_makedirs(bg_bed_path)
     cl_name = input_mat.obs_names.to_list()
@@ -52,6 +52,7 @@ def generate_background_bed(input_mat, bg_bed_path, map_dict_store_path, step=50
         map_dict[i] = random.sample(cl_name, step)
         all_task.append(executor.submit(generate_beds, bg_bed_path + "/" + str(i) + ".bed", map_dict[i], input_mat, peak_confidence))
     wait(all_task, return_when=ALL_COMPLETED)
+    pd.DataFrame([_.result() for _ in as_completed(all_task)]).to_csv(peaks_number_store_path, header=None, index=None, sep='\t')
     with open(map_dict_store_path, "wb") as map_dict_file:
         pickle.dump(map_dict, map_dict_file)
     return map_dict
