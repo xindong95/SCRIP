@@ -221,7 +221,7 @@ def cal_deviation_table_batch(fg_table, bg_table, n_cores=8):
 def cal_peak_norm_matrix(index_peak_number_path, peaks_number_path):
     index_peak_number = pd.read_csv(index_peak_number_path, sep='\t', header=None, index_col=0)
     data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
-
+    data_peak_number.index = data_peak_number.index.astype(str)
     peak_cell_index_norm_table = pd.DataFrame(np.zeros([index_peak_number.index.__len__(), data_peak_number.index.__len__()]),
                                               index=index_peak_number.index, columns=data_peak_number.index)
     for dts in peak_cell_index_norm_table.index:

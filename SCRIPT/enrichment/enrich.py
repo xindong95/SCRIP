@@ -67,7 +67,7 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_n
             'fg_dataset_fisher_ChIP_df_store')
         fg_dataset_peak_norm_df = run_info.safe_run_and_store(
             cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_peak_norm_df_ChIP.pk'),
+            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_ChIP.pk'),
             'bg_dataset_peak_norm_ChIP_df_store')
         fg_dataset_cell_score_df = run_info.safe_run_and_store(
             score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
@@ -107,7 +107,7 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_n
             'fg_dataset_fisher_motif_df_store')
         fg_dataset_peak_norm_df = run_info.safe_run_and_store(
             cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_peak_norm_df_motif.pk'),
+            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_motif.pk'),
             'bg_dataset_peak_norm_motif_df_store')
         fg_dataset_cell_score_df = run_info.safe_run_and_store(
             score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
