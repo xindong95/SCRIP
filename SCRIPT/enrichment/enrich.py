@@ -66,9 +66,9 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_n
             os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_fisher_df_ChIP.pk'), 
             'fg_dataset_fisher_ChIP_df_store')
         fg_dataset_peak_norm_df = run_info.safe_run_and_store(
-            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
+            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path],
             os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_ChIP.pk'),
-            'bg_dataset_peak_norm_ChIP_df_store')
+            'fg_dataset_peak_norm_ChIP_df_store')
         fg_dataset_cell_score_df = run_info.safe_run_and_store(
             score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
             os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_score_df_ChIP.pk'),
@@ -106,9 +106,9 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_n
             os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_fisher_df_motif.pk'),
             'fg_dataset_fisher_motif_df_store')
         fg_dataset_peak_norm_df = run_info.safe_run_and_store(
-            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
+            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path],
             os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_motif.pk'),
-            'bg_dataset_peak_norm_motif_df_store')
+            'fg_dataset_peak_norm_motif_df_store')
         fg_dataset_cell_score_df = run_info.safe_run_and_store(
             score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
             os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_score_df_motif.pk'),
@@ -289,6 +289,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
 
 
 def run( args ):
+    print_log('Parsing arguments...', '\r')
     processed_adata_path = args.processed_experiment
     feature_matrix_path = args.feature_matrix
     species = args.species

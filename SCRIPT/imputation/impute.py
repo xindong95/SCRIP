@@ -47,6 +47,7 @@ def determine_number_of_cells_per_group(input_mat, start=1, end=70, iteration_ti
             peak_confidence = np.ceil(0.2*cell_number)
         tmp_peak_number = []
         for i in range(iteration_time):
+            random.seed(i)
             cells = random.sample(cell_pool, cell_number)
             tmp_peak_number.append(generate_peak_list(cells, input_mat, peak_confidence).__len__())
         peak_number = sum(tmp_peak_number)/iteration_time

@@ -15,10 +15,16 @@ import subprocess
 # install giggle, tabix
 # https://github.com/ryanlayer/giggle
 
+def install_giggle():
+    prefix = os.environ['PATH'].split(':')[0]
+    cmd = 'cd refpkg/giggle; make; cp bin/giggle {PREFIX}/; cd ../..'.format(PREFIX=prefix)
+    subprocess.run(cmd, shell=True)
+
 def main():
+    install_giggle()
     setup(
         name='SCRIPT',
-        version='0.0.210520',
+        version='0.0.210623',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
@@ -52,6 +58,7 @@ def main():
             ]
         },
     )
+
 
 
 if __name__ == "__main__":
