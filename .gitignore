@@ -131,6 +131,7 @@ dmypy.json
 
 # vscode
 .vscode/
+
 refpkg/giggle/bin/
 refpkg/giggle/lab/
 refpkg/giggle/doc/html/
