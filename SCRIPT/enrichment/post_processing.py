@@ -24,7 +24,7 @@ def map_factor_on_ChIP(table):
     for i in table.index:
         factor_name = i.split("_")
         factor_index_list.append(factor_name[1])
-    table["Factor"] = factor_index_list
+    table.loc[:,"Factor"] = factor_index_list
     return table.groupby("Factor").max()
 
 # @excute_info('Extract cell by map dictionary ...', 'Finished all clusters!')

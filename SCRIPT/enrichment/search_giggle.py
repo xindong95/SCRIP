@@ -32,7 +32,7 @@ def search_giggle(bed_path, result_path, index_path, genome_length):
 
 
 def search_giggle_batch(bed_folder, result_folder, index_path, genome_length, n_cores=8, tp=''):
-    print_log('Start searching foreground beds from {tp} index ...'.format(tp=tp))
+    print_log('Start searching {ground} beds from {tp} index ...'.format(ground=tp[0], tp=tp[1]))
     safe_makedirs(result_folder)
     beds = os.listdir(bed_folder)
     args = []
@@ -44,7 +44,7 @@ def search_giggle_batch(bed_folder, result_folder, index_path, genome_length, n_
                      genome_length))
     with Pool(n_cores) as p:
         p.starmap(search_giggle, args)
-    print_log('Finished searching foreground beds from {tp} index ...'.format(tp=tp))
+    print_log('Finished searching {ground} beds from {tp} index ...'.format(ground=tp[0], tp=tp[1]))
 
 # def read_giggle_result(path):
 #     """For giggle stored path, return a table, col is cell cluster / cell and row is factor"""

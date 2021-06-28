@@ -207,12 +207,11 @@ def cal_deviation_table(fg_table, bg_table, i):
 
 
 def cal_deviation_table_batch(fg_table, bg_table, n_cores=8):
-    print_log("Calculating deviation, divide into {n} chunks...".format(n=n_cores))
+    print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
     fg_table_split = np.array_split(fg_table, n_cores)
     args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
     with Pool(n_cores) as p:
         result = p.starmap(cal_deviation_table, args)
-    print_log("Generating P value table ...")
     dts_cell_result_table_deviation = pd.concat([i for i in result])
     print_log('Finished calculation enrichment!')
     return dts_cell_result_table_deviation
@@ -242,8 +241,7 @@ def score_normalization(dataset_odds_ratio_df, dataset_fisher_df, peak_number_no
     # fisher normalize matrix
     fisher_log_foreground = -np.log10(dataset_fisher_df)
     fisher_log_foreground_true_table = (fisher_log_foreground.T/fisher_log_foreground.max(1)).T
-    fisher_log_foreground_true_table = fisher_log_foreground_true_table.reindex(
-        index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
+    fisher_log_foreground_true_table = fisher_log_foreground_true_table.reindex(index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
 
     peak_number_norm_coef_table = peak_number_norm_coef.reindex(
         index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)

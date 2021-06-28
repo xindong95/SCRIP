@@ -33,11 +33,11 @@ def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_n
     folder_prefix = run_info.info['project_folder']
     # tp(type) is 'ChIP-seq' or 'motif'
     if tp == 'ChIP-seq':
-        run_info.safe_run(search_giggle_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, tp], 'bg_bed_chip_search')
-        run_info.safe_run(search_giggle_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, tp], 'fg_bed_chip_search')
+        run_info.safe_run(search_giggle_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, ['background', tp]], 'bg_bed_chip_search')
+        run_info.safe_run(search_giggle_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, ['foreground', tp]], 'fg_bed_chip_search')
     else:
-        run_info.safe_run(search_giggle_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, tp], 'bg_bed_motif_search')
-        run_info.safe_run(search_giggle_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, tp], 'fg_bed_motif_search')
+        run_info.safe_run(search_giggle_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, ['background', tp]], 'bg_bed_motif_search')
+        run_info.safe_run(search_giggle_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, ['foreground', tp]], 'fg_bed_motif_search')
 
     if tp == 'ChIP-seq':
         bg_dataset_odds_ratio_df = run_info.safe_run_and_store(
@@ -227,7 +227,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
     if run_info.info['progress']['bg_bed_generation'] == 'No':
         if os.path.exists(bg_bed_path):
             shutil.rmtree(bg_bed_path)
-        bg_map_dict = generate_background_bed(cell_feature_adata, bg_bed_path, bg_map_dict_path, bg_peaks_number_path,
+        bg_map_dict = generate_background_bed(processed_adata, cell_feature_adata, bg_bed_path, bg_map_dict_path, bg_peaks_number_path,
                                               cell_number_per_group, bg_iteration, peak_confidence, n_cores)
         run_info.finish_stage('bg_bed_generation')
     else:  # run_info.info['progress']['bg_bed_generation'] == 'Finish'
@@ -289,7 +289,6 @@ def enrich(processed_adata, cell_feature_adata, project='',
 
 
 def run( args ):
-    print_log('Parsing arguments...', '\r')
     processed_adata_path = args.processed_experiment
     feature_matrix_path = args.feature_matrix
     species = args.species

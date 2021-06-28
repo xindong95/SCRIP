@@ -12,7 +12,7 @@ import argparse
 import os
 import sys
 import ruamel.yaml
-from pkg_resources import resource_filename
+# from pkg_resources import resource_filename
 from SCRIPT.Constants import *
 from SCRIPT.utilities.utils import read_config
 yaml = ruamel.yaml.YAML()
