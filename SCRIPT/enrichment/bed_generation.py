@@ -32,7 +32,7 @@ def generate_beds(file_path, cells, input_mat, peak_confidence):
     if peaks.__len__() == 0:
         print_log('Warning: No peaks in {bed_path}, skip generation'.format(bed_path = file_path[:-4]))
     else:
-        peaks = pd.DataFrame([p.split("_") for p in peaks])
+        peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
         peaks.to_csv(file_path, sep="\t", header= None, index=None)
         cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=file_path)
         cmd += 'rm {bed_path}'.format(bed_path=file_path)

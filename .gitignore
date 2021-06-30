@@ -143,4 +143,5 @@ refpkg/giggle/*_Runner.c
 refpkg/giggle/*.dSYM/
 refpkg/giggle/*.DS_Store
 
-
+refpkg/seqpare/obj/
+refpkg/seqpare/bin/
