@@ -17,14 +17,14 @@ import subprocess
 
 def install_giggle():
     prefix = os.environ['PATH'].split(':')[0]
-    cmd = 'cd refpkg/giggle; make; cp bin/giggle {PREFIX}/; cd ../..'.format(PREFIX=prefix)
+    cmd = 'cd refpkg/seqpare; make; cp bin/seqpare {PREFIX}/; cd ../..'.format(PREFIX=prefix)
     subprocess.run(cmd, shell=True)
 
 def main():
     install_giggle()
     setup(
         name='SCRIPT',
-        version='0.0.210623',
+        version='0.0.210706',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',

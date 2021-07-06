@@ -23,101 +23,101 @@ from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
 from SCRIPT.enrichment.post_processing import map_factor_on_ChIP, merge_giggle_adata
 from SCRIPT.enrichment.calculation import cal_deviation_table_batch, score_normalization, cal_peak_norm_matrix
-from SCRIPT.enrichment.search_giggle import search_giggle_batch, read_giggle_result_odds_batch, read_giggle_result_fisher_batch
+from SCRIPT.enrichment.search_seqpare import search_seqpare_batch, read_seqpare_result_batch
 from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
 from SCRIPT.imputation.impute import determine_number_of_cells_per_group
 # from SCRIPT.Constants import *
 
 
-def search_and_read_giggle(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_number_path, fg_bed_path, fg_result_path, fg_peaks_number_path, index, genome_length, n_cores, fg_map_dict):
+def search_and_read_seqpare(run_info, tp, bg_bed_path, bg_result_path, bg_peaks_number_path, fg_bed_path, fg_result_path, fg_peaks_number_path, index, genome_length, n_cores, fg_map_dict):
     folder_prefix = run_info.info['project_folder']
     # tp(type) is 'ChIP-seq' or 'motif'
     if tp == 'ChIP-seq':
-        run_info.safe_run(search_giggle_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, ['background', tp]], 'bg_bed_chip_search')
-        run_info.safe_run(search_giggle_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, ['foreground', tp]], 'fg_bed_chip_search')
+        run_info.safe_run(search_seqpare_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, ['background', tp]], 'bg_bed_chip_search')
+        run_info.safe_run(search_seqpare_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, ['foreground', tp]], 'fg_bed_chip_search')
     else:
-        run_info.safe_run(search_giggle_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, ['background', tp]], 'bg_bed_motif_search')
-        run_info.safe_run(search_giggle_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, ['foreground', tp]], 'fg_bed_motif_search')
+        run_info.safe_run(search_seqpare_batch, [bg_bed_path, bg_result_path, index, genome_length, n_cores, ['background', tp]], 'bg_bed_motif_search')
+        run_info.safe_run(search_seqpare_batch, [fg_bed_path, fg_result_path, index, genome_length, n_cores, ['foreground', tp]], 'fg_bed_motif_search')
 
     if tp == 'ChIP-seq':
-        bg_dataset_odds_ratio_df = run_info.safe_run_and_store(
-            read_giggle_result_odds_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_odds_ratio_df_ChIP.pk'), 
-            'bg_dataset_odds_ratio_ChIP_df_store')
-        bg_dataset_fisher_df = run_info.safe_run_and_store(
-            read_giggle_result_fisher_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_fisher_df_ChIP.pk'), 
-            'bg_dataset_fisher_ChIP_df_store')
-        bg_dataset_peak_norm_df = run_info.safe_run_and_store(
-            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_peak_norm_df_ChIP.pk'),
-            'bg_dataset_peak_norm_ChIP_df_store')
-        bg_dataset_cell_score_df = run_info.safe_run_and_store(
-            score_normalization, [bg_dataset_odds_ratio_df, bg_dataset_fisher_df, bg_dataset_peak_norm_df],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_score_df_ChIP.pk'),
-            'bg_dataset_score_ChIP_df_store')
+        # bg_dataset_odds_ratio_df = run_info.safe_run_and_store(
+        #     read_giggle_result_odds_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_odds_ratio_df_ChIP.pk'), 
+        #     'bg_dataset_odds_ratio_ChIP_df_store')
+        # bg_dataset_fisher_df = run_info.safe_run_and_store(
+        #     read_giggle_result_fisher_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_fisher_df_ChIP.pk'), 
+        #     'bg_dataset_fisher_ChIP_df_store')
+        # bg_dataset_peak_norm_df = run_info.safe_run_and_store(
+        #     cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_peak_norm_df_ChIP.pk'),
+        #     'bg_dataset_peak_norm_ChIP_df_store')
+        # bg_dataset_cell_score_df = run_info.safe_run_and_store(
+        #     score_normalization, [bg_dataset_odds_ratio_df, bg_dataset_fisher_df, bg_dataset_peak_norm_df],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_score_df_ChIP.pk'),
+        #     'bg_dataset_score_ChIP_df_store')
 
-        fg_dataset_odds_ratio_df = run_info.safe_run_and_store(
-            read_giggle_result_odds_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_odds_ratio_df_ChIP.pk'), 
-            'fg_dataset_odds_ratio_ChIP_df_store')
-        fg_dataset_fisher_df = run_info.safe_run_and_store(
-            read_giggle_result_fisher_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_fisher_df_ChIP.pk'), 
-            'fg_dataset_fisher_ChIP_df_store')
-        fg_dataset_peak_norm_df = run_info.safe_run_and_store(
-            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_ChIP.pk'),
-            'fg_dataset_peak_norm_ChIP_df_store')
-        fg_dataset_cell_score_df = run_info.safe_run_and_store(
-            score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_score_df_ChIP.pk'),
-            'fg_dataset_score_ChIP_df_store')
+        # fg_dataset_odds_ratio_df = run_info.safe_run_and_store(
+        #     read_giggle_result_odds_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_odds_ratio_df_ChIP.pk'), 
+        #     'fg_dataset_odds_ratio_ChIP_df_store')
+        # fg_dataset_fisher_df = run_info.safe_run_and_store(
+        #     read_giggle_result_fisher_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_fisher_df_ChIP.pk'), 
+        #     'fg_dataset_fisher_ChIP_df_store')
+        # fg_dataset_peak_norm_df = run_info.safe_run_and_store(
+        #     cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_ChIP.pk'),
+        #     'fg_dataset_peak_norm_ChIP_df_store')
+        # fg_dataset_cell_score_df = run_info.safe_run_and_store(
+        #     score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_score_df_ChIP.pk'),
+        #     'fg_dataset_score_ChIP_df_store')
 
-        fg_dataset_deviation_score_df = run_info.safe_run_and_store(
-            cal_deviation_table_batch, [fg_dataset_cell_score_df, bg_dataset_cell_score_df, n_cores],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_deviation_df_ChIP.pk'), 
-            'fg_dataset_deviation_score_ChIP_df_store')
+        # fg_dataset_deviation_score_df = run_info.safe_run_and_store(
+        #     cal_deviation_table_batch, [fg_dataset_cell_score_df, bg_dataset_cell_score_df, n_cores],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_deviation_df_ChIP.pk'), 
+        #     'fg_dataset_deviation_score_ChIP_df_store')
 
     else:
-        bg_dataset_odds_ratio_df = run_info.safe_run_and_store(
-            read_giggle_result_odds_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_odds_ratio_df_motif.pk'),
-            'bg_dataset_odds_ratio_motif_df_store')
-        bg_dataset_fisher_df = run_info.safe_run_and_store(
-            read_giggle_result_fisher_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_fisher_df_motif.pk'),
-            'bg_dataset_fisher_motif_df_store')
-        bg_dataset_peak_norm_df = run_info.safe_run_and_store(
-            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_peak_norm_df_motif.pk'),
-            'bg_dataset_peak_norm_motif_df_store')
-        bg_dataset_cell_score_df = run_info.safe_run_and_store(
-            score_normalization, [bg_dataset_odds_ratio_df, bg_dataset_fisher_df, bg_dataset_peak_norm_df],
-            os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_score_df_motif.pk'),
-            'bg_dataset_score_motif_df_store')
+        # bg_dataset_odds_ratio_df = run_info.safe_run_and_store(
+        #     read_giggle_result_odds_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_odds_ratio_df_motif.pk'),
+        #     'bg_dataset_odds_ratio_motif_df_store')
+        # bg_dataset_fisher_df = run_info.safe_run_and_store(
+        #     read_giggle_result_fisher_batch, [bg_result_path, n_cores, 'background {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_fisher_df_motif.pk'),
+        #     'bg_dataset_fisher_motif_df_store')
+        # bg_dataset_peak_norm_df = run_info.safe_run_and_store(
+        #     cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), bg_peaks_number_path],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_peak_norm_df_motif.pk'),
+        #     'bg_dataset_peak_norm_motif_df_store')
+        # bg_dataset_cell_score_df = run_info.safe_run_and_store(
+        #     score_normalization, [bg_dataset_odds_ratio_df, bg_dataset_fisher_df, bg_dataset_peak_norm_df],
+        #     os.path.join(folder_prefix, 'enrichment', 'bg_files', 'bg_dataset_score_df_motif.pk'),
+        #     'bg_dataset_score_motif_df_store')
 
-        fg_dataset_odds_ratio_df = run_info.safe_run_and_store(
-            read_giggle_result_odds_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_odds_ratio_df_motif.pk'),
-            'fg_dataset_odds_ratio_motif_df_store')
-        fg_dataset_fisher_df = run_info.safe_run_and_store(
-            read_giggle_result_fisher_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_fisher_df_motif.pk'),
-            'fg_dataset_fisher_motif_df_store')
-        fg_dataset_peak_norm_df = run_info.safe_run_and_store(
-            cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_motif.pk'),
-            'fg_dataset_peak_norm_motif_df_store')
-        fg_dataset_cell_score_df = run_info.safe_run_and_store(
-            score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_score_df_motif.pk'),
-            'fg_dataset_score_motif_df_store')
+        # fg_dataset_odds_ratio_df = run_info.safe_run_and_store(
+        #     read_giggle_result_odds_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_odds_ratio_df_motif.pk'),
+        #     'fg_dataset_odds_ratio_motif_df_store')
+        # fg_dataset_fisher_df = run_info.safe_run_and_store(
+        #     read_giggle_result_fisher_batch, [fg_result_path, n_cores, 'foreground {tp}'.format(tp=tp)],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_fisher_df_motif.pk'),
+        #     'fg_dataset_fisher_motif_df_store')
+        # fg_dataset_peak_norm_df = run_info.safe_run_and_store(
+        #     cal_peak_norm_matrix, [os.path.join(index, 'peaks_number.txt'), fg_peaks_number_path],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_peak_norm_df_motif.pk'),
+        #     'fg_dataset_peak_norm_motif_df_store')
+        # fg_dataset_cell_score_df = run_info.safe_run_and_store(
+        #     score_normalization, [fg_dataset_odds_ratio_df, fg_dataset_fisher_df, fg_dataset_peak_norm_df],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_score_df_motif.pk'),
+        #     'fg_dataset_score_motif_df_store')
 
-        fg_dataset_deviation_score_df = run_info.safe_run_and_store(
-            cal_deviation_table_batch, [fg_dataset_cell_score_df, bg_dataset_cell_score_df, n_cores],
-            os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_deviation_df_motif.pk'),
-            'fg_dataset_deviation_score_motif_df_store')
+        # fg_dataset_deviation_score_df = run_info.safe_run_and_store(
+        #     cal_deviation_table_batch, [fg_dataset_cell_score_df, bg_dataset_cell_score_df, n_cores],
+        #     os.path.join(folder_prefix, 'enrichment', 'fg_files', 'fg_dataset_deviation_df_motif.pk'),
+        #     'fg_dataset_deviation_score_motif_df_store')
 
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
     if tp == 'ChIP-seq':
@@ -151,7 +151,7 @@ def enrich(processed_adata, cell_feature_adata, project='',
         'project':project_abs_path,
         'cell_number_per_group':cell_number_per_group,
         'peak_confidence':peak_confidence,
-        'bg_iteration':bg_iteration,
+        # 'bg_iteration':bg_iteration,
         'chip_index':chip_index,
         'motif_index':motif_index,
         'reference_method':reference_method,
@@ -182,11 +182,11 @@ def enrich(processed_adata, cell_feature_adata, project='',
     fg_peaks_number_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_peaks_number.txt')
     fg_motif_result_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_motif_result')
     fg_chip_result_path = os.path.join(project, 'enrichment', 'fg_files', 'fg_chip_result')
-    bg_bed_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_bed')
-    bg_map_dict_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_bed.pk')
-    bg_peaks_number_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_peaks_number.txt')
-    bg_chip_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_chip_result') 
-    bg_motif_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_motif_result')
+    # bg_bed_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_bed')
+    # bg_map_dict_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_bed.pk')
+    # bg_peaks_number_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_peaks_number.txt')
+    # bg_chip_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_chip_result') 
+    # bg_motif_result_path = os.path.join(project, 'enrichment', 'bg_files', 'bg_motif_result')
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.h5ad')
     safe_makedirs(fg_bed_path)
     safe_makedirs(bg_bed_path)
@@ -224,15 +224,15 @@ def enrich(processed_adata, cell_feature_adata, project='',
     ##################################
     ### bed generation
     ##################################
-    if run_info.info['progress']['bg_bed_generation'] == 'No':
-        if os.path.exists(bg_bed_path):
-            shutil.rmtree(bg_bed_path)
-        bg_map_dict = generate_background_bed(processed_adata, cell_feature_adata, bg_bed_path, bg_map_dict_path, bg_peaks_number_path,
-                                              cell_number_per_group, bg_iteration, peak_confidence, n_cores)
-        run_info.finish_stage('bg_bed_generation')
-    else:  # run_info.info['progress']['bg_bed_generation'] == 'Finish'
-        with open(bg_map_dict_path, "rb") as map_dict_file:
-            bg_map_dict = pickle.load(map_dict_file)
+    # if run_info.info['progress']['bg_bed_generation'] == 'No':
+    #     if os.path.exists(bg_bed_path):
+    #         shutil.rmtree(bg_bed_path)
+    #     bg_map_dict = generate_background_bed(processed_adata, cell_feature_adata, bg_bed_path, bg_map_dict_path, bg_peaks_number_path,
+    #                                           cell_number_per_group, bg_iteration, peak_confidence, n_cores)
+    #     run_info.finish_stage('bg_bed_generation')
+    # else:  # run_info.info['progress']['bg_bed_generation'] == 'Finish'
+    #     with open(bg_map_dict_path, "rb") as map_dict_file:
+    #         bg_map_dict = pickle.load(map_dict_file)
     if run_info.info['progress']['fg_bed_generation'] == 'No':
         if os.path.exists(fg_bed_path):
             shutil.rmtree(fg_bed_path)

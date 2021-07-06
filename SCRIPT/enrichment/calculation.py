@@ -186,66 +186,66 @@ from multiprocessing import Process, Pool
 #     return new_pvalues
 
 
-def cal_deviation(val, mean, std):
-    return (val-mean)/std
+# def cal_deviation(val, mean, std):
+#     return (val-mean)/std
 
 
-def cal_deviation_table(fg_table, bg_table, i):
-    print_log('chunk {i} calculating ...'.format(i=i))
-    dts_cell_result_table_deviation = fg_table.copy()
-    for factor in fg_table.index:
-        factor_bg = bg_table.loc[factor, :].tolist()
-        bg_mean = np.mean(factor_bg)
-        bg_std = np.std(factor_bg)
-        if bg_mean != 0 and bg_std != 0:
-            dts_cell_result_table_deviation.loc[factor, :] = fg_table.loc[factor, :].apply(
-                cal_deviation, **{'mean': bg_mean, 'std': bg_std})
-        else:
-            dts_cell_result_table_deviation.loc[factor, :] = 0
-    print_log('chunk {i} finished calculation!'.format(i=i))
-    return dts_cell_result_table_deviation
+# def cal_deviation_table(fg_table, bg_table, i):
+#     print_log('chunk {i} calculating ...'.format(i=i))
+#     dts_cell_result_table_deviation = fg_table.copy()
+#     for factor in fg_table.index:
+#         factor_bg = bg_table.loc[factor, :].tolist()
+#         bg_mean = np.mean(factor_bg)
+#         bg_std = np.std(factor_bg)
+#         if bg_mean != 0 and bg_std != 0:
+#             dts_cell_result_table_deviation.loc[factor, :] = fg_table.loc[factor, :].apply(
+#                 cal_deviation, **{'mean': bg_mean, 'std': bg_std})
+#         else:
+#             dts_cell_result_table_deviation.loc[factor, :] = 0
+#     print_log('chunk {i} finished calculation!'.format(i=i))
+#     return dts_cell_result_table_deviation
 
 
-def cal_deviation_table_batch(fg_table, bg_table, n_cores=8):
-    print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
-    fg_table_split = np.array_split(fg_table, n_cores)
-    args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
-    with Pool(n_cores) as p:
-        result = p.starmap(cal_deviation_table, args)
-    dts_cell_result_table_deviation = pd.concat([i for i in result])
-    print_log('Finished calculation enrichment!')
-    return dts_cell_result_table_deviation
+# def cal_deviation_table_batch(fg_table, bg_table, n_cores=8):
+#     print_log("Calculating enrichment, divide into {n} chunks...".format(n=n_cores))
+#     fg_table_split = np.array_split(fg_table, n_cores)
+#     args = [[table, bg_table, i] for (i, table) in enumerate(fg_table_split)]
+#     with Pool(n_cores) as p:
+#         result = p.starmap(cal_deviation_table, args)
+#     dts_cell_result_table_deviation = pd.concat([i for i in result])
+#     print_log('Finished calculation enrichment!')
+#     return dts_cell_result_table_deviation
 
 
-def cal_peak_norm_matrix(index_peak_number_path, peaks_number_path):
-    index_peak_number = pd.read_csv(index_peak_number_path, sep='\t', header=None, index_col=0)
-    data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
-    data_peak_number.index = data_peak_number.index.astype(str)
-    peak_cell_index_norm_table = pd.DataFrame(np.zeros([index_peak_number.index.__len__(), data_peak_number.index.__len__()]),
-                                              index=index_peak_number.index, columns=data_peak_number.index)
-    for dts in peak_cell_index_norm_table.index:
-        dts_number = index_peak_number.loc[dts, 1]
-        peak_cell_index_norm_table.loc[dts, :] = [i/dts_number if i <= dts_number else dts_number/i for i in data_peak_number[1]]
-    peak_cell_index_norm_table = peak_cell_index_norm_table.reindex(index=index_peak_number.index, columns=data_peak_number.index)
+# def cal_peak_norm_matrix(index_peak_number_path, peaks_number_path):
+#     index_peak_number = pd.read_csv(index_peak_number_path, sep='\t', header=None, index_col=0)
+#     data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
+#     data_peak_number.index = data_peak_number.index.astype(str)
+#     peak_cell_index_norm_table = pd.DataFrame(np.zeros([index_peak_number.index.__len__(), data_peak_number.index.__len__()]),
+#                                               index=index_peak_number.index, columns=data_peak_number.index)
+#     for dts in peak_cell_index_norm_table.index:
+#         dts_number = index_peak_number.loc[dts, 1]
+#         peak_cell_index_norm_table.loc[dts, :] = [i/dts_number if i <= dts_number else dts_number/i for i in data_peak_number[1]]
+#     peak_cell_index_norm_table = peak_cell_index_norm_table.reindex(index=index_peak_number.index, columns=data_peak_number.index)
 
-    peak_number_dts_mean_value = data_peak_number[1].mean()
-    peak_number_dts_norm_series = data_peak_number[1].apply(lambda x: 2**-(abs(x-peak_number_dts_mean_value)/x))
-    peak_number_dts_norm_series = peak_number_dts_norm_series.reindex(index=data_peak_number.index)
+#     peak_number_dts_mean_value = data_peak_number[1].mean()
+#     peak_number_dts_norm_series = data_peak_number[1].apply(lambda x: 2**-(abs(x-peak_number_dts_mean_value)/x))
+#     peak_number_dts_norm_series = peak_number_dts_norm_series.reindex(index=data_peak_number.index)
 
-    peak_number_norm_coef = peak_cell_index_norm_table * peak_number_dts_norm_series
+#     peak_number_norm_coef = peak_cell_index_norm_table * peak_number_dts_norm_series
 
-    return peak_number_norm_coef
+#     return peak_number_norm_coef
 
 
-def score_normalization(dataset_odds_ratio_df, dataset_fisher_df, peak_number_norm_coef):
-    # fisher normalize matrix
-    fisher_log_foreground = -np.log10(dataset_fisher_df)
-    fisher_log_foreground_true_table = (fisher_log_foreground.T/fisher_log_foreground.max(1)).T
-    fisher_log_foreground_true_table = fisher_log_foreground_true_table.reindex(index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
+# def score_normalization(dataset_odds_ratio_df, dataset_fisher_df, peak_number_norm_coef):
+#     # fisher normalize matrix
+#     fisher_log_foreground = -np.log10(dataset_fisher_df)
+#     fisher_log_foreground_true_table = (fisher_log_foreground.T/fisher_log_foreground.max(1)).T
+#     fisher_log_foreground_true_table = fisher_log_foreground_true_table.reindex(index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
 
-    peak_number_norm_coef_table = peak_number_norm_coef.reindex(
-        index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
+#     peak_number_norm_coef_table = peak_number_norm_coef.reindex(
+#         index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
 
-    # key multiply
-    fg_dataset_cell_score_df = dataset_odds_ratio_df * fisher_log_foreground_true_table * peak_number_norm_coef_table
-    return fg_dataset_cell_score_df
+#     # key multiply
+#     fg_dataset_cell_score_df = dataset_odds_ratio_df * fisher_log_foreground_true_table * peak_number_norm_coef_table
+#     return fg_dataset_cell_score_df

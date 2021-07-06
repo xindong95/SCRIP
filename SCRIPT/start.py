@@ -106,8 +106,8 @@ def add_enrich_parser( subparsers ):
                               help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
     # processing options
     group_processing = argparser_enrich.add_argument_group( "Processing options" )
-    group_processing.add_argument( "--bg_iter", dest = "bg_iter", type = str, default = 'auto',
-                                   help='Number of background iteraton. Recommand greater than 1000. DEFAULT: "auto".')
+    # group_processing.add_argument( "--bg_iter", dest = "bg_iter", type = str, default = 'auto',
+    #                                help='Number of background iteraton. Recommand greater than 1000. DEFAULT: "auto".')
     group_processing.add_argument( "--reference", dest = "reference", choices=['integration','both','chip','motif'], default = "integration",
                                    help='Choise of integration / both / chip / motif, "integration" means integrate motif and ChIP result by standard deviation, "both" means keep the both result without merge. DEFAULT: integration. ')
 

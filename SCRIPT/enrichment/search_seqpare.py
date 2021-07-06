@@ -22,8 +22,15 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def search_seqpare(bed_path, result_path, index_path):
+    #     bed = bed_path.split("/")[-1]
+    #     if bed_path.endswith('gz'):
     cmd = 'seqpare "{index_path}/*" "{bed_path}" -m 1 -o {result_path}\n'.format(
         index_path=index_path, result_path=result_path, bed_path=bed_path)
+#     print(cmd)
+#     else:
+#         cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_path)
+#         cmd += 'giggle search -i {index_path} -s -q {bed_path}.gz > {result_path}\n'.format(index_path=index_path, result_path=result_path, bed_path=bed_path)
+#         cmd += 'rm {bed_path}'.format(bed_path=bed_path)
     subprocess.run(cmd, shell=True, check=True)
 
 
@@ -48,10 +55,10 @@ def read_seqpare_result(files):
         cell_bc = giggle_result[:-4]  # remove suffix '.txt'
         dtframe = pd.read_csv(files[i], sep="\t", index_col=5)
         if i == 0:
-            dtframe = dtframe.loc[:, ['sm']].copy()
-            dataset_cell_score_df = dtframe.rename(columns={'sm': cell_bc})
+            dtframe = dtframe.loc[:, ['teo']].copy()
+            dataset_cell_score_df = dtframe.rename(columns={'teo': cell_bc})
         else:
-            dataset_cell_score_df[cell_bc] = dtframe.loc[:, "sm"]
+            dataset_cell_score_df[cell_bc] = dtframe.loc[:, "teo"]
     dataset_cell_score_df.index = [i.rsplit('/', 1)[1][:-7] for i in dataset_cell_score_df.index]  # remove suffix '.bed.gz'
     return dataset_cell_score_df
 
