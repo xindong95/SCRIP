@@ -93,16 +93,16 @@ def add_enrich_parser( subparsers ):
     
     # # group for preprocessing
     # group_preprocessing = argparser_enrich.add_argument_group( "Preprocessing paramater arguments" )
-    # group_preprocessing.add_argument( "--cell_number", dest = "cell_number_per_group", type = str, default = 'auto',
+    # group_preprocessing.add_argument( "--min_cell", dest = "min_cell", type = str, default = 'auto',
     #                                     help='Number of cell of each group when imputation. DEFAULT: "auto".')
-    # group_preprocessing.add_argument("--peak_confidence", dest="peak_confidence", type=str, default='auto',
+    # group_preprocessing.add_argument("--min_peak", dest="min_peak", type=str, default='auto',
     #                                     help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
     
     # group for impute
     group_impute = argparser_enrich.add_argument_group( "Peak imputation paramater arguments" )
-    group_impute.add_argument( "--cell_number", dest = "cell_number_per_group", type = str, default = 'auto',
-                               help='Number of cell of each group when imputation. DEFAULT: "auto".')
-    group_impute.add_argument("--peak_confidence", dest="peak_confidence", type=str, default='auto',
+    group_impute.add_argument( "--cell_number", dest = "cell_number_impute", type = str, default = 'auto',
+                               help='Number of cell to merge together when imputation. DEFAULT: "auto".')
+    group_impute.add_argument("--peak_confidence", dest="peak_confidence_impute", type=str, default='auto',
                               help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
     # processing options
     group_processing = argparser_enrich.add_argument_group( "Processing options" )

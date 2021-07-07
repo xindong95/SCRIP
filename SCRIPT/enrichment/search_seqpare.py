@@ -22,20 +22,13 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def search_seqpare(bed_path, result_path, index_path):
-    #     bed = bed_path.split("/")[-1]
-    #     if bed_path.endswith('gz'):
     cmd = 'seqpare "{index_path}/*" "{bed_path}" -m 1 -o {result_path}\n'.format(
         index_path=index_path, result_path=result_path, bed_path=bed_path)
-#     print(cmd)
-#     else:
-#         cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_path)
-#         cmd += 'giggle search -i {index_path} -s -q {bed_path}.gz > {result_path}\n'.format(index_path=index_path, result_path=result_path, bed_path=bed_path)
-#         cmd += 'rm {bed_path}'.format(bed_path=bed_path)
     subprocess.run(cmd, shell=True, check=True)
 
 
-def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=['', '']):
-    print_log('Start searching {ground} beds from {tp} index ...'.format(ground=tp[0], tp=tp[1]))
+def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
+    print_log('Start searching beds from {tp} index ...'.format(tp=tp))
     safe_makedirs(result_folder)
     beds = os.listdir(bed_folder)
     args = []
@@ -46,7 +39,7 @@ def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=['
                      index_path))
     with Pool(n_cores) as p:
         p.starmap(search_seqpare, args)
-    print_log('Finished searching {ground} beds from {tp} index ...'.format(ground=tp[0], tp=tp[1]))
+    print_log('Finished searching beds from {tp} index ...'.format(tp=tp))
 
 
 def read_seqpare_result(files):

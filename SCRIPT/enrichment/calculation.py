@@ -217,9 +217,10 @@ from multiprocessing import Process, Pool
 #     return dts_cell_result_table_deviation
 
 
-# def cal_peak_norm_matrix(index_peak_number_path, peaks_number_path):
-#     index_peak_number = pd.read_csv(index_peak_number_path, sep='\t', header=None, index_col=0)
-#     data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
+def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number):
+    ref_peak_number = pd.read_csv(ref_peak_number_path, sep='\t', header=None, index_col=0)
+    data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
+    peak_norm_hyper = (ref_peak_number.dot(data_peak_number.T)/ccre_number)
 #     data_peak_number.index = data_peak_number.index.astype(str)
 #     peak_cell_index_norm_table = pd.DataFrame(np.zeros([index_peak_number.index.__len__(), data_peak_number.index.__len__()]),
 #                                               index=index_peak_number.index, columns=data_peak_number.index)
@@ -233,19 +234,21 @@ from multiprocessing import Process, Pool
 #     peak_number_dts_norm_series = peak_number_dts_norm_series.reindex(index=data_peak_number.index)
 
 #     peak_number_norm_coef = peak_cell_index_norm_table * peak_number_dts_norm_series
+    return peak_norm_hyper
 
-#     return peak_number_norm_coef
+
+def cal_score(dataset_mbm_overlap_ChIP_df, dataset_bg_peak_norm_ChIP_df):
+    intersect_frame = dataset_mbm_overlap_ChIP_df.copy()
+    peak_hyper_frame = dataset_bg_peak_norm_ChIP_df.copy().reindex(index=intersect_frame.index, columns=intersect_frame.columns)
+    fg_dataset_cell_raw_score_df = intersect_frame/peak_hyper_frame
+    return fg_dataset_cell_raw_score_df
 
 
-# def score_normalization(dataset_odds_ratio_df, dataset_fisher_df, peak_number_norm_coef):
-#     # fisher normalize matrix
-#     fisher_log_foreground = -np.log10(dataset_fisher_df)
-#     fisher_log_foreground_true_table = (fisher_log_foreground.T/fisher_log_foreground.max(1)).T
-#     fisher_log_foreground_true_table = fisher_log_foreground_true_table.reindex(index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
-
-#     peak_number_norm_coef_table = peak_number_norm_coef.reindex(
-#         index=dataset_odds_ratio_df.index, columns=dataset_odds_ratio_df.columns)
-
-#     # key multiply
-#     fg_dataset_cell_score_df = dataset_odds_ratio_df * fisher_log_foreground_true_table * peak_number_norm_coef_table
-#     return fg_dataset_cell_score_df
+def zscore_normalization(data_cell_frame, by='cell'):
+    if by=="cell":
+        data_cell_frame_zscore = data_cell_frame.apply(scipy.stats.zscore, axis=0)
+    elif by == "factor":
+        data_cell_frame_zscore = data_cell_frame.apply(scipy.stats.zscore, axis=1)
+    else:
+        pass
+    return data_cell_frame_zscore

@@ -10,7 +10,7 @@
 
 
 # import subprocess
-import scipy as sp
+import scipy
 import numpy as np
 import pandas as pd
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
@@ -19,13 +19,14 @@ from SCRIPT.utilities.utils import print_log, excute_info
 
 @excute_info('Summary result from dataset level to factor level.') 
 def map_factor_on_ChIP(table):
+    ret_table=table.copy()
     # map factor by id "_"
     factor_index_list = []
-    for i in table.index:
+    for i in ret_table.index:
         factor_name = i.split("_")
         factor_index_list.append(factor_name[1])
-    table.loc[:,"Factor"] = factor_index_list
-    return table.groupby("Factor").max()
+    ret_table.loc[:, "Factor"] = factor_index_list
+    return ret_table.groupby("Factor").max()
 
 # @excute_info('Extract cell by map dictionary ...', 'Finished all clusters!')
 # def extract_by_cell_cluster(result_table, map_dict):

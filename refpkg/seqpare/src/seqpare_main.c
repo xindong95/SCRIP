@@ -8,7 +8,7 @@
 #define MINOR_VERSION "1"
 #define REVISION_VERSION "1"
 #define BUILD_VERSION "0"
-#define MODIFY_VERSION "XinD"
+#define MODIFY_VERSION "SCRIPT"
 #define VERSION MAJOR_VERSION "." MINOR_VERSION "." REVISION_VERSION "." MODIFY_VERSION
 
 int seqpare_help(int exit_code);

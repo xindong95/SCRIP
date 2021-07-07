@@ -2,7 +2,6 @@ defalut_params:
   project: '' # comment
   cell_number_per_group: 50
   peak_confidence: 5
-  bg_iter: 'auto'
   reference: True
   thread: 16
   yes_confirm: False
