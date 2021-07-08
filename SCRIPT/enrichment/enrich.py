@@ -33,7 +33,7 @@ def search_and_read_seqpare(run_info, tp, imputed_beds_path, result_path, peaks_
     folder_prefix = run_info.info['project_folder']
     # tp(type) is 'ChIP-seq' or 'motif'
     if tp == 'ChIP-seq':
-        run_info.safe_run(search_seqpare_batch, [imputed_beds_path, result_path, index, ccre_number, n_cores, tp], 'bed_ChIP_search')
+        run_info.safe_run(search_seqpare_batch, [imputed_beds_path, result_path, index, n_cores, tp], 'bed_ChIP_search')
         dataset_mbm_overlap_ChIP_df = run_info.safe_run_and_store(
             read_seqpare_result_batch, [result_path, n_cores, tp],
             os.path.join(folder_prefix, 'enrichment', 'dataset_mbm_overlap_ChIP_df.pk'),
@@ -53,7 +53,7 @@ def search_and_read_seqpare(run_info, tp, imputed_beds_path, result_path, peaks_
         # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
         fg_cell_dataset_score_df = map_factor_on_ChIP(dataset_zscore_ChIP_df).T
     else:
-        run_info.safe_run(search_seqpare_batch, [imputed_beds_path, result_path, index, ccre_number, n_cores, tp], 'bed_motif_search')
+        run_info.safe_run(search_seqpare_batch, [imputed_beds_path, result_path, index, n_cores, tp], 'bed_motif_search')
         dataset_mbm_overlap_motif_df = run_info.safe_run_and_store(
             read_seqpare_result_batch, [result_path, n_cores, tp],
             os.path.join(folder_prefix, 'enrichment', 'dataset_mbm_overlap_motif_df.pk'),

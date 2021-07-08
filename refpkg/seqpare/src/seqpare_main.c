@@ -27,8 +27,8 @@ int main(int argc, char **argv)
 		}		
 	}
 	
-	clock_t start, end1;  
-    start = clock();
+	// clock_t start, end1;  
+    // start = clock();
 	
 	if(m==0 && argc==3){
 		//compare two interval sets
@@ -155,8 +155,8 @@ int main(int argc, char **argv)
 	else 
 		return seqpare_help(0);
 
-    end1 = clock();    
-    printf("execution time: %f\n", ((double)(end1-start))/CLOCKS_PER_SEC);         
+    // end1 = clock();    
+    // printf("execution time: %f\n", ((double)(end1-start))/CLOCKS_PER_SEC);         
   
     return 0;
 }

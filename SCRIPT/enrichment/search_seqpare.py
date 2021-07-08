@@ -22,7 +22,7 @@ warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def search_seqpare(bed_path, result_path, index_path):
-    cmd = 'seqpare "{index_path}/*" "{bed_path}" -m 1 -o {result_path}\n'.format(
+    cmd = 'seqpare "{index_path}/*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'.format(
         index_path=index_path, result_path=result_path, bed_path=bed_path)
     subprocess.run(cmd, shell=True, check=True)
 

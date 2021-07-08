@@ -49,10 +49,10 @@ def check_para(processed_adata, cell_feature_adata, project,
         information += 'SCRIPT will search motif index.\n'
     if reference_method != 'motif':
         information += 'ChIP-seq index locates at {chip_index}.\n'.format(chip_index=chip_index)
-        information += 'ChIP-seq intervals intersect result will be stored in {chip_result_path}'.format(chip_result_path=chip_result_path)
+        information += 'ChIP-seq intervals intersection result will be stored in {chip_result_path}'.format(chip_result_path=chip_result_path)
     if reference_method != 'chip':
         information += 'Motif index locates at {motif_index}.\n'.format(motif_index=motif_index)
-        information += 'Motif intervals intersect result will be stored in {motif_result_path}, '.format(motif_result_path=motif_result_path)
+        information += 'Motif intervals intersection result will be stored in {motif_result_path}, '.format(motif_result_path=motif_result_path)
     if result_store_path != '':
         information += 'Computed result will be stored in {result_store_path}.\n'.format(result_store_path=result_store_path)
     else:
