@@ -57,12 +57,12 @@ class EnrichRunInfo(object):
                 'dataset_mbm_overlap_ChIP_df_store': 'No',
                 'dataset_bg_peak_norm_ChIP_df_store': 'No',
                 'dataset_raw_score_ChIP_df_store': 'No',
-                'dataset_zscore_ChIP_df_store': 'No',
+                'dataset_score_ChIP_df_store': 'No',
 
                 'dataset_mbm_overlap_motif_df_store': 'No',
                 'dataset_bg_peak_norm_motif_df_store': 'No',
                 'dataset_raw_score_motif_df_store': 'No',
-                'dataset_zscore_motif_df_store': 'No',
+                'dataset_score_motif_df_store': 'No',
 
                 'enrich_adata_store':'No'
             }

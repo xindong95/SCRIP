@@ -21,8 +21,8 @@ import pandas as pd
 from SCRIPT.enrichment.bed_generation import generate_neighbor_bed
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
-from SCRIPT.enrichment.post_processing import map_factor_on_ChIP, merge_giggle_adata
-from SCRIPT.enrichment.calculation import zscore_normalization, cal_peak_norm, cal_score
+from SCRIPT.enrichment.post_processing import merge_giggle_adata
+from SCRIPT.enrichment.calculation import score_normalization, cal_peak_norm, cal_score, map_factor_on_ChIP
 from SCRIPT.enrichment.search_seqpare import search_seqpare_batch, read_seqpare_result_batch
 from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
 from SCRIPT.imputation.impute import determine_number_of_cells_per_group
@@ -46,12 +46,12 @@ def search_and_read_seqpare(run_info, tp, imputed_beds_path, result_path, peaks_
             cal_score, [dataset_mbm_overlap_ChIP_df, dataset_bg_peak_norm_ChIP_df],
             os.path.join(folder_prefix, 'enrichment', 'dataset_raw_score_ChIP_df.pk'),
             'dataset_raw_score_ChIP_df_store')
-        dataset_zscore_ChIP_df = run_info.safe_run_and_store(
-            zscore_normalization, [dataset_raw_score_ChIP_df, 'cell'],
-            os.path.join(folder_prefix, 'enrichment', 'dataset_zscore_ChIP_df.pk'),
-            'dataset_zscore_ChIP_df_store')
+        dataset_score_ChIP_df = run_info.safe_run_and_store(
+            score_normalization, [dataset_raw_score_ChIP_df,'ChIP'],
+            os.path.join(folder_prefix, 'enrichment', 'dataset_score_ChIP_df.pk'),
+            'dataset_score_ChIP_df_store')
         # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
-        fg_cell_dataset_score_df = map_factor_on_ChIP(dataset_zscore_ChIP_df).T
+        fg_cell_dataset_score_df = dataset_score_ChIP_df.T
     else:
         run_info.safe_run(search_seqpare_batch, [imputed_beds_path, result_path, index, n_cores, tp], 'bed_motif_search')
         dataset_mbm_overlap_motif_df = run_info.safe_run_and_store(
@@ -67,9 +67,9 @@ def search_and_read_seqpare(run_info, tp, imputed_beds_path, result_path, peaks_
             os.path.join(folder_prefix, 'enrichment', 'dataset_raw_score_motif_df.pk'),
             'dataset_raw_score_motif_df_store')
         dataset_zscore_motif_df = run_info.safe_run_and_store(
-            zscore_normalization, [dataset_raw_score_motif_df, 'cell'],
-            os.path.join(folder_prefix, 'enrichment', 'dataset_zscore_motif_df.pk'),
-            'dataset_zscore_motif_df_store')
+            score_normalization, [dataset_raw_score_motif_df, 'motif'],
+            os.path.join(folder_prefix, 'enrichment', 'dataset_score_motif_df.pk'),
+            'dataset_score_motif_df_store')
         # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
         fg_cell_dataset_score_df = dataset_zscore_motif_df.T
     return fg_cell_dataset_score_df, run_info

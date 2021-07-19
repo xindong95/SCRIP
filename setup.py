@@ -49,7 +49,7 @@ def main():
             'seaborn',
             'sklearn',
             'scipy',
-            'scanpy==1.7.1',
+            'scanpy>=1.7.1',
         ],
         python_requires='>=3.8.*, !=3.9.*',
         entry_points={

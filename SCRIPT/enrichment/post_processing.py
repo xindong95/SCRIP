@@ -17,17 +17,6 @@ import pandas as pd
 from SCRIPT.utilities.utils import print_log, excute_info
 
 
-@excute_info('Summary result from dataset level to factor level.') 
-def map_factor_on_ChIP(table):
-    ret_table=table.copy()
-    # map factor by id "_"
-    factor_index_list = []
-    for i in ret_table.index:
-        factor_name = i.split("_")
-        factor_index_list.append(factor_name[1])
-    ret_table.loc[:, "Factor"] = factor_index_list
-    return ret_table.groupby("Factor").max()
-
 # @excute_info('Extract cell by map dictionary ...', 'Finished all clusters!')
 # def extract_by_cell_cluster(result_table, map_dict):
 #     r_table = pd.DataFrame()

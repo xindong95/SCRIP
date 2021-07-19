@@ -13,7 +13,7 @@ import sys
 import numpy as np
 import pandas as pd
 import scipy
-from SCRIPT.utilities.utils import print_log
+from SCRIPT.utilities.utils import excute_info, print_log
 from multiprocessing import Process, Pool
 
 # def cal_hist_auc(arrays, bins = 500):
@@ -216,6 +216,16 @@ from multiprocessing import Process, Pool
 #     print_log('Finished calculation enrichment!')
 #     return dts_cell_result_table_deviation
 
+@excute_info('Summary result from dataset level to factor level.')
+def map_factor_on_ChIP(table):
+    ret_table = table.copy()
+    # map factor by id "_"
+    factor_index_list = []
+    for i in ret_table.index:
+        factor_name = i.split("_")
+        factor_index_list.append(factor_name[1])
+    ret_table.loc[:, "Factor"] = factor_index_list
+    return ret_table.groupby("Factor").max()
 
 def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number):
     ref_peak_number = pd.read_csv(ref_peak_number_path, sep='\t', header=None, index_col=0)
@@ -237,10 +247,10 @@ def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number):
     return peak_norm_hyper
 
 
-def cal_score(dataset_mbm_overlap_ChIP_df, dataset_bg_peak_norm_ChIP_df):
-    intersect_frame = dataset_mbm_overlap_ChIP_df.copy()
-    peak_hyper_frame = dataset_bg_peak_norm_ChIP_df.copy().reindex(index=intersect_frame.index, columns=intersect_frame.columns)
-    fg_dataset_cell_raw_score_df = intersect_frame/peak_hyper_frame
+def cal_score(dataset_mbm_overlap_df, dataset_bg_peak_norm_df):
+    intersect_frame = dataset_mbm_overlap_df.copy()
+    peak_hyper_frame = dataset_bg_peak_norm_df.copy().reindex(index=intersect_frame.index, columns=intersect_frame.columns)
+    fg_dataset_cell_raw_score_df = (intersect_frame/peak_hyper_frame)-1
     return fg_dataset_cell_raw_score_df
 
 
@@ -252,3 +262,13 @@ def zscore_normalization(data_cell_frame, by='cell'):
     else:
         pass
     return data_cell_frame_zscore
+
+
+def score_normalization(data_cell_frame, type='ChIP'):
+    if type == 'ChIP':
+        factor_cell_frame_raw_score = map_factor_on_ChIP(data_cell_frame)
+    else:
+        factor_cell_frame_raw_score = data_cell_frame
+    factor_cell_frame_zscore = zscore_normalization(factor_cell_frame_raw_score, by='cell')
+    factor_cell_frame_score = (factor_cell_frame_zscore.T-factor_cell_frame_zscore.mean(1)).T
+    return factor_cell_frame_score*10
