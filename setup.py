@@ -12,19 +12,16 @@ import os
 import sys
 import subprocess
 
-# install giggle, tabix
-# https://github.com/ryanlayer/giggle
-
-def install_giggle():
+def install_seqpare():
     prefix = os.environ['PATH'].split(':')[0]
     cmd = 'cd refpkg/seqpare; make; cp bin/seqpare {PREFIX}/; cd ../..'.format(PREFIX=prefix)
     subprocess.run(cmd, shell=True)
 
 def main():
-    install_giggle()
+    install_seqpare()
     setup(
         name='SCRIPT',
-        version='0.0.210706',
+        version='0.0.210719',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',

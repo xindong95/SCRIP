@@ -57,19 +57,19 @@ def prepare_argparser():
     subparsers = argparser.add_subparsers( dest = 'subcommand' )
     subparsers.required = True
 
-    add_enrich_parser( subparsers )
-
-    add_setting_parser( subparsers )
+    add_enrich_parser(subparsers)
+    add_impute_parser(subparsers)
+    add_setting_parser(subparsers)
 
     return argparser
 
 def add_setting_parser( subparsers ):
     argparser_setting = subparsers.add_parser("setting", help="Configuration.")
     argparser_setting.add_argument( "--show", dest = "show", action = 'store_true', default=False, help = "" )
-    argparser_setting.add_argument( "--human_chip_index", dest = "human_chip_index", type = str, help = "" )
-    argparser_setting.add_argument( "--human_motif_index", dest = "human_motif_index", type = str, help = "" )
-    argparser_setting.add_argument( "--mouse_chip_index", dest = "mouse_chip_index", type = str, help = "" )
-    argparser_setting.add_argument( "--mouse_motif_index", dest = "mouse_motif_index", type = str, help = "" )
+    argparser_setting.add_argument("--human_tf_index", dest="human_tf_index", type=str, help="")
+    # argparser_setting.add_argument( "--human_motif_index", dest = "human_motif_index", type = str, help = "" )
+    argparser_setting.add_argument("--mouse_tf_index", dest="mouse_tf_index", type=str, help="")
+    # argparser_setting.add_argument( "--mouse_motif_index", dest = "mouse_motif_index", type = str, help = "" )
 
     return
 
@@ -80,8 +80,8 @@ def add_enrich_parser( subparsers ):
     
     # group for input files
     group_input = argparser_enrich.add_argument_group( "Input files arguments" )
-    group_input.add_argument( "-e", "--processed_experiment", dest = "processed_experiment", type = str, required = True, 
-                              help = 'A processed single cell experiment anndata. Seurat or scanpy or MAESTRO. REQUIRED.' )
+    # group_input.add_argument( "-e", "--processed_experiment", dest = "processed_experiment", type = str, required = True, 
+    #                           help = 'A processed single cell experiment anndata. Seurat or scanpy or MAESTRO. REQUIRED.' )
     group_input.add_argument( "-i", "--input_feature_matrix", dest = "feature_matrix", type = str, required = True, 
                               help = 'A cell by peak matrix . REQUIRED.' )
     group_input.add_argument( "-s", "--species", dest = "species", choices= ['hs', 'mm'], required = True, 
@@ -91,25 +91,20 @@ def add_enrich_parser( subparsers ):
     group_output.add_argument( "-p", "--project", dest = "project", type = str, default = "" ,
                                help = 'Project name, which will be used to generate output files folder. DEFAULT: Random generate.')
     
-    # # group for preprocessing
-    # group_preprocessing = argparser_enrich.add_argument_group( "Preprocessing paramater arguments" )
-    # group_preprocessing.add_argument( "--min_cell", dest = "min_cell", type = str, default = 'auto',
-    #                                     help='Number of cell of each group when imputation. DEFAULT: "auto".')
-    # group_preprocessing.add_argument("--min_peak", dest="min_peak", type=str, default='auto',
-    #                                     help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
-    
-    # group for impute
-    group_impute = argparser_enrich.add_argument_group( "Peak imputation paramater arguments" )
-    group_impute.add_argument( "--cell_number", dest = "cell_number_impute", type = str, default = 'auto',
-                               help='Number of cell to merge together when imputation. DEFAULT: "auto".')
-    group_impute.add_argument("--peak_confidence", dest="peak_confidence_impute", type=str, default='auto',
-                              help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
-    # processing options
-    group_processing = argparser_enrich.add_argument_group( "Processing options" )
-    # group_processing.add_argument( "--bg_iter", dest = "bg_iter", type = str, default = 'auto',
-    #                                help='Number of background iteraton. Recommand greater than 1000. DEFAULT: "auto".')
-    group_processing.add_argument( "--reference", dest = "reference", choices=['integration','both','chip','motif'], default = "integration",
-                                   help='Choise of integration / both / chip / motif, "integration" means integrate motif and ChIP result by standard deviation, "both" means keep the both result without merge. DEFAULT: integration. ')
+    # group for preprocessing
+    group_preprocessing = argparser_enrich.add_argument_group( "Preprocessing paramater arguments" )
+    group_preprocessing.add_argument( "--min_cells", dest = "min_cells", type = str, default = 'auto',
+                                      help='Minimal cell cutoff for features. Auto will take 0.05%% of total cell number.DEFAULT: "auto".')
+    group_preprocessing.add_argument("--min_peaks", dest="min_peaks", type=str, default='auto',
+                                     help='Minimal peak cutoff for cells. Auto will take the mean-3*std of all feature number (if less than 500 is 500). DEFAULT: "auto".')
+    group_preprocessing.add_argument("--max_peaks", dest="max_peaks", type=str, default='auto',
+                                     help='Max peak cutoff for cells. This will help you to remove the doublet cells. Auto will take the mean+5*std of all feature number. DEFAULT: "auto".')
+    # # processing options
+    # group_processing = argparser_enrich.add_argument_group( "Processing options" )
+    # # group_processing.add_argument( "--bg_iter", dest = "bg_iter", type = str, default = 'auto',
+    # #                                help='Number of background iteraton. Recommand greater than 1000. DEFAULT: "auto".')
+    # group_processing.add_argument( "--reference", dest = "reference", choices=['chip','motif'], default = "integration",
+    #                                help='Choise of integration / both / chip / motif, "integration" means integrate motif and ChIP result by standard deviation, "both" means keep the both result without merge. DEFAULT: integration. ')
 
     group_other = argparser_enrich.add_argument_group( "Other options" )
     group_other.add_argument( "-t", '--thread', dest='n_cores', type = int, default = 16,
@@ -120,6 +115,37 @@ def add_enrich_parser( subparsers ):
                               help="Whether delete tmp files(including bed and search results) generated by SCRIPT. DEFAULT: False.")
     return
 
+
+def add_impute_parser(subparsers):
+    """Add main function 'impute' argument parsers.
+    """
+    argparser_impute = subparsers.add_parser("impute", help="Imputation function.")
+
+    # group for input files
+    group_input = argparser_impute.add_argument_group("Input files arguments")
+    group_input.add_argument("-e", "--processed_experiment", dest="processed_experiment", type=str, required=True,
+                             help='A processed single cell experiment anndata. Seurat or scanpy or MAESTRO. REQUIRED.')
+    group_input.add_argument("-i", "--input_feature_matrix", dest="feature_matrix", type=str, required=True,
+                             help='A cell by peak matrix . REQUIRED.')
+
+    # group for output files
+    group_output = argparser_impute.add_argument_group("Output arguments")
+    group_output.add_argument("-p", "--project", dest="project", type=str, default="",
+                              help='Project name, which will be used to generate output files folder. DEFAULT: Random generate.')
+
+    # group for impute
+    group_impute = argparser_impute.add_argument_group("Peak imputation paramater arguments")
+    group_impute.add_argument("--cell_number", dest="cell_number_impute", type=str, default='auto',
+                              help='Number of cell to merge together when imputation. DEFAULT: "auto".')
+    group_impute.add_argument("--peak_confidence", dest="peak_confidence_impute", type=str, default='auto',
+                              help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
+
+    group_other = argparser_impute.add_argument_group("Other options")
+    group_other.add_argument("-t", '--thread', dest='n_cores', type=int, default=16,
+                             help="Number of cores use to run SCRIPT. DEFAULT: 16.")
+    group_other.add_argument("-y", "--yes", dest='yes', action='store_true', default=False,
+                             help="Whether ask for confirmation. DEFAULT: False.")
+    return
 
 if __name__ == '__main__':
     try:

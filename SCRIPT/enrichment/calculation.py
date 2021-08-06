@@ -223,9 +223,26 @@ def map_factor_on_ChIP(table):
     factor_index_list = []
     for i in ret_table.index:
         factor_name = i.split("_")
-        factor_index_list.append(factor_name[1])
+        factor_index_list.append(factor_name[0])
     ret_table.loc[:, "Factor"] = factor_index_list
-    return ret_table.groupby("Factor").max()
+    group_table = ret_table.groupby("Factor")
+    factor_table = group_table.max()
+    # max_index = group_table.idxmax()
+    return factor_table
+
+@excute_info('Getting the best reference for each cell.')
+def get_factor_source(table):
+    ret_table = table.copy()
+    # map factor by id "_"
+    factor_index_list = []
+    for i in ret_table.index:
+        factor_name = i.split("_")
+        factor_index_list.append(factor_name[0])
+    ret_table.loc[:, "Factor"] = factor_index_list
+    group_table = ret_table.groupby("Factor")
+    # factor_table = group_table.max()
+    max_index = group_table.idxmax()
+    return max_index
 
 def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number):
     ref_peak_number = pd.read_csv(ref_peak_number_path, sep='\t', header=None, index_col=0)
@@ -264,11 +281,11 @@ def zscore_normalization(data_cell_frame, by='cell'):
     return data_cell_frame_zscore
 
 
-def score_normalization(data_cell_frame, type='ChIP'):
-    if type == 'ChIP':
-        factor_cell_frame_raw_score = map_factor_on_ChIP(data_cell_frame)
-    else:
-        factor_cell_frame_raw_score = data_cell_frame
+def score_normalization(data_cell_frame):
+    # if type == 'ChIP':
+    factor_cell_frame_raw_score = map_factor_on_ChIP(data_cell_frame)
+    # else:
+    #     factor_cell_frame_raw_score = data_cell_frame
     factor_cell_frame_zscore = zscore_normalization(factor_cell_frame_raw_score, by='cell')
     factor_cell_frame_score = (factor_cell_frame_zscore.T-factor_cell_frame_zscore.mean(1)).T
-    return factor_cell_frame_score*10
+    return factor_cell_frame_score*10 

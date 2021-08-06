@@ -16,18 +16,18 @@ from SCRIPT.Constants import *
 from SCRIPT.utilities.utils import store_to_pickle, read_pickle
 
 
-def time_estimate(cell_number, reference_method, core, chip_factor_number=4499, motif_factor_number=1112):
+def time_estimate(cell_number, core, chip_factor_number=4499):
 #   generate bed: 0.5 second per cell,  search index: 10 seconds per cell, cal p: 2 seconds per factor
-    chip_process = True if reference_method in ['integration', 'both', 'chip'] else False
-    motif_process = True if reference_method in ['integration', 'both', 'motif'] else False
+    # chip_process = True if reference_method in ['integration', 'both', 'chip'] else False
+    # motif_process = True if reference_method in ['integration', 'both', 'motif'] else False
     seconds = int(cell_number * core / 50) # single core process, find nearest cells function
     seconds += 3 * cell_number
-    if chip_process == True:
-        seconds += 10 * cell_number
-        seconds += 2 * chip_factor_number
-    if motif_process == True:
-        seconds += 10 * cell_number
-        seconds += 2 * motif_factor_number
+    # if chip_process == True:
+    seconds += 10 * cell_number
+    seconds += 2 * chip_factor_number
+    # if motif_process == True:
+    #     seconds += 10 * cell_number
+    #     seconds += 2 * motif_factor_number
 
     seconds = seconds / core
     # now_time = datetime.now()
@@ -51,20 +51,15 @@ class EnrichRunInfo(object):
             info['progress'] = {
 
                 'bed_generation': 'No',
-                'bed_ChIP_search': 'No',
-                'bed_motif_search': 'No',
+                'bed_search': 'No',
                 
-                'dataset_mbm_overlap_ChIP_df_store': 'No',
-                'dataset_bg_peak_norm_ChIP_df_store': 'No',
-                'dataset_raw_score_ChIP_df_store': 'No',
-                'dataset_score_ChIP_df_store': 'No',
+                'dataset_mbm_overlap_df_store': 'No',
+                'dataset_bg_peak_norm_df_store': 'No',
+                'dataset_raw_score_df_store': 'No',
+                'dataset_score_resource_df_store': 'No',
+                'dataset_score_df_store': 'No',
 
-                'dataset_mbm_overlap_motif_df_store': 'No',
-                'dataset_bg_peak_norm_motif_df_store': 'No',
-                'dataset_raw_score_motif_df_store': 'No',
-                'dataset_score_motif_df_store': 'No',
-
-                'enrich_adata_store':'No'
+                'result_store': 'No'
             }
         self.version = info['version']
         self.file_path = info['file_path']

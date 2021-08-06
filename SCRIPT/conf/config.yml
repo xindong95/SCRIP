@@ -1,14 +1,13 @@
 defalut_params:
   project: '' # comment
-  cell_number_per_group: 50
-  peak_confidence: 5
-  reference: True
+  # cell_number_per_group: 50
+  # peak_confidence: 5
+  # reference: True
   thread: 16
   yes_confirm: False
   clean: False
 
 index:
-  human_chip_index: ''
-  human_motif_index: ''
-  mouse_chip_index: ''
-  mouse_motif_index: ''
+  human_tf_index: ''
+  mouse_tf_index: ''
+
