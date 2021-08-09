@@ -46,7 +46,7 @@ def search_and_read_seqpare(run_info, beds_path, result_path, peaks_number_path,
         cal_score, [dataset_mbm_overlap_df, dataset_bg_peak_norm_df],
         os.path.join(folder_prefix, 'dataset_raw_score_df.pk'),
         'dataset_raw_score_df_store')
-    dataset_raw_score_df = run_info.safe_run_and_store(
+    dataset_score_resource_df = run_info.safe_run_and_store(
         get_factor_source, [dataset_raw_score_df],
         os.path.join(folder_prefix, 'dataset_score_resource_df.pk'),
         'dataset_score_resource_df_store')

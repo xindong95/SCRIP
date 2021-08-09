@@ -225,8 +225,8 @@ def map_factor_on_ChIP(table):
         factor_name = i.split("_")
         factor_index_list.append(factor_name[0])
     ret_table.loc[:, "Factor"] = factor_index_list
-    group_table = ret_table.groupby("Factor")
-    factor_table = group_table.max()
+    # group_table = ret_table.groupby("Factor")
+    factor_table = ret_table.groupby("Factor").max()
     # max_index = group_table.idxmax()
     return factor_table
 
@@ -239,9 +239,9 @@ def get_factor_source(table):
         factor_name = i.split("_")
         factor_index_list.append(factor_name[0])
     ret_table.loc[:, "Factor"] = factor_index_list
-    group_table = ret_table.groupby("Factor")
+    # group_table = ret_table.groupby("Factor")
     # factor_table = group_table.max()
-    max_index = group_table.idxmax()
+    max_index = ret_table.groupby("Factor").idxmax()
     return max_index
 
 def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number):
