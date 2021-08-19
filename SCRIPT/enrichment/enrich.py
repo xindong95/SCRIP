@@ -25,7 +25,7 @@ from SCRIPT.enrichment.post_processing import merge_giggle_adata
 from SCRIPT.enrichment.calculation import score_normalization, cal_peak_norm, cal_score, get_factor_source
 from SCRIPT.enrichment.search_seqpare import search_seqpare_batch, read_seqpare_result_batch
 from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
-from SCRIPT.imputation.impute import determine_number_of_cells_per_group
+from SCRIPT.enhancement.enhance import determine_number_of_cells_per_group
 # from SCRIPT.Constants import *
 
 

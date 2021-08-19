@@ -22,29 +22,10 @@ from SCRIPT.enrichment.bed_generation import generate_peak_list
 from multiprocessing import Pool
 
 
-def cal_neighbor_cell_peak_mat(table, input_mat, coor_table, impute_n, i):
-    # print(i)
-    for cell_barcode in table.index:
-        nearest_bc = find_nearest_cells(cell_barcode, coor_table, n_neighbor=impute_n)
-#         table.loc[cell_barcode,:] = [1 if i else 0 for i in input_mat.loc[nearest_bc,:].sum() >= 1]
-        table.loc[cell_barcode, :] = input_mat.loc[nearest_bc, :].sum()
-    return table
-
-def cal_neighbor_cell_peak_mat_batch(input_mat, coor_table, impute_n, n_cores=8):
-    print_log("Generating neighbor cells peak matrix, divide into {n} chunks...".format(n=n_cores))
-    input_table_split = np.array_split(input_mat, n_cores)
-    args = [[table, input_mat, coor_table, impute_n, i] for (i, table) in enumerate(input_table_split)]
-    with Pool(n_cores) as p:
-        result = p.starmap(cal_neighbor_cell_peak_mat, args)
-    cell_peak = pd.concat([i for i in result])
-    print_log('Finished!')
-#     return scipy.sparse.csr_matrix(cell_peak)
-    return cell_peak
-
 def determine_number_of_cells_per_group(input_mat, start=1, end=70, iteration_time=30, aim_peak_number=10000, peak_confidence=None):
     peak_number = 0
     cell_pool = input_mat.obs_names.to_list()
-    cell_number = start - 1 
+    cell_number = start - 1
     while peak_number <= aim_peak_number:
         cell_number += 1
         if peak_confidence == None:
@@ -69,7 +50,7 @@ def sub_coor_table_in_small_square(cell, coor_table, step, t):
     return tmp.copy()
 
 
-def find_nearest_cells(cell, coor_table, n_neighbor=20, step=None):
+def find_nearest_cells_umap(cell, coor_table, n_neighbor=20, step=None):
     #   coor_table has two columns: X, Y, the index of coortable is cell barcodes
     if step == None:
         up_limit = coor_table.max()
@@ -95,27 +76,48 @@ def find_nearest_cells(cell, coor_table, n_neighbor=20, step=None):
     neighbor_bcs = tmp.index[0:n_neighbor].tolist()
     return neighbor_bcs
 
+def cal_neighbor_cell_peak_mat_umap(table, input_mat, coor_table, impute_n, i):
+    # print(i)
+    for cell_barcode in table.index:
+        nearest_bc = find_nearest_cells_umap(cell_barcode, coor_table, n_neighbor=impute_n)
+#         table.loc[cell_barcode,:] = [1 if i else 0 for i in input_mat.loc[nearest_bc,:].sum() >= 1]
+        table.loc[cell_barcode, :] = input_mat.loc[nearest_bc, :].sum()
+    return table
 
-@excute_info('Start generating nearest neighbor cells beds ...', 'Finished generating nearest neighbor cells beds!')
-def generate_neighbor_bed(adata, input_mat, bed_path, map_dict_store_path, peaks_number_store_path, n_neighbor=10, peak_confidence=2, n_cores=8):
-    coor_table = pd.DataFrame(adata.obsm['X_umap'], index=adata.obs.index, columns=["X", "Y"])
-    width = coor_table.max().X - coor_table.min().X
-    height = coor_table.max().Y - coor_table.min().Y
-    step = min(width, height)/200
-    map_dict = {}
-    safe_makedirs(bed_path)
-    # total_cnt = adata.obs.index.__len__()
-    executor = ThreadPoolExecutor(max_workers=n_cores)
-    all_task = []
-    for cell in adata.obs.index:
-        neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor, step)
-        map_dict[cell] = neighbor_cells
-        all_task.append(executor.submit(generate_beds, bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence))
-    wait(all_task, return_when=ALL_COMPLETED)
-    pd.DataFrame([_.result() for _ in as_completed(all_task)]).to_csv(peaks_number_store_path, header=None, index=None, sep='\t')
-    with open(map_dict_store_path, "wb") as map_dict_file:
-        pickle.dump(map_dict, map_dict_file)
-    return map_dict
+def cal_neighbor_cell_peak_mat_umap_batch(input_mat, coor_table, impute_n, n_cores=8):
+    print_log("Generating neighbor cells peak matrix, divide into {n} chunks...".format(n=n_cores))
+    input_table_split = np.array_split(input_mat, n_cores)
+    args = [[table, input_mat, coor_table, impute_n, i] for (i, table) in enumerate(input_table_split)]
+    with Pool(n_cores) as p:
+        result = p.starmap(cal_neighbor_cell_peak_mat_umap, args)
+    cell_peak = pd.concat([i for i in result])
+    print_log('Finished!')
+#     return scipy.sparse.csr_matrix(cell_peak)
+    return cell_peak
+
+
+
+
+# @excute_info('Start generating nearest neighbor cells beds ...', 'Finished generating nearest neighbor cells beds!')
+# def generate_neighbor_bed_umap(adata, input_mat, bed_path, map_dict_store_path, peaks_number_store_path, n_neighbor=10, peak_confidence=2, n_cores=8):
+#     coor_table = pd.DataFrame(adata.obsm['X_umap'], index=adata.obs.index, columns=["X", "Y"])
+#     width = coor_table.max().X - coor_table.min().X
+#     height = coor_table.max().Y - coor_table.min().Y
+#     step = min(width, height)/200
+#     map_dict = {}
+#     safe_makedirs(bed_path)
+#     # total_cnt = adata.obs.index.__len__()
+#     executor = ThreadPoolExecutor(max_workers=n_cores)
+#     all_task = []
+#     for cell in adata.obs.index:
+#         neighbor_cells = find_nearest_cells_umap(cell, coor_table, n_neighbor, step)
+#         map_dict[cell] = neighbor_cells
+#         all_task.append(executor.submit(generate_beds, bed_path + "/" + str(cell) + ".bed", neighbor_cells, input_mat, peak_confidence))
+#     wait(all_task, return_when=ALL_COMPLETED)
+#     pd.DataFrame([_.result() for _ in as_completed(all_task)]).to_csv(peaks_number_store_path, header=None, index=None, sep='\t')
+#     with open(map_dict_store_path, "wb") as map_dict_file:
+#         pickle.dump(map_dict, map_dict_file)
+#     return map_dict
 
 
 def run(args):

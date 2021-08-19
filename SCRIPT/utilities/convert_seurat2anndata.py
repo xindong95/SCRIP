@@ -26,7 +26,7 @@ from rpy2.robjects.conversion import localconverter
 # sc.logging.print_versions()
 
 rscript = '''
-obj <- readRDS('/mnt/Storage2/home/dongxin/Projects/scATAC/10X_ATAC/analysis/atac_pbmc_10k_v1_S1_L001/Result/Analysis/atac_pbmc_10k_v1_S1_L001_scATAC_Object.rds')
+obj <- readRDS('/path/to/file.rds')
 Seurat::as.SingleCellExperiment(obj$ATAC)
 '''
 

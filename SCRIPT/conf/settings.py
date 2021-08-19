@@ -13,13 +13,13 @@ def update_setting( args ):
         sys.stdout.write('\n')
     else:
         if args.human_tf_index:
-            CONFIG['index']['human_tf_index'] = args.human_tf_index
-        # if args.human_motif_index:
-        #     CONFIG['index']['human_motif_index'] = args.human_motif_index
+            CONFIG['index']['human_tf_index'] = os.path.abspath(args.human_tf_index)
+        if args.human_hm_index:
+            CONFIG['index']['human_hm_index'] = os.path.abspath(args.human_hm_index)
         if args.mouse_tf_index:
-            CONFIG['index']['mouse_tf_index'] = args.mouse_tf_index
-        # if args.mouse_motif_index:
-        #     CONFIG['index']['mouse_motif_index'] = args.mouse_motif_index
+            CONFIG['index']['mouse_tf_index'] = os.path.abspath(args.mouse_tf_index)
+        if args.mouse_hm_index:
+            CONFIG['index']['mouse_hm_index'] = os.path.abspath(args.mouse_hm_index)
         with open(CONFIG_PATH, 'w+') as config_file:
             yaml.dump(CONFIG, config_file)
         print('Update sucessfully!')

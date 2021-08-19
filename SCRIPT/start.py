@@ -67,9 +67,10 @@ def add_setting_parser( subparsers ):
     argparser_setting = subparsers.add_parser("setting", help="Configuration.")
     argparser_setting.add_argument( "--show", dest = "show", action = 'store_true', default=False, help = "" )
     argparser_setting.add_argument("--human_tf_index", dest="human_tf_index", type=str, help="")
-    # argparser_setting.add_argument( "--human_motif_index", dest = "human_motif_index", type = str, help = "" )
+    argparser_setting.add_argument("--human_hm_index", dest="human_hm_index", type=str, help="")
     argparser_setting.add_argument("--mouse_tf_index", dest="mouse_tf_index", type=str, help="")
-    # argparser_setting.add_argument( "--mouse_motif_index", dest = "mouse_motif_index", type = str, help = "" )
+    argparser_setting.add_argument("--mouse_hm_index", dest="mouse_hm_index", type=str, help="")
+
 
     return
 
