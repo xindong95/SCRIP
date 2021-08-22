@@ -19,7 +19,6 @@ yaml = ruamel.yaml.YAML()
 
 CONFIG, CONFIG_PATH = read_config()
 
-
 def main():
     argparser = prepare_argparser()
     args = argparser.parse_args()
