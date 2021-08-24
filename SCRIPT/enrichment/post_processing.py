@@ -17,21 +17,6 @@ import pandas as pd
 from SCRIPT.utilities.utils import print_log, excute_info
 
 
-# @excute_info('Extract cell by map dictionary ...', 'Finished all clusters!')
-# def extract_by_cell_cluster(result_table, map_dict):
-#     r_table = pd.DataFrame()
-#     for key in result_table.columns:
-#         key_cell_number = len(map_dict[key])
-#         table_index = result_table.index
-#         cell_bc = map_dict[key]
-#         new_table_np = np.tile(result_table[key].to_numpy(),[key_cell_number,1]).T
-#         tmp_table = pd.DataFrame(new_table_np, index = table_index, columns=cell_bc)
-#         r_table = pd.concat([r_table, tmp_table], axis=1)
-#     return r_table
-
-# def p_to_z_transform(p_table):
-#     z_table = -np.log10(p_table).T.apply(sp.stats.zscore, axis=0).T.copy()
-#     return z_table
 
 @excute_info('Generating merged anndata ... ', 'Finished Generating merged anndata!')
 def merge_giggle_adata(adata, table, data_type, table2=''):

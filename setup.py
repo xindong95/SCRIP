@@ -21,7 +21,7 @@ def main():
     install_seqpare()
     setup(
         name='SCRIPT',
-        version='0.0.210719',
+        version='0.0.210823',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
