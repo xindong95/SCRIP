@@ -10,20 +10,21 @@
 
 import os
 import sys
+# import shutil
 # import re
 import pickle
 # import random
 # import subprocess
 import time
-# import threading
-# import shutil
-# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 # from datetime import datetime, timedelta
+# import threading
+# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 # from multiprocessing import Process, Pool
 
+
 import ruamel.yaml
-# import numpy as np
-# import pandas as pd
+import numpy as np
+import pandas as pd
 # import anndata as ad
 # # import h5py
 # import Bio
@@ -36,13 +37,9 @@ import ruamel.yaml
 # import seaborn as sns
 # import sklearn
 # from sklearn.preprocessing import quantile_transform
-# import scipy as sp
-# import scanpy as sc
+from scipy import io
+import scanpy as sc
 # from adjustText import adjust_text
-# import episcanpy
-
-# from giggle import Giggle
-
 
 
 # sc.settings.verbosity = 3
@@ -120,3 +117,12 @@ def read_pickle(path):
 def safe_makedirs(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+
+def write_to_mtx(data, path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    pd.DataFrame(data.var.index).to_csv(os.path.join(path, "genes.tsv"), sep="\t", index=False, header=False)
+    pd.DataFrame(data.obs.index).to_csv(os.path.join(path, "barcodes.tsv"), sep="\t", index=False, header=False)
+    data.obs.to_csv(os.path.join(path, "metadata.tsv"), sep="\t", index=False, header=False)
+    io.mmwrite(os.path.join(path, "matrix.mtx"), data.X)

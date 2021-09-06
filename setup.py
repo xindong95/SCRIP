@@ -41,7 +41,7 @@ def main():
             'anndata2ri',
             # 'Bio',
             'pyranges==0.0.95',
-            'pybedtools==0.8.1',
+            'pybedtools>=0.8.2',
             'matplotlib',
             'seaborn',
             'sklearn',

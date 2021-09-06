@@ -9,14 +9,16 @@
 '''
 
 
+from sklearn.neighbors import BallTree
+from sklearn.neighbors import KDTree
 import sys
 from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
-from SCRIPT.enrichment.bed_generation import generate_beds
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
+# from SCRIPT.enrichment.bed_generation import generate_beds
+# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
 import scanpy as sc
 import anndata as ad
 import random
-import pickle
+import scipy
 import numpy as np
 import pandas as pd
 from SCRIPT.enrichment.bed_generation import generate_peak_list
@@ -97,7 +99,44 @@ def cal_neighbor_cell_peak_mat_umap_batch(input_mat, coor_table, impute_n, n_cor
     return cell_peak
 
 
+def find_nearest_cells(q_point, tree, n_neighbor):
+    _, ind = tree.query(q_point, k=n_neighbor+1)
+    return ind[0][1:]
 
+
+def cal_neighbor_cell_peak_mat(sub_mat, input_mat, tree, pc_table, impute_n, start_idx, i):
+    end_index = start_idx + sub_mat.shape[0]
+    k = 0
+    for idx in range(start_idx, end_index):
+        nearest_bc_idx = find_nearest_cells(np.reshape(pc_table[idx, :], (1, -1)), tree, n_neighbor=impute_n)
+#         scipy.sparse.csr_matrix(input_mat[nearest_bc_idx,:].sum(0))
+        sub_mat[k, :] = input_mat[nearest_bc_idx, :].sum(0)
+        k += 1
+    return sub_mat
+
+
+def cal_neighbor_cell_peak_mat_batch(input_mat, impute_n=5, KD_leafsize=80, nPC=50, n_cores=8):
+    '''
+    input_mat:
+    a csr sparse matrix, which can be get by adata.X
+    
+    '''
+    print_log("Building KD tree...")
+    pc_table = sc.tl.pca(input_mat, n_comps=50, svd_solver='arpack')
+    tree = BallTree(pc_table, KD_leafsize)
+    print_log("Calculating neighbors, divide into {n} chunks...".format(n=n_cores))
+    cell_number = input_mat.shape[0]
+    index_split = [i for i in range(0, cell_number, int(cell_number/n_cores))] + [cell_number]
+#     input_table_split = np.array_split(input_mat_dense, n_cores)
+    input_mat_lil = input_mat.tolil()
+    input_mat_split = [input_mat_lil[index_split[i]:index_split[i+1], :] for i in range(index_split.__len__()-1)]
+    args = [[sub_mat, input_mat, tree, pc_table, impute_n, index_split[i], i] for (i, sub_mat) in enumerate(input_mat_split)]
+#     print(args)
+    with Pool(n_cores) as p:
+        result = p.starmap(cal_neighbor_cell_peak_mat, args)
+    cell_peak_csr = scipy.sparse.vstack(result).tocsr()
+    print_log('Finished!')
+    return cell_peak_csr
 
 # @excute_info('Start generating nearest neighbor cells beds ...', 'Finished generating nearest neighbor cells beds!')
 # def generate_neighbor_bed_umap(adata, input_mat, bed_path, map_dict_store_path, peaks_number_store_path, n_neighbor=10, peak_confidence=2, n_cores=8):

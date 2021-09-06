@@ -43,7 +43,7 @@ def get_affinity(input_mat, bed_file_path, reference, ccre_number):
 
     search_seqpare(bed_file_path + '.gz', bed_file_path[0:-4] + '.txt', reference)
     all_peak_result = read_seqpare_result([bed_file_path[0:-4] + '.txt'])
-    affinity = all_peak_result['all_peaks']/(ref_number[1]*peaks_number/ccre_number)
+    affinity = all_peak_result.iloc[:, 0]/(ref_number[1]*peaks_number/ccre_number)
     return affinity
 
 
