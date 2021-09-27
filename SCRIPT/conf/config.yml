@@ -10,4 +10,6 @@ defalut_params:
 index:
   human_tf_index: ''
   mouse_tf_index: ''
+  human_hm_index: ''
+  mouse_hm_index: ''
 

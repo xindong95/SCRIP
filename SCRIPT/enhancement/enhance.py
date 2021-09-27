@@ -160,6 +160,19 @@ def cal_neighbor_cell_peak_mat_batch(input_mat, impute_n=5, KD_leafsize=80, nPC=
 #     return map_dict
 
 
+def enhance(input_mat, impute_n=5, KD_leafsize=80, nPC=50, path='SCRIPT/enhancement/', binarize=True, n_cores=8):
+    '''
+    input_mat:
+    a csr sparse matrix
+    
+    '''
+    safe_makedirs(path)
+    imputed_csr = cal_neighbor_cell_peak_mat_batch(input_mat, impute_n=impute_n, KD_leafsize=KD_leafsize, nPC=nPC, n_cores=n_cores)
+    if binarize == True:
+        imputed_csr[imputed_csr > 1] = 1
+    utils.store_to_pickle(imputed_csr, path + 'imputed.csr.pk')
+    return imputed_csr
+
 def run(args):
     processed_adata_path = args.processed_experiment
     feature_matrix_path = args.feature_matrix

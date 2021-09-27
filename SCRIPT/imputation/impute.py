@@ -91,8 +91,65 @@ def get_factor_affinity(input_mat, bed_file_path, reference, factor, ccre_number
     affinity = all_peak_result.iloc[:,0]/(ref_number[1]*peaks_number/ccre_number)
     return affinity
 
-def impute():
-    return
+
+
+def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, ccre_number=339815, path='SCRIPT/imputation/', write_mtx=True, ref_baseline=5000, remove_others_source=False, n_cores=8):
+    '''
+    ccre_number, mouse for 339815
+    '''
+    safe_makedirs(path)
+    if bed_check == True:
+        if not os.path.exists(path + '/imputed_beds/'):
+            generate_beds_by_matrix(input_mat_adata, path + '/imputed_beds/', path + '/imputed_beds_peaks_number.txt', n_cores)
+        else:
+            print_log('Skip generate beds...')
+    else:
+        generate_beds_by_matrix(input_mat_adata, path + '/imputed_beds/', path + '/imputed_beds_peaks_number.txt', n_cores)
+
+    if search_check == True:
+        if not os.path.exists(path + '/imputed_results_%s/' % impute_factor):
+            search_seqpare_factor_batch(path + '/imputed_beds/', path + '/imputed_results_%s/' % impute_factor, ref_path, impute_factor, n_cores)
+        else:
+            print_log('Skip searching beds...')
+    else:
+        search_seqpare_factor_batch(path + '/imputed_beds/', path + '/imputed_results_%s/' % impute_factor, ref_path, impute_factor, n_cores)
+
+    print_log('Calculating score...')
+    factor_affinity = get_factor_affinity(input_mat_adata,  path + '/all_beds.bed', ref_path, impute_factor, ccre_number)
+    factor_enrich = read_seqpare_result_batch(path + '/imputed_results_%s/' % impute_factor, n_cores)
+    factor_hyper_bg = cal_peak_factor_norm(ref_path + 'peaks_number.txt',  path + '/imputed_beds_peaks_number.txt', ccre_number, factor_affinity, impute_factor)
+    factor_score = cal_score(factor_enrich, factor_hyper_bg)
+
+    ref_peak_number = pd.read_csv(ref_path + '/peaks_number.txt', sep='\t', header=None, index_col=0)
+    factor_idx = [i for i in ref_peak_number.index if i.startswith(impute_factor)]
+    ref_peak_number = ref_peak_number.loc[factor_idx, :]
+
+    factor_score = factor_score.loc[ref_peak_number.index[ref_peak_number[1] > ref_baseline], :].copy()
+    factor_source = get_factor_source(factor_score)
+
+    chip_bed_list = [pybedtools.BedTool(os.path.join(ref_path, i + '.bed.gz')) for i in factor_source.iloc[0, :].unique()]
+    chip_bed = chip_bed_list[0].cat(*chip_bed_list[1:])
+    data_bed = pybedtools.BedTool('\n'.join(['\t'.join(p.rsplit('_', maxsplit=2)) for p in input_mat_adata.var_names]), from_string=True)
+    intersect_bed = data_bed.intersect(chip_bed, u=True)
+    imputed_chip_peak = str(intersect_bed).replace('\t', '_').split('\n')[0:-1]
+
+    chip_cell_peak = input_mat_adata[:, imputed_chip_peak].copy()
+    chip_cell_peak_df = chip_cell_peak.to_df()
+    if remove_others_source == True:
+        for i in factor_source.iloc[0, :].unique():
+            cellbc = factor_source.columns[factor_source.iloc[0, :] == i]
+            tmp_dataset_bed = pybedtools.BedTool(os.path.join(ref_path, i + '.bed.gz'))
+            exclude_chip_peak = str(intersect_bed.intersect(tmp_dataset_bed, v=True)).replace('\t', '_').split('\n')[0:-1]
+            chip_cell_peak_df.loc[cellbc, exclude_chip_peak] = 0
+    chip_cell_peak = sc.AnnData(chip_cell_peak_df)
+    chip_cell_peak.X = scipy.sparse.csr.csr_matrix(chip_cell_peak.X)
+    print_log('Writing results...')
+    if write_mtx == True:
+        write_to_mtx(chip_cell_peak, path + 'imputation/imputed_H3K27ac_mtx/')
+    print_log('Finished!')
+    return chip_cell_peak
+
+
 
 def run(args):
     return 
