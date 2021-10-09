@@ -35,8 +35,8 @@ def main():
         pass
     elif subcommand == "target":
         pass
-    elif subcommand == "setting":
-        from SCRIPT.conf.settings import update_setting
+    elif subcommand == "config":
+        from SCRIPT.conf.config import update_setting
         try:
             update_setting( args )
         except:
@@ -58,12 +58,12 @@ def prepare_argparser():
 
     add_enrich_parser(subparsers)
     add_impute_parser(subparsers)
-    add_setting_parser(subparsers)
+    add_config_parser(subparsers)
 
     return argparser
 
-def add_setting_parser( subparsers ):
-    argparser_setting = subparsers.add_parser("setting", help="Configuration.")
+def add_config_parser( subparsers ):
+    argparser_setting = subparsers.add_parser("config", help="Configuration.")
     argparser_setting.add_argument( "--show", dest = "show", action = 'store_true', default=False, help = "" )
     argparser_setting.add_argument("--human_tf_index", dest="human_tf_index", type=str, help="")
     argparser_setting.add_argument("--human_hm_index", dest="human_hm_index", type=str, help="")

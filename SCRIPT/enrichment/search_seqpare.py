@@ -12,12 +12,13 @@
 import subprocess
 import os
 import sys
+import warnings
 import pandas as pd
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
 from multiprocessing import Process, Pool
-import warnings
+
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
