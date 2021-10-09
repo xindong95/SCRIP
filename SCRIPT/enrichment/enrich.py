@@ -46,8 +46,9 @@ from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
 #     return affinity
 
 
-def search_and_read_result(run_info, beds_path, result_path, peaks_length_path, index, n_cores):
+def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
     folder_prefix = run_info.info['project_folder']
+    peaks_length_path = os.path.join(index, 'peaks_length.txt')
     peaks_length = pd.read_csv(peaks_length_path, sep='\t', header=None, index_col=0)
     # tp(type) is 'ChIP-seq' or 'motif'
 
@@ -170,7 +171,7 @@ def enrich(cell_feature_adata, species='NA',
     ##################################
     ### Search giggle and compute enrich score
     ##################################
-    cell_tf_score_df, run_info = search_and_read_result(run_info, beds_path, chip_result_path, peaks_number_path, chip_index, n_cores)
+    cell_tf_score_df, run_info = search_and_read_result(run_info, beds_path, chip_result_path, chip_index, n_cores)
     ##################################
     ### Summary results
     ##################################
