@@ -145,3 +145,6 @@ refpkg/giggle/*.DS_Store
 
 refpkg/seqpare/obj/
 refpkg/seqpare/bin/
+
+refpkg/iGD/obj/
+refpkg/iGD/bin/

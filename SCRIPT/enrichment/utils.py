@@ -54,10 +54,9 @@ class EnrichRunInfo(object):
                 'bed_search': 'No',
                 
                 'dataset_mbm_overlap_df_store': 'No',
-                'dataset_bg_peak_norm_df_store': 'No',
-                'dataset_raw_score_df_store': 'No',
+                'dataset_cell_TPY_store': 'No',
                 'dataset_score_resource_df_store': 'No',
-                'dataset_score_df_store': 'No',
+                'tf_cell_score_df_store': 'No',
 
                 'result_store': 'No'
             }

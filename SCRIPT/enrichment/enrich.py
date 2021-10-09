@@ -22,33 +22,33 @@ import subprocess
 from SCRIPT.enrichment.bed_generation import generate_beds_by_matrix
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
-from SCRIPT.enrichment.post_processing import merge_giggle_adata
-from SCRIPT.enrichment.calculation import score_normalization, cal_peak_norm, cal_score, get_factor_source
-from SCRIPT.enrichment.search_seqpare import search_seqpare_batch, read_seqpare_result_batch, search_seqpare, read_seqpare_result
-from SCRIPT.utilities.utils import read_config, read_SingleCellExperiment_rds, print_log, store_to_pickle, read_pickle, safe_makedirs
-from SCRIPT.enhancement.enhance import determine_number_of_cells_per_group
+from SCRIPT.enrichment.calculation import score_normalization, cal_score, get_factor_source
+from SCRIPT.enrichment.search import search_seqpare_batch, read_seqpare_result_batch
+from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
+# from SCRIPT.enhancement.enhance import determine_number_of_cells_per_group
 # from SCRIPT.Constants import *
 
 
-def get_affinity(input_mat, bed_file_path, reference, ccre_number):
-    peaks = input_mat.var_names.to_list()
-    peaks_number = peaks.__len__()
-    ref_number = pd.read_csv(reference + '/peaks_number.txt', sep='\t', index_col=0, header=None)
+# def get_affinity(input_mat, bed_file_path, reference, ccre_number):
+#     peaks = input_mat.var_names.to_list()
+#     peaks_number = peaks.__len__()
+#     ref_number = pd.read_csv(reference + '/peaks_number.txt', sep='\t', index_col=0, header=None)
 
-    peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
-    peaks.to_csv(bed_file_path, sep="\t", header=None, index=None)
-    cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_file_path)
-    cmd += 'rm {bed_path}'.format(bed_path=bed_file_path)
-    subprocess.run(cmd, shell=True, check=True)
+#     peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
+#     peaks.to_csv(bed_file_path, sep="\t", header=None, index=None)
+#     cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_file_path)
+#     cmd += 'rm {bed_path}'.format(bed_path=bed_file_path)
+#     subprocess.run(cmd, shell=True, check=True)
 
-    search_seqpare(bed_file_path + '.gz', bed_file_path[0:-4] + '.txt', reference)
-    all_peak_result = read_seqpare_result([bed_file_path[0:-4] + '.txt'])
-    affinity = all_peak_result.iloc[:, 0]/(ref_number[1]*peaks_number/ccre_number)
-    return affinity
+#     search_seqpare(bed_file_path + '.gz', bed_file_path[0:-4] + '.txt', reference)
+#     all_peak_result = read_seqpare_result([bed_file_path[0:-4] + '.txt'])
+#     affinity = all_peak_result.iloc[:, 0]/(ref_number[1]*peaks_number/ccre_number)
+#     return affinity
 
 
-def search_and_read_seqpare(run_info, beds_path, result_path, peaks_number_path, index, ccre_number, affinity, n_cores):
+def search_and_read_result(run_info, beds_path, result_path, peaks_length_path, index, n_cores):
     folder_prefix = run_info.info['project_folder']
+    peaks_length = pd.read_csv(peaks_length_path, sep='\t', header=None, index_col=0)
     # tp(type) is 'ChIP-seq' or 'motif'
 
     run_info.safe_run(search_seqpare_batch, [beds_path, result_path, index, n_cores], 'bed_search')
@@ -56,25 +56,25 @@ def search_and_read_seqpare(run_info, beds_path, result_path, peaks_number_path,
         read_seqpare_result_batch, [result_path, n_cores],
         os.path.join(folder_prefix, 'dataset_mbm_overlap_df.pk'),
         'dataset_mbm_overlap_df_store')
-    dataset_bg_peak_norm_df = run_info.safe_run_and_store(
-        cal_peak_norm, [os.path.join(index, 'peaks_number.txt'), peaks_number_path, ccre_number, affinity],
-        os.path.join(folder_prefix, 'dataset_bg_peak_norm_df.pk'),
-        'dataset_bg_peak_norm_df_store')
-    dataset_raw_score_df = run_info.safe_run_and_store(
-        cal_score, [dataset_mbm_overlap_df, dataset_bg_peak_norm_df],
-        os.path.join(folder_prefix, 'dataset_raw_score_df.pk'),
-        'dataset_raw_score_df_store')
+    # dataset_bg_peak_norm_df = run_info.safe_run_and_store(
+    #     cal_peak_norm, [os.path.join(index, 'peaks_number.txt'), peaks_number_path, ccre_number, affinity],
+    #     os.path.join(folder_prefix, 'dataset_bg_peak_norm_df.pk'),
+    #     'dataset_bg_peak_norm_df_store')
+    dataset_cell_TPY_df = run_info.safe_run_and_store(
+        cal_score, [dataset_mbm_overlap_df, peaks_length],
+        os.path.join(folder_prefix, 'dataset_cell_TPY_df.pk'),
+        'dataset_cell_TPY_store')
     dataset_score_resource_df = run_info.safe_run_and_store(
-        get_factor_source, [dataset_raw_score_df],
+        get_factor_source, [dataset_cell_TPY_df],
         os.path.join(folder_prefix, 'dataset_score_resource_df.pk'),
         'dataset_score_resource_df_store')
-    dataset_score_df = run_info.safe_run_and_store(
-        score_normalization, [dataset_raw_score_df],
-        os.path.join(folder_prefix, 'dataset_score_df.pk'),
-        'dataset_score_df_store')
+    tf_cell_score_df = run_info.safe_run_and_store(
+        score_normalization, [dataset_cell_TPY_df],
+        os.path.join(folder_prefix, 'tf_cell_score_df.pk'),
+        'tf_cell_score_df_store')
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
-    fg_cell_dataset_score_df = dataset_score_df.T
-    return fg_cell_dataset_score_df, run_info
+    cell_tf_score_df = tf_cell_score_df.T
+    return cell_tf_score_df, run_info
 
 
 def enrich(cell_feature_adata, species='NA',
@@ -129,10 +129,10 @@ def enrich(cell_feature_adata, species='NA',
     safe_makedirs(beds_path)
 
     if species == 'hs':
-        ccre_number = 926535
+        # ccre_number = 926535
         chip_factor_number = 4499
     if species == 'mm':
-        ccre_number = 339815
+        # ccre_number = 339815
         chip_factor_number = 2185
     ##################################
     ### pre-check
@@ -166,18 +166,17 @@ def enrich(cell_feature_adata, species='NA',
             shutil.rmtree(beds_path)
             generate_beds_by_matrix(cell_feature_adata, beds_path, peaks_number_path, n_cores)
         run_info.finish_stage('bed_generation')
-    affinity = get_affinity(cell_feature_adata, total_peaks_path, chip_index, ccre_number)
+    # affinity = get_affinity(cell_feature_adata, total_peaks_path, chip_index, ccre_number)
     ##################################
     ### Search giggle and compute enrich score
     ##################################
-    fg_cell_dataset_score_df, run_info = search_and_read_seqpare(run_info, beds_path, chip_result_path,
-                                                                      peaks_number_path, chip_index, ccre_number, affinity, n_cores)
+    cell_tf_score_df, run_info = search_and_read_result(run_info, beds_path, chip_result_path, peaks_number_path, chip_index, n_cores)
     ##################################
     ### Summary results
     ##################################
     run_info.finish_stage('result_store')
     if store_result_adata == True:
-        fg_cell_dataset_score_df.to_csv(result_store_path, sep='\t')
+        cell_tf_score_df.to_csv(result_store_path, sep='\t')
     ##################################
     ### Clean files
     ##################################
@@ -230,12 +229,14 @@ def run( args ):
 
     if max_peaks == 'auto':
         max_peaks = feature_mean+3*feature_std
-        feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
+        sc.pp.filter_cells(feature_matrix, max_genes = max_peaks)
+        # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
     elif max_peaks == 'none':
         print_log('Skip filter by max peaks number.')
     else:
         max_peaks = int(max_peaks)
-        feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
+        sc.pp.filter_cells(feature_matrix, max_genes=max_peaks)
+        # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
     
 
     enrich(feature_matrix, 

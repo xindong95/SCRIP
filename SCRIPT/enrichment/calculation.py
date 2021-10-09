@@ -48,19 +48,18 @@ def get_factor_source(table):
     max_index = ret_table.groupby("Factor").idxmax()
     return max_index
 
-def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number, affinity):
-    ref_peak_number = pd.read_csv(ref_peak_number_path, sep='\t', header=None, index_col=0)
-    data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
-    peak_norm_hyper = (ref_peak_number.dot(data_peak_number.T)/ccre_number)
-    peak_norm_hyper = (peak_norm_hyper.T * affinity).T
-    return peak_norm_hyper
+# def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number, affinity):
+#     ref_peak_number = pd.read_csv(ref_peak_number_path, sep='\t', header=None, index_col=0)
+#     data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
+#     peak_norm_hyper = (ref_peak_number.dot(data_peak_number.T)/ccre_number)
+#     peak_norm_hyper = (peak_norm_hyper.T * affinity).T
+#     return peak_norm_hyper
 
 
-def cal_score(dataset_mbm_overlap_df, dataset_bg_peak_norm_df):
-    intersect_frame = dataset_mbm_overlap_df.copy()
-    peak_hyper_frame = dataset_bg_peak_norm_df.copy().reindex(index=intersect_frame.index, columns=intersect_frame.columns)
-    fg_dataset_cell_raw_score_df = np.log2((intersect_frame+1)/(peak_hyper_frame+1))
-    return fg_dataset_cell_raw_score_df
+def cal_score(dataset_mbm_overlap_df, peaks_length):
+    dataset_cell_raw_score_df = (dataset_mbm_overlap_df.T/peaks_length[1]).T
+    dataset_cell_TPY_df = (dataset_cell_raw_score_df*10000)/dataset_cell_raw_score_df.sum()
+    return dataset_cell_TPY_df
 
 
 # def zscore_normalization(data_cell_frame, by='cell'):
@@ -73,10 +72,9 @@ def cal_score(dataset_mbm_overlap_df, dataset_bg_peak_norm_df):
 #     return data_cell_frame_zscore
 
 
-def score_normalization(data_cell_frame):
-    tf_cell_table = map_factor_on_ChIP(data_cell_frame)
-    tf_cell_frame_zscore = standardScaler(tf_cell_table)
-    tf_cell_frame_score = (tf_cell_frame_zscore.T - tf_cell_frame_zscore.mean(1)).T
-    # tf_cell_frame_zscore = tf_cell_table.apply(scipy.stats.zscore, axis=1)
-    # tf_cell_frame_zscore = tf_cell_frame_zscore.apply(scipy.stats.zscore, axis=0)
-    return tf_cell_frame_score
+def score_normalization(dataset_cell_frame):
+    tf_cell_df = map_factor_on_ChIP(dataset_cell_frame)
+    tf_cell_log_df = np.log2(tf_cell_df+1)
+    tf_cell_zero_df = (tf_cell_log_df.T-tf_cell_log_df.mean(1)).T
+    tf_cell_zscore_df = standardScaler(tf_cell_zero_df)
+    return tf_cell_zscore_df

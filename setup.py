@@ -3,7 +3,7 @@
 '''
 @File    :   setup.py
 @Time    :   2021/04/16 12:34:01
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
@@ -14,14 +14,14 @@ import subprocess
 
 def install_seqpare():
     prefix = os.environ['PATH'].split(':')[0]
-    cmd = 'cd refpkg/seqpare; make; cp bin/seqpare {PREFIX}/; cd ../..'.format(PREFIX=prefix)
+    cmd = f'cd refpkg/seqpare; make; cp bin/seqpare {prefix}/; cd ../..'
     subprocess.run(cmd, shell=True)
 
 def main():
     install_seqpare()
     setup(
         name='SCRIPT',
-        version='0.0.210823',
+        version='0.0.211008',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
