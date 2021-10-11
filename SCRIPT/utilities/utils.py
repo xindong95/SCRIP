@@ -110,7 +110,7 @@ def store_to_pickle(object, path):
 
 
 def read_pickle(path):
-    with open(os.path.join(path), 'rb+') as f:
+    with open(os.path.join(path), 'rb') as f:
         ret = pickle.load(f)
     return ret
 

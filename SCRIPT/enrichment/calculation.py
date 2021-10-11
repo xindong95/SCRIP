@@ -75,6 +75,6 @@ def cal_score(dataset_mbm_overlap_df, peaks_length):
 def score_normalization(dataset_cell_frame):
     tf_cell_df = map_factor_on_ChIP(dataset_cell_frame)
     tf_cell_log_df = np.log2(tf_cell_df+1)
-    tf_cell_zero_df = (tf_cell_log_df.T-tf_cell_log_df.mean(1)).T
-    tf_cell_zscore_df = standardScaler(tf_cell_zero_df)
-    return tf_cell_zscore_df
+    tf_cell_zscore_df = standardScaler(tf_cell_log_df)
+    tf_cell_zero_df = (tf_cell_zscore_df.T-tf_cell_zscore_df.mean(1)).T
+    return tf_cell_zero_df
