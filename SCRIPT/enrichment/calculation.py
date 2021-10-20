@@ -3,18 +3,16 @@
 '''
 @File    :   calculation.py
 @Time    :   2021/04/16 12:35:01
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
 
-import os
-import sys
 import numpy as np
 import pandas as pd
 # import scipy
 from sklearn import preprocessing
-from SCRIPT.utilities.utils import excute_info, print_log
+from SCRIPT.utilities.utils import excute_info
 # from multiprocessing import Process, Pool
 
 

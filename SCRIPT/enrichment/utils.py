@@ -3,7 +3,7 @@
 '''
 @File    :   utils.py
 @Time    :   2021/04/16 12:34:42
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
@@ -12,7 +12,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 import json
-from SCRIPT.Constants import *
+from SCRIPT.Constants import SCRIPT_VERSION
 from SCRIPT.utilities.utils import store_to_pickle, read_pickle
 
 
@@ -35,7 +35,7 @@ def time_estimate(cell_number, core, chip_factor_number=4499):
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
     elapse = "{hour:0>2d}:{minute:0>2d}:{second:0>2d}".format(hour=int(h), minute=int(m), second=int(s))
-    return elapse, future_time    
+    return elapse, future_time
 
 class EnrichRunInfo(object):
     def __init__(self, file_path, parameters_dict):
@@ -52,7 +52,7 @@ class EnrichRunInfo(object):
 
                 'bed_generation': 'No',
                 'bed_search': 'No',
-                
+
                 'dataset_mbm_overlap_df_store': 'No',
                 'dataset_cell_TPY_store': 'No',
                 'dataset_score_resource_df_store': 'No',
@@ -81,7 +81,7 @@ class EnrichRunInfo(object):
         self.info['progress'][stage] = 'No'
         with open(self.file_path, 'w') as jf:
             json.dump(self.info, jf, indent=2)
-    
+
     def check_consist(self, parameters_dict):
         if self.version != SCRIPT_VERSION:
             return False
@@ -115,4 +115,3 @@ class EnrichRunInfo(object):
         else:
             pass
         return
-

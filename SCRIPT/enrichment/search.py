@@ -11,25 +11,22 @@
 
 import subprocess
 import os
-import sys
-from multiprocessing import Process, Pool
+from multiprocessing import Pool
 import warnings
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
+# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 import pandas as pd
 import numpy as np
-from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
+from SCRIPT.utilities.utils import print_log, safe_makedirs
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def search_seqpare(bed_path, result_path, index_path):
-    cmd = 'seqpare "{index_path}/*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'.format(
-        index_path=index_path, result_path=result_path, bed_path=bed_path)
+    cmd = f'seqpare "{index_path}/*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'
     subprocess.run(cmd, shell=True, check=True)
 
-
 def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
-    print_log('Start searching beds from {tp} index ...'.format(tp=tp))
+    print_log(f'Start searching beds from {tp} index ...')
     safe_makedirs(result_folder)
     beds = os.listdir(bed_folder)
     args = []
@@ -40,7 +37,7 @@ def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''
                      index_path))
     with Pool(n_cores) as p:
         p.starmap(search_seqpare, args)
-    print_log('Finished searching beds from {tp} index ...'.format(tp=tp))
+    print_log(f'Finished searching beds from {tp} index ...')
 
 
 def read_seqpare_result(files):
@@ -56,16 +53,13 @@ def read_seqpare_result(files):
     dataset_cell_score_df.index = [i.rsplit('/', 1)[1][:-7] for i in dataset_cell_score_df.index]  # remove suffix '.bed.gz'
     return dataset_cell_score_df
 
-
 def read_seqpare_result_batch(path, n_cores=8, tp=''):
-    print_log("Reading searching results, using {n} cores...".format(n=n_cores))
+    print_log(f"Reading searching results, using {n_cores} cores...")
     file_list = os.listdir(path)
     result_split = np.array_split(file_list, n_cores)
     args = [[[os.path.join(path, j) for j in list_chunk]] for list_chunk in result_split]
     with Pool(n_cores) as p:
         result = p.starmap(read_seqpare_result, args)
     dataset_cell_score_df = pd.concat([i for i in result], axis=1)
-    print_log("Finished reading {tp} index search result!".format(tp=tp))
+    print_log(f"Finished reading {tp} index search result!")
     return dataset_cell_score_df
-
-

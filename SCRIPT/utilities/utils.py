@@ -3,7 +3,7 @@
 '''
 @File    :   utils.py
 @Time    :   2021/04/16 12:29:39
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
@@ -23,7 +23,6 @@ import time
 
 
 import ruamel.yaml
-import numpy as np
 import pandas as pd
 # import anndata as ad
 # # import h5py
@@ -38,7 +37,7 @@ import pandas as pd
 # import sklearn
 # from sklearn.preprocessing import quantile_transform
 from scipy import io
-import scanpy as sc
+
 # from adjustText import adjust_text
 
 
@@ -122,7 +121,7 @@ def safe_makedirs(path):
 def write_to_mtx(data, path):
     if not os.path.exists(path):
         os.makedirs(path)
-    pd.DataFrame(data.var.index).to_csv(os.path.join(path, "genes.tsv"), sep="\t", index=False, header=False)
-    pd.DataFrame(data.obs.index).to_csv(os.path.join(path, "barcodes.tsv"), sep="\t", index=False, header=False)
-    data.obs.to_csv(os.path.join(path, "metadata.tsv"), sep="\t", index=False, header=False)
+    pd.DataFrame(data.var.index).to_csv(os.path.join(path, "genes.tsv" ), sep = "\t", index=False, header=False)
+    pd.DataFrame(data.obs.index).to_csv(os.path.join(path, "barcodes.tsv"), sep = "\t", index=False, header=False)
+    data.obs.to_csv(os.path.join(path, "metadata.tsv"), sep = "\t", index=False, header=False)
     io.mmwrite(os.path.join(path, "matrix.mtx"), data.X.T)

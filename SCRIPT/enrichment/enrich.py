@@ -3,7 +3,7 @@
 '''
 @File    :   enrich.py
 @Time    :   2021/04/16 12:34:09
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
@@ -11,14 +11,10 @@
 import os
 import sys
 import time
-import pickle
 import shutil
 import random
 import scanpy as sc
-import anndata as ad
-import numpy as np
 import pandas as pd
-import subprocess
 from SCRIPT.enrichment.bed_generation import generate_beds_by_matrix
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
@@ -28,22 +24,6 @@ from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
 # from SCRIPT.enhancement.enhance import determine_number_of_cells_per_group
 # from SCRIPT.Constants import *
 
-
-# def get_affinity(input_mat, bed_file_path, reference, ccre_number):
-#     peaks = input_mat.var_names.to_list()
-#     peaks_number = peaks.__len__()
-#     ref_number = pd.read_csv(reference + '/peaks_number.txt', sep='\t', index_col=0, header=None)
-
-#     peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
-#     peaks.to_csv(bed_file_path, sep="\t", header=None, index=None)
-#     cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_file_path)
-#     cmd += 'rm {bed_path}'.format(bed_path=bed_file_path)
-#     subprocess.run(cmd, shell=True, check=True)
-
-#     search_seqpare(bed_file_path + '.gz', bed_file_path[0:-4] + '.txt', reference)
-#     all_peak_result = read_seqpare_result([bed_file_path[0:-4] + '.txt'])
-#     affinity = all_peak_result.iloc[:, 0]/(ref_number[1]*peaks_number/ccre_number)
-#     return affinity
 
 
 def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
@@ -57,10 +37,6 @@ def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
         read_seqpare_result_batch, [result_path, n_cores],
         os.path.join(folder_prefix, 'dataset_mbm_overlap_df.pk'),
         'dataset_mbm_overlap_df_store')
-    # dataset_bg_peak_norm_df = run_info.safe_run_and_store(
-    #     cal_peak_norm, [os.path.join(index, 'peaks_number.txt'), peaks_number_path, ccre_number, affinity],
-    #     os.path.join(folder_prefix, 'dataset_bg_peak_norm_df.pk'),
-    #     'dataset_bg_peak_norm_df_store')
     dataset_cell_TPY_df = run_info.safe_run_and_store(
         cal_score, [dataset_mbm_overlap_df, peaks_length],
         os.path.join(folder_prefix, 'dataset_cell_TPY_df.pk'),
@@ -75,12 +51,12 @@ def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
         'tf_cell_score_df_store')
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
     cell_tf_score_df = tf_cell_score_df.T
-    return cell_tf_score_df, run_info
+    return cell_tf_score_df, run_info, dataset_score_resource_df
 
 
 def enrich(cell_feature_adata, species='NA',
            project='',
-           chip_index='', 
+           chip_index='',
            store_result_adata=True,
            n_cores=8,
            yes=False,
@@ -123,7 +99,7 @@ def enrich(cell_feature_adata, species='NA',
                 print('Please type Y / N.')
 
     beds_path = os.path.join(project, 'enrichment', 'beds')
-    total_peaks_path = os.path.join(project, 'enrichment', 'all_peaks.bed')
+    # total_peaks_path = os.path.join(project, 'enrichment', 'all_peaks.bed')
     peaks_number_path = os.path.join(project, 'enrichment', 'peaks_number.txt')
     chip_result_path = os.path.join(project, 'enrichment', 'ChIP_result')
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.txt')
@@ -140,13 +116,13 @@ def enrich(cell_feature_adata, species='NA',
     ##################################
     print_log('Checking parameters ...')
     check_para(cell_feature_adata, project,
-               chip_index, 
+               chip_index,
                beds_path, chip_result_path, result_store_path,
                yes, clean, n_cores)
     print_log('Estimating running time ...')
-    elapse, future_time = time_estimate(cell_number = cell_feature_adata.shape[0], 
+    elapse, future_time = time_estimate(cell_number = cell_feature_adata.shape[0],
                                         core=n_cores, chip_factor_number=chip_factor_number)
-    print_log("It will take about {elapse} to process and finish at {future_time}.\n".format(elapse = elapse, future_time = future_time))
+    print_log(f"It will take about {elapse} to process and finish at {future_time}.\n")
 
     if yes == False:
         print('Type "Y" to continue processing, "N" to abort.')
@@ -171,7 +147,7 @@ def enrich(cell_feature_adata, species='NA',
     ##################################
     ### Search giggle and compute enrich score
     ##################################
-    cell_tf_score_df, run_info = search_and_read_result(run_info, beds_path, chip_result_path, chip_index, n_cores)
+    cell_tf_score_df, run_info, _ = search_and_read_result(run_info, beds_path, chip_result_path, chip_index, n_cores)
     ##################################
     ### Summary results
     ##################################
@@ -187,10 +163,10 @@ def enrich(cell_feature_adata, species='NA',
             shutil.rmtree(chip_result_path)
         except:
             pass
-    return 
+    return
 
 
-def run( args ):
+def run_enrich(args):
     feature_matrix_path = args.feature_matrix
     species = args.species
     project = args.project
@@ -208,7 +184,7 @@ def run( args ):
         chip_index = CONFIG['index']['mouse_tf_index']
     else:
         pass
-    
+
     print_log('Reading Files, Please wait ...')
     feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
 
@@ -238,15 +214,15 @@ def run( args ):
         max_peaks = int(max_peaks)
         sc.pp.filter_cells(feature_matrix, max_genes=max_peaks)
         # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
-    
 
-    enrich(feature_matrix, 
+
+    enrich(feature_matrix,
            species=species,
            project=project,
-           chip_index=chip_index, 
+           chip_index=chip_index,
            store_result_adata=True,
            n_cores=n_cores,
-           yes=yes, 
+           yes=yes,
            clean=clean
            )
 

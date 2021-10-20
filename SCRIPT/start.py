@@ -9,11 +9,11 @@
 '''
 
 import argparse
-import os
 import sys
 import ruamel.yaml
-# from pkg_resources import resource_filename
 from SCRIPT.Constants import SCRIPT_VERSION
+from SCRIPT.enrichment.enrich import run_enrich
+from SCRIPT.conf.config import update_setting
 from SCRIPT.utilities.utils import read_config
 yaml = ruamel.yaml.YAML()
 
@@ -26,9 +26,8 @@ def main():
     subcommand  = args.subcommand
 
     if subcommand == "enrich":
-        from SCRIPT.enrichment.enrich import run
         try:
-            run( args )
+            run_enrich(args)
         except MemoryError:
             sys.exit( "MemoryError occurred.")
     elif subcommand == "impute":
@@ -36,11 +35,10 @@ def main():
     elif subcommand == "target":
         pass
     elif subcommand == "config":
-        from SCRIPT.conf.config import update_setting
         try:
             update_setting( args )
         except:
-            pass
+            sys.exit("Setting set wrong.")
     elif subcommand == "format":
         pass
 
@@ -79,11 +77,9 @@ def add_enrich_parser( subparsers ):
 
     # group for input files
     group_input = argparser_enrich.add_argument_group( "Input files arguments" )
-    # group_input.add_argument( "-e", "--processed_experiment", dest = "processed_experiment", type = str, required = True, 
-    #                           help = 'A processed single cell experiment anndata. Seurat or scanpy or MAESTRO. REQUIRED.' )
-    group_input.add_argument( "-i", "--input_feature_matrix", dest = "feature_matrix", type = str, required = True, 
+    group_input.add_argument( "-i", "--input_feature_matrix", dest = "feature_matrix", type = str, required = True,
                               help = 'A cell by peak matrix . REQUIRED.' )
-    group_input.add_argument( "-s", "--species", dest = "species", choices= ['hs', 'mm'], required = True, 
+    group_input.add_argument( "-s", "--species", dest = "species", choices= ['hs', 'mm'], required = True,
                               help = 'Species. "hs"(human) or "mm"(mouse). REQUIRED.' )
     # group for output files
     group_output = argparser_enrich.add_argument_group( "Output arguments" )

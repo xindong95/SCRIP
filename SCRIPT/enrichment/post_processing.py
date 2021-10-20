@@ -3,18 +3,16 @@
 '''
 @File    :   post_processing.py
 @Time    :   2021/04/16 12:34:26
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
 
 
-# import subprocess
-import scipy
 import numpy as np
 import pandas as pd
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
-from SCRIPT.utilities.utils import print_log, excute_info
+from SCRIPT.utilities.utils import excute_info
 
 
 
@@ -43,7 +41,7 @@ def merge_giggle_adata(adata, table, data_type, table2=''):
                 ovlp_final_table[ovlp_factor] = ovlp_chip_table[ovlp_factor]
             else:
                 ovlp_final_table[ovlp_factor] = ovlp_motif_table[ovlp_factor]
-                
+
         final_table = pd.concat([ovlp_final_table,unique_chip_table,unique_motif_table], axis=1)
         final_table.columns = ['I_' + tf for tf in final_table.columns.tolist()]
         new_adata.uns['integrated'] = final_table
