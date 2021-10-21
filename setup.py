@@ -12,16 +12,17 @@ import os
 import sys
 import subprocess
 
-def install_seqpare():
+
+def install_giggle():
     prefix = os.environ['PATH'].split(':')[0]
-    cmd = f'cd refpkg/seqpare; make; cp bin/seqpare {prefix}/; cd ../..'
+    cmd = f'cd refpkg/giggle; make; cp bin/giggle {prefix}/; cd ../..'
     subprocess.run(cmd, shell=True)
 
 def main():
-    install_seqpare()
+    install_giggle()
     setup(
         name='SCRIPT',
-        version='0.0.211008',
+        version='0.0.211021',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',

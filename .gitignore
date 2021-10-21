@@ -133,6 +133,7 @@ dmypy.json
 .vscode/
 
 refpkg/giggle/bin/
+refpkg/giggle/test/
 refpkg/giggle/lab/
 refpkg/giggle/doc/html/
 refpkg/giggle/obj/

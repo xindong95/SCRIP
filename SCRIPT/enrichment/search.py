@@ -21,11 +21,13 @@ from SCRIPT.utilities.utils import print_log, safe_makedirs
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
-def search_seqpare(bed_path, result_path, index_path):
-    cmd = f'seqpare "{index_path}/*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'
+def search_ref(bed_path, result_path, index_path):
+    cmd = f'giggle search -i "{index_path}" -q "{bed_path}" -s > "{result_path}"\n'
+    # cmd = f'igd search {index_path}/ref.igd -q {bed_path} | head -n -1 | cut -f 2,3,4 > {result_path}'
+    # cmd = f'seqpare "{index_path}/*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'
     subprocess.run(cmd, shell=True, check=True)
 
-def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
+def search_ref_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
     print_log(f'Start searching beds from {tp} index ...')
     safe_makedirs(result_folder)
     beds = os.listdir(bed_folder)
@@ -36,30 +38,32 @@ def search_seqpare_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''
                      os.path.join(result_folder, barcodes + '.txt'),
                      index_path))
     with Pool(n_cores) as p:
-        p.starmap(search_seqpare, args)
+        p.starmap(search_ref, args)
     print_log(f'Finished searching beds from {tp} index ...')
 
 
-def read_seqpare_result(files):
+def read_search_result(files):
     for i in range(len(files)):
-        giggle_result = os.path.basename(files[i])
-        cell_bc = giggle_result[:-4]  # remove suffix '.txt'
-        dtframe = pd.read_csv(files[i], sep="\t", index_col=5)
+        result_name = os.path.basename(files[i])
+        cell_bc = result_name[:-4]  # remove suffix '.txt'
+        dtframe = pd.read_csv(files[i], sep="\t", index_col=0, comment='#', header=None)
+        read_col = 2  # 1 file_size 2 overlaps 3 odds_ratio 4 fishers_two_tail 5 fishers_left_tail 6 fishers_right_tail 7 combo_score
         if i == 0:
-            dtframe = dtframe.loc[:, ['teo']].copy()
-            dataset_cell_score_df = dtframe.rename(columns={'teo': cell_bc})
+            dtframe = dtframe.loc[:, [read_col]].copy()
+            dataset_cell_score_df = dtframe.rename(columns={read_col: cell_bc}).copy()
         else:
-            dataset_cell_score_df[cell_bc] = dtframe.loc[:, "teo"]
-    dataset_cell_score_df.index = [i.rsplit('/', 1)[1][:-7] for i in dataset_cell_score_df.index]  # remove suffix '.bed.gz'
+            dataset_cell_score_df[cell_bc] = dtframe.loc[:, read_col]
+    dataset_cell_score_df.index = [i.rsplit('/', 1)[0][:-7] for i in dataset_cell_score_df.index]  # remove suffix '.bed.gz'
     return dataset_cell_score_df
 
-def read_seqpare_result_batch(path, n_cores=8, tp=''):
+
+def read_search_result_batch(path, n_cores=8, tp=''):
     print_log(f"Reading searching results, using {n_cores} cores...")
     file_list = os.listdir(path)
     result_split = np.array_split(file_list, n_cores)
     args = [[[os.path.join(path, j) for j in list_chunk]] for list_chunk in result_split]
     with Pool(n_cores) as p:
-        result = p.starmap(read_seqpare_result, args)
+        result = p.starmap(read_search_result, args)
     dataset_cell_score_df = pd.concat([i for i in result], axis=1)
     print_log(f"Finished reading {tp} index search result!")
     return dataset_cell_score_df

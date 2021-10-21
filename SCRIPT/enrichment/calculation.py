@@ -46,33 +46,33 @@ def get_factor_source(table):
     max_index = ret_table.groupby("Factor").idxmax()
     return max_index
 
-# def cal_peak_norm(ref_peak_number_path, peaks_number_path, ccre_number, affinity):
-#     ref_peak_number = pd.read_csv(ref_peak_number_path, sep='\t', header=None, index_col=0)
-#     data_peak_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
-#     peak_norm_hyper = (ref_peak_number.dot(data_peak_number.T)/ccre_number)
-#     peak_norm_hyper = (peak_norm_hyper.T * affinity).T
-#     return peak_norm_hyper
+
+def cal_score(dataset_overlap_df, peaks_number):
+    '''
+    nql: normalize query peak length
+    dm: divide the mean
+    '''
+    dataset_cell_percent = (dataset_overlap_df.T/peaks_number.loc[dataset_overlap_df.index, 1]).T
+    dataset_cell_percent_scale = (dataset_cell_percent/dataset_cell_percent.sum())*1e4
+    dataset_cell_percent_scale_dm = (dataset_cell_percent_scale.T/dataset_cell_percent_scale.mean(1)).T
+    return dataset_cell_percent_scale_dm
 
 
-def cal_score(dataset_mbm_overlap_df, peaks_length):
-    dataset_cell_raw_score_df = (dataset_mbm_overlap_df.T/peaks_length[1]).T
-    dataset_cell_TPY_df = (dataset_cell_raw_score_df*10000)/dataset_cell_raw_score_df.sum()
-    return dataset_cell_TPY_df
+def adjust_outlier(mat, r=5):
+    '''
+    columns are cells
+    rows are factors
+    '''
+    ret = mat.copy()
+    max_v = (mat.mean(1)+r*mat.std(1))
+    min_v = (mat.mean(1)-r*mat.std(1))
+    for i in mat.index:
+        ret.loc[i, ret.columns[ret.loc[i, :] > max_v[i]]] = max_v[i]
+        ret.loc[i, ret.columns[ret.loc[i, :] < min_v[i]]] = min_v[i]
+    return ret
 
-
-# def zscore_normalization(data_cell_frame, by='cell'):
-#     if by=="cell":
-#         data_cell_frame_zscore = data_cell_frame.apply(scipy.stats.zscore, axis=0)
-#     elif by == "factor":
-#         data_cell_frame_zscore = data_cell_frame.apply(scipy.stats.zscore, axis=1)
-#     else:
-#         pass
-#     return data_cell_frame_zscore
-
-
-def score_normalization(dataset_cell_frame):
-    tf_cell_df = map_factor_on_ChIP(dataset_cell_frame)
-    tf_cell_log_df = np.log2(tf_cell_df+1)
-    tf_cell_zscore_df = standardScaler(tf_cell_log_df)
-    tf_cell_zero_df = (tf_cell_zscore_df.T-tf_cell_zscore_df.mean(1)).T
-    return tf_cell_zero_df
+def score_normalization(dataset_cell_df):
+    tf_cell_df = map_factor_on_ChIP(dataset_cell_df)
+    tf_cell_df_std = standardScaler(tf_cell_df)
+    tf_cell_df_std_adj = adjust_outlier(tf_cell_df_std, 5)
+    return tf_cell_df_std_adj

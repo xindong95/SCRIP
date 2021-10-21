@@ -19,7 +19,7 @@ from SCRIPT.enrichment.bed_generation import generate_beds_by_matrix
 from SCRIPT.enrichment.validation import check_para
 from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
 from SCRIPT.enrichment.calculation import score_normalization, cal_score, get_factor_source
-from SCRIPT.enrichment.search import search_seqpare_batch, read_seqpare_result_batch
+from SCRIPT.enrichment.search import search_ref_batch, read_search_result_batch
 from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
 # from SCRIPT.enhancement.enhance import determine_number_of_cells_per_group
 # from SCRIPT.Constants import *
@@ -28,25 +28,27 @@ from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
 
 def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
     folder_prefix = run_info.info['project_folder']
-    peaks_length_path = os.path.join(index, 'peaks_length.txt')
-    peaks_length = pd.read_csv(peaks_length_path, sep='\t', header=None, index_col=0)
+    # qpeak_length_path = os.path.join(folder_prefix, 'qpeaks_length.txt')
+    # qpeak_length = pd.read_csv(qpeak_length_path, sep='\t', header=None, index_col=0)/1e4
+    peaks_number_path = os.path.join(index, 'peaks_number.txt')
+    peaks_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
     # tp(type) is 'ChIP-seq' or 'motif'
 
-    run_info.safe_run(search_seqpare_batch, [beds_path, result_path, index, n_cores], 'bed_search')
-    dataset_mbm_overlap_df = run_info.safe_run_and_store(
-        read_seqpare_result_batch, [result_path, n_cores],
-        os.path.join(folder_prefix, 'dataset_mbm_overlap_df.pk'),
-        'dataset_mbm_overlap_df_store')
-    dataset_cell_TPY_df = run_info.safe_run_and_store(
-        cal_score, [dataset_mbm_overlap_df, peaks_length],
-        os.path.join(folder_prefix, 'dataset_cell_TPY_df.pk'),
-        'dataset_cell_TPY_store')
+    run_info.safe_run(search_ref_batch, [beds_path, result_path, index, n_cores], 'bed_search')
+    dataset_overlap_df = run_info.safe_run_and_store(
+        read_search_result_batch, [result_path, n_cores],
+        os.path.join(folder_prefix, 'dataset_overlap_df.pk'),
+        'dataset_overlap_df_store')
+    dataset_cell_norm_df = run_info.safe_run_and_store(
+        cal_score, [dataset_overlap_df, peaks_number],
+        os.path.join(folder_prefix, 'dataset_cell_norm_df.pk'),
+        'dataset_cell_norm_df_store')
     dataset_score_resource_df = run_info.safe_run_and_store(
-        get_factor_source, [dataset_cell_TPY_df],
+        get_factor_source, [dataset_cell_norm_df],
         os.path.join(folder_prefix, 'dataset_score_resource_df.pk'),
         'dataset_score_resource_df_store')
     tf_cell_score_df = run_info.safe_run_and_store(
-        score_normalization, [dataset_cell_TPY_df],
+        score_normalization, [dataset_cell_norm_df],
         os.path.join(folder_prefix, 'tf_cell_score_df.pk'),
         'tf_cell_score_df_store')
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
@@ -100,7 +102,7 @@ def enrich(cell_feature_adata, species='NA',
 
     beds_path = os.path.join(project, 'enrichment', 'beds')
     # total_peaks_path = os.path.join(project, 'enrichment', 'all_peaks.bed')
-    peaks_number_path = os.path.join(project, 'enrichment', 'peaks_number.txt')
+    qpeaks_length_path = os.path.join(project, 'enrichment', 'qpeaks_length.txt')
     chip_result_path = os.path.join(project, 'enrichment', 'ChIP_result')
     result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.txt')
     safe_makedirs(beds_path)
@@ -141,7 +143,7 @@ def enrich(cell_feature_adata, species='NA',
     if run_info.info['progress']['bed_generation'] == 'No':
         if os.path.exists(beds_path):
             shutil.rmtree(beds_path)
-            generate_beds_by_matrix(cell_feature_adata, beds_path, peaks_number_path, n_cores)
+            generate_beds_by_matrix(cell_feature_adata, beds_path, qpeaks_length_path, n_cores)
         run_info.finish_stage('bed_generation')
     # affinity = get_affinity(cell_feature_adata, total_peaks_path, chip_index, ccre_number)
     ##################################

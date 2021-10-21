@@ -5,6 +5,7 @@ except ImportError:
 	from distutils.extension import Extension
 import os
 import sysconfig
+import numpy
 
 cmdclass = {}
 
@@ -23,7 +24,7 @@ import sys, platform
 
 sys.path.append('python')
 
-include_dirs = [".", "/usr/local/zlib/include", "/home/john/anaconda3/include"]
+include_dirs = [".", numpy.get_include()]
 
 setup(
 	name = 'igd_py',

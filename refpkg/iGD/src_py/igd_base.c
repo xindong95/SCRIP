@@ -165,7 +165,9 @@ void open_iGD(iGD_t *iGD, char *igdFile)
     tmp[strrchr(tmp, '.')-tmp] = '\0';
     strcpy(iGD->fname, tmp);
     char *idFile = tmp;					//str_split(tmp, '.', &nCols)[0];
-    strcat(idFile, "_index.tsv");            
+    
+	printf(tmp);
+	strcat(idFile, "_index.tsv");            
     iGD->finfo = get_fileinfo(idFile, &iGD->nFiles);  
     
     FILE *fp = fopen(igdFile, "rb");

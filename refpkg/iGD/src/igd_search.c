@@ -1071,12 +1071,12 @@ int igd_search(int argc, char **argv)
      	free(IGD->nCnt[i]);
      	free(IGD->tIdx[i]);
     }
-    free(IGD->nCnt);
-    free(IGD->tIdx);
-    free(IGD->cName);
-    free(IGD->finfo);
-    free(IGD);
-    free(hits);
+    // free(IGD->nCnt);
+    // free(IGD->tIdx);
+    // free(IGD->cName);
+    // free(IGD->finfo);
+    // free(IGD);
+    // free(hits);
     return EX_OK;
 }
 
