@@ -21,7 +21,7 @@ def update_setting( args ):
             CONFIG['index']['mouse_tf_index'] = os.path.abspath(args.mouse_tf_index)
         if args.mouse_hm_index:
             CONFIG['index']['mouse_hm_index'] = os.path.abspath(args.mouse_hm_index)
-        with open(CONFIG_PATH, 'w+') as config_file:
+        with open(os.path.join(CONFIG_PATH, 'config.yml'), 'w+') as config_file:
             yaml.dump(CONFIG, config_file)
         print('Update sucessfully!')
 

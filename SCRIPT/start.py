@@ -132,7 +132,7 @@ def add_impute_parser(subparsers):
                               help='The factor you want to impute. REQUIRED.')
     group_impute.add_argument("--ref_baseline", dest="ref_baseline", type=str, default='500',
                               help='Remove dataset which peaks number less than this value. DEFAULT: 500.')
-    group_impute.add_argument("--remove_others", dest="remove_others", action='stort_true',  default=False,
+    group_impute.add_argument("--remove_others", dest="remove_others", action='store_true',  default=False,
                               help='Remove signal not from best match. DEFAULT: False.')
 
     group_other = argparser_impute.add_argument_group("Other options")
