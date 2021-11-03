@@ -14,6 +14,7 @@ import ruamel.yaml
 from SCRIPT.Constants import SCRIPT_VERSION
 from SCRIPT.enrichment.enrich import run_enrich
 from SCRIPT.imputation.impute import run_impute
+from SCRIPT.targets.target import run_target
 from SCRIPT.conf.config import update_setting
 from SCRIPT.utilities.utils import read_config
 yaml = ruamel.yaml.YAML()
@@ -37,7 +38,10 @@ def main():
         except MemoryError:
             sys.exit("MemoryError occurred.")
     elif subcommand == "target":
-        pass
+        try:
+            run_target(args)
+        except MemoryError:
+            sys.exit("MemoryError occurred.")
     elif subcommand == "config":
         try:
             update_setting( args )
