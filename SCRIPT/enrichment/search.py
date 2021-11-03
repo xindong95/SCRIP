@@ -48,12 +48,12 @@ def read_search_result(files):
         cell_bc = result_name[:-4]  # remove suffix '.txt'
         dtframe = pd.read_csv(i[1], sep="\t", index_col=0, comment='#', header=None)
         read_col = 2  # 1 file_size 2 overlaps 3 odds_ratio 4 fishers_two_tail 5 fishers_left_tail 6 fishers_right_tail 7 combo_score
-        if i == 0:
+        if i[0] == 0:
             dtframe = dtframe.loc[:, [read_col]].copy()
             dataset_cell_score_df = dtframe.rename(columns={read_col: cell_bc}).copy()
         else:
             dataset_cell_score_df[cell_bc] = dtframe.loc[:, read_col]
-    dataset_cell_score_df.index = [i.rsplit('/', 1)[0][:-7] for i in dataset_cell_score_df.index]  # remove suffix '.bed.gz'
+    dataset_cell_score_df.index = [n.rsplit('/', 1)[0][:-7] for n in dataset_cell_score_df.index]  # remove suffix '.bed.gz'
     return dataset_cell_score_df
 
 
