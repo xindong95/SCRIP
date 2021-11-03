@@ -178,7 +178,7 @@ def run_impute(args):
     elif feature_matrix_path.endswith('.h5ad'):
         input_mat_adata = sc.read_h5ad(feature_matrix_path)
 
-    # sc.pp.calculate_qc_metrics(input_mat_adata, percent_top=None, log1p=False, inplace=True)
+    sc.pp.calculate_qc_metrics(input_mat_adata, percent_top=None, log1p=False, inplace=True)
     # feature_mean = input_mat_adata.obs.n_genes_by_counts.mean()
     # feature_std = input_mat_adata.obs.n_genes_by_counts.std()
 
