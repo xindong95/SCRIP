@@ -24,5 +24,3 @@ def update_setting( args ):
         with open(os.path.join(CONFIG_PATH, 'config.yml'), 'w+') as config_file:
             yaml.dump(CONFIG, config_file)
         print('Update sucessfully!')
-
-

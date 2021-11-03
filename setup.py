@@ -26,7 +26,7 @@ def main():
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
-        packages=['SCRIPT', 'SCRIPT.enrichment', 'SCRIPT.enhancement', 'SCRIPT.conf', 'SCRIPT.utilities', 'SCRIPT.imputation'],
+        packages=['SCRIPT', 'SCRIPT.enrichment', 'SCRIPT.enhancement', 'SCRIPT.conf', 'SCRIPT.utilities', 'SCRIPT.imputation', 'SCRIPT.targets'],
         package_data={
         'SCRIPT': [
             'conf/config.yml',
