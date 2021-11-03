@@ -31,13 +31,14 @@ def generate_beds(file_path, cells, input_mat, peak_confidence=1):
     cell_barcode = os.path.basename(file_path)[:-4]# remove .bed
     if peaks.__len__() == 0:
         print_log(f'Warning: No peaks in {file_path[:-4]}, skip generation.')
+        peaks_length = 0
     else:
         peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
         peaks.to_csv(file_path, sep="\t", header= None, index=None)
         cmd = f'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {file_path} | bgzip -c > {file_path}.gz\n'
         cmd += f'rm {file_path}'
         subprocess.run(cmd, shell=True, check=True)
-    peaks_length = peaks[2].astype(int).sum() - peaks[1].astype(int).sum()
+        peaks_length = peaks[2].astype(int).sum() - peaks[1].astype(int).sum()
     return [cell_barcode, peaks_length]
 
 
@@ -54,4 +55,3 @@ def generate_beds_by_matrix(cell_feature_adata, beds_path, peaks_number_path, n_
     wait(all_task, return_when=ALL_COMPLETED)
     pd.DataFrame([_.result() for _ in as_completed(all_task)]).to_csv(peaks_number_path, header=None, index=None, sep='\t')
     return
-
