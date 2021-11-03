@@ -9,6 +9,8 @@
 '''
 import os
 import subprocess
+import random
+import time
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
 from multiprocessing import Process, Pool
 import pandas as pd
@@ -143,6 +145,12 @@ def run_impute(args):
     remove_others = args.remove_others
     ref_baseline = args.ref_baseline
     n_cores = args.n_cores
+
+    if project == '':
+        tmp_chr_list = [chr(i) for i in range(ord("A"), ord("Z") + 1)] + [chr(i) for i in range(ord("a"), ord("z") + 1)] + [chr(i) for i in range(ord("0"), ord("9") + 1)]
+        random.seed(time.time())
+        tmp_prefix = str(time.time())[6:13].replace('.', '') + '_' + ''.join(random.sample(tmp_chr_list, 4))
+        project = 'SCRIPT_' + tmp_prefix
 
     if factor in ['H3K4me3', 'H3K4me2', 'H3K27ac', 'H3K9ac', 'H3K4me1']:
         factor_type='histone'

@@ -141,6 +141,8 @@ def run_target(args):
         input_mat_adata = sc.read_10x_h5(feature_matrix_path, gex_only=False)
     elif feature_matrix_path.endswith('.h5ad'):
         input_mat_adata = sc.read_h5ad(feature_matrix_path)
+    else:
+        input_mat_adata = sc.read_10x_mtx(feature_matrix_path, gex_only=False)
 
 
     CONFIG, CONFIG_PATH = read_config()
