@@ -137,6 +137,7 @@ refpkg/giggle/test/
 refpkg/giggle/lab/
 refpkg/giggle/doc/html/
 refpkg/giggle/obj/
+refpkg/giggle/lib/libgiggle.a
 refpkg/giggle/inkids_rare.bed.gz
 refpkg/giggle/inkids_rare_smaller.bed.gz
 refpkg/giggle/*.o
