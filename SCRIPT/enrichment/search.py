@@ -43,10 +43,10 @@ def search_ref_batch(bed_folder, result_folder, index_path, n_cores=8, tp=''):
 
 
 def read_search_result(files):
-    for i in range(len(files)):
-        result_name = os.path.basename(files[i])
+    for i in enumerate(files):
+        result_name = os.path.basename(i[1])
         cell_bc = result_name[:-4]  # remove suffix '.txt'
-        dtframe = pd.read_csv(files[i], sep="\t", index_col=0, comment='#', header=None)
+        dtframe = pd.read_csv(i[1], sep="\t", index_col=0, comment='#', header=None)
         read_col = 2  # 1 file_size 2 overlaps 3 odds_ratio 4 fishers_two_tail 5 fishers_left_tail 6 fishers_right_tail 7 combo_score
         if i == 0:
             dtframe = dtframe.loc[:, [read_col]].copy()

@@ -3,27 +3,33 @@
 '''
 @File    :   impute.py
 @Time    :   2021/08/25 19:09:37
-@Author  :   Xin Dong 
+@Author  :   Xin Dong
 @Contact :   xindong9511@gmail.com
 @License :   (C)Copyright 2020-2021, XinDong
 '''
 import os
 import subprocess
-import pandas as pd
-import scanpy as sc
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
+# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
 from multiprocessing import Process, Pool
-from SCRIPT.enrichment.search_seqpare import read_seqpare_result
-from SCRIPT.utilities.utils import print_log, safe_makedirs, excute_info
+import pandas as pd
+import scipy
+import pybedtools
+import scanpy as sc
+from SCRIPT.enrichment.search import read_search_result_batch
+from SCRIPT.enrichment.bed_generation import generate_beds_by_matrix
+from SCRIPT.utilities.utils import print_log, safe_makedirs, excute_info, write_to_mtx, store_to_pickle, read_config
 
-def search_seqpare_factor(bed_path, result_path, index_path, factor):
-    cmd = 'seqpare "{index_path}/{factor}*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'.format(
-        index_path=index_path, result_path=result_path, bed_path=bed_path, factor=factor)
+
+
+
+def search_ref_factor(bed_path, result_path, index_path, factor):
+    cmd = f'giggle search -i "{index_path}" -q "{bed_path}" -s -f {factor}_ > "{result_path}"\n'
+    # cmd = f'igd search {index_path}/ref.igd -q {bed_path} | head -n -1 | cut -f 2,3,4 > {result_path}'
+    # cmd = f'seqpare "{index_path}/*.bed.gz" "{bed_path}" -m 1 -o {result_path}\n'
     subprocess.run(cmd, shell=True, check=True)
 
-
-def search_seqpare_factor_batch(bed_folder, result_folder, index_path, factor, n_cores=8):
-    print_log('Start searching beds from {factor} index ...'.format(factor=factor))
+def search_ref_factor_batch(bed_folder, result_folder, index_path, factor, n_cores=8, tp=''):
+    print_log(f'Start searching beds from {tp} index ...')
     safe_makedirs(result_folder)
     beds = os.listdir(bed_folder)
     args = []
@@ -31,103 +37,82 @@ def search_seqpare_factor_batch(bed_folder, result_folder, index_path, factor, n
         barcodes = bed[:-7]  # remove suffix '.bed.gz'
         args.append((os.path.join(bed_folder, bed),
                      os.path.join(result_folder, barcodes + '.txt'),
-                     index_path, factor))
+                     index_path,
+                     factor))
     with Pool(n_cores) as p:
-        p.starmap(search_seqpare_factor, args)
-    print_log('Finished searching beds from {factor} index ...'.format(factor=factor))
+        p.starmap(search_ref_factor, args)
+    print_log(f'Finished searching beds from {tp} index ...')
+
+# def get_factor_affinity(input_mat, bed_file_path, reference, factor, ccre_number):
+#     peaks = input_mat.var_names.to_list()
+#     peaks_number = peaks.__len__()
+#     ref_number = pd.read_csv(reference + '/peaks_number.txt', sep='\t', index_col=0, header=None)
+#     factor_idx = [i for i in ref_number.index if i.startswith(factor)]
+#     ref_number = ref_number.loc[factor_idx,:]
+#     peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
+#     peaks.to_csv(bed_file_path, sep="\t", header=None, index=None)
+#     cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_file_path)
+#     cmd += 'rm {bed_path}'.format(bed_path=bed_file_path)
+#     subprocess.run(cmd, shell=True, check=True)
+
+#     search_seqpare_factor(bed_file_path + '.gz', bed_file_path[0:-4] + '.txt', reference, factor)
+#     all_peak_result = read_seqpare_result([bed_file_path[0:-4] + '.txt'])
+#     affinity = all_peak_result.iloc[:,0]/(ref_number[1]*peaks_number/ccre_number)
+#     return affinity
 
 
-def generate_peak_list(cells, input_mat, peak_confidence=1):
-    cell_above_cutoff_index = sc.pp.filter_genes(
-        input_mat[cells, :], min_cells=peak_confidence, inplace=False)[0]
-    peaks = input_mat.var_names[cell_above_cutoff_index].to_list()
-    return peaks
+@excute_info('Getting the best reference for each cell.')
+def get_factor_source(table):
+    ret_table = table.copy()
+    # map factor by id "_"
+    factor_index_list = []
+    for i in ret_table.index:
+        factor_name = i.split("_")
+        factor_index_list.append(factor_name[0])
+    ret_table.loc[:, "Factor"] = factor_index_list
+    max_index = ret_table.groupby("Factor").idxmax()
+    return max_index
 
-
-def generate_beds(file_path, cells, input_mat, peak_confidence=1):
-    peaks = generate_peak_list(cells, input_mat, peak_confidence)
-    cell_barcode = os.path.basename(file_path)[:-4]  # remove .bed
-    if peaks.__len__() == 0:
-        print_log('Warning: No peaks in {bed_path}, skip generation'.format(bed_path=file_path[:-4]))
-    else:
-        peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
-        peaks.to_csv(file_path, sep="\t", header=None, index=None)
-        cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=file_path)
-        cmd += 'rm {bed_path}'.format(bed_path=file_path)
-        subprocess.run(cmd, shell=True, check=True)
-    return [cell_barcode, peaks.__len__()]
-
-
-@excute_info('Start generating cells beds ...', 'Finished generating cells beds!')
-def generate_beds_by_matrix(cell_feature_adata, beds_path, peaks_number_path, n_cores):
-    safe_makedirs(beds_path)
-    # total_cnt = adata.obs.index.__len__()
-    executor = ThreadPoolExecutor(max_workers=n_cores)
-    all_task = []
-    for cell in cell_feature_adata.obs.index:
-        # neighbor_cells = find_nearest_cells(cell, coor_table, n_neighbor, step)
-        # map_dict[cell] = neighbor_cells
-        all_task.append(executor.submit(generate_beds, beds_path + "/" + str(cell) + ".bed", cell, cell_feature_adata))
-    wait(all_task, return_when=ALL_COMPLETED)
-    pd.DataFrame([_.result() for _ in as_completed(all_task)]).to_csv(peaks_number_path, header=None, index=None, sep='\t')
-    return
-
-
-def get_factor_affinity(input_mat, bed_file_path, reference, factor, ccre_number):
-    peaks = input_mat.var_names.to_list()
-    peaks_number = peaks.__len__()
-    ref_number = pd.read_csv(reference + '/peaks_number.txt', sep='\t', index_col=0, header=None)
-    factor_idx = [i for i in ref_number.index if i.startswith(factor)]
-    ref_number = ref_number.loc[factor_idx,:]
-    
-    peaks = pd.DataFrame([p.rsplit("_", 2) for p in peaks])
-    peaks.to_csv(bed_file_path, sep="\t", header=None, index=None)
-    cmd = 'sort --buffer-size 2G -k1,1 -k2,2n -k3,3n {bed_path} | bgzip -c > {bed_path}.gz\n'.format(bed_path=bed_file_path)
-    cmd += 'rm {bed_path}'.format(bed_path=bed_file_path)
-    subprocess.run(cmd, shell=True, check=True)
-
-    search_seqpare_factor(bed_file_path + '.gz', bed_file_path[0:-4] + '.txt', reference, factor)
-    all_peak_result = read_seqpare_result([bed_file_path[0:-4] + '.txt'])
-    affinity = all_peak_result.iloc[:,0]/(ref_number[1]*peaks_number/ccre_number)
-    return affinity
-
-
-
-def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, ccre_number=339815, path='SCRIPT/imputation/', write_mtx=True, ref_baseline=5000, remove_others_source=False, n_cores=8):
+def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, path='SCRIPT/imputation/', write_mtx=True, ref_baseline=500, remove_others_source=False, n_cores=8):
     '''
-    ccre_number, mouse for 339815
+    impute tf ChIP data from ATAC data
     '''
+
     safe_makedirs(path)
+    print(input_mat_adata.X.shape)
     if bed_check == True:
-        if not os.path.exists(path + '/imputed_beds/'):
-            generate_beds_by_matrix(input_mat_adata, path + '/imputed_beds/', path + '/imputed_beds_peaks_number.txt', n_cores)
+        if not os.path.exists(f'{path}/imputed_beds/'):
+            print_log('Generating beds...')
+            generate_beds_by_matrix(input_mat_adata, f'{path}/imputed_beds/', f'{path}/imputed_beds_peaks_number.txt', n_cores)
         else:
             print_log('Skip generate beds...')
     else:
-        generate_beds_by_matrix(input_mat_adata, path + '/imputed_beds/', path + '/imputed_beds_peaks_number.txt', n_cores)
+        print_log('Generating beds...')
+        generate_beds_by_matrix(input_mat_adata, f'{path}/imputed_beds/', f'{path}/imputed_beds_peaks_number.txt', n_cores)
 
     if search_check == True:
-        if not os.path.exists(path + '/imputed_results_%s/' % impute_factor):
-            search_seqpare_factor_batch(path + '/imputed_beds/', path + '/imputed_results_%s/' % impute_factor, ref_path, impute_factor, n_cores)
+        if not os.path.exists(f'{path}/imputed_results_{impute_factor}/'):
+            search_ref_factor_batch(f'{path}/imputed_beds/', f'{path}/imputed_results_{impute_factor}/', ref_path, impute_factor, n_cores)
         else:
             print_log('Skip searching beds...')
     else:
-        search_seqpare_factor_batch(path + '/imputed_beds/', path + '/imputed_results_%s/' % impute_factor, ref_path, impute_factor, n_cores)
+        search_ref_factor_batch(f'{path}/imputed_beds/', f'{path}/imputed_results_{impute_factor}/', ref_path, impute_factor, n_cores)
 
     print_log('Calculating score...')
-    factor_affinity = get_factor_affinity(input_mat_adata,  path + '/all_beds.bed', ref_path, impute_factor, ccre_number)
-    factor_enrich = read_seqpare_result_batch(path + '/imputed_results_%s/' % impute_factor, n_cores)
-    factor_hyper_bg = cal_peak_factor_norm(ref_path + 'peaks_number.txt',  path + '/imputed_beds_peaks_number.txt', ccre_number, factor_affinity, impute_factor)
-    factor_score = cal_score(factor_enrich, factor_hyper_bg)
+    factor_enrich = read_search_result_batch(f'{path}/imputed_results_{impute_factor}/', n_cores)
 
-    ref_peak_number = pd.read_csv(ref_path + '/peaks_number.txt', sep='\t', header=None, index_col=0)
-    factor_idx = [i for i in ref_peak_number.index if i.startswith(impute_factor)]
-    ref_peak_number = ref_peak_number.loc[factor_idx, :]
+    peaks_number = pd.read_csv(os.path.join(ref_path, 'peaks_number.txt'), sep='\t', header=None, index_col=0)
+    peaks_number_factor = peaks_number.loc[[i for i in peaks_number.index if i.startswith(impute_factor)], :].copy()
+    peaks_number_baseline_index = peaks_number_factor.index[peaks_number_factor[1] > ref_baseline]
+    # peaks_number_factor = peaks_number_factor.loc[peaks_number_baseline_index, :]
 
-    factor_score = factor_score.loc[ref_peak_number.index[ref_peak_number[1] > ref_baseline], :].copy()
+    factor_enrich = factor_enrich.loc[peaks_number_baseline_index, :].copy()
+    factor_score = (factor_enrich.T/peaks_number_factor.loc[factor_enrich.index, 1]).T
+
     factor_source = get_factor_source(factor_score)
+    store_to_pickle(factor_source, f'{path}/{impute_factor}_dataset_source.pk')
 
-    chip_bed_list = [pybedtools.BedTool(os.path.join(ref_path, i + '.bed.gz')) for i in factor_source.iloc[0, :].unique()]
+    chip_bed_list = [pybedtools.BedTool(os.path.join(ref_path, 'raw_beds', i + '.bed.gz')) for i in factor_source.iloc[0, :].unique()]
     chip_bed = chip_bed_list[0].cat(*chip_bed_list[1:])
     data_bed = pybedtools.BedTool('\n'.join(['\t'.join(p.rsplit('_', maxsplit=2)) for p in input_mat_adata.var_names]), from_string=True)
     intersect_bed = data_bed.intersect(chip_bed, u=True)
@@ -145,11 +130,54 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
     chip_cell_peak.X = scipy.sparse.csr.csr_matrix(chip_cell_peak.X)
     print_log('Writing results...')
     if write_mtx == True:
-        write_to_mtx(chip_cell_peak, path + 'imputation/imputed_H3K27ac_mtx/')
+        write_to_mtx(chip_cell_peak, f'{path}/imputed_{impute_factor}_mtx/')
     print_log('Finished!')
     return chip_cell_peak
 
 
+def run_impute(args):
+    feature_matrix_path = args.feature_matrix
+    species = args.species
+    factor = args.factor
+    project = args.project
+    remove_others = args.remove_others
+    ref_baseline = args.ref_baseline
+    n_cores = args.n_cores
 
-def run(args):
-    return 
+    if factor in ['H3K4me3', 'H3K4me2', 'H3K27ac', 'H3K9ac', 'H3K4me1']:
+        factor_type='histone'
+    else:
+        factor_type='TR'
+
+    CONFIG, _ = read_config()
+    if factor_type== 'TR':
+        if species == 'hs':
+            chip_index = CONFIG['index']['human_tf_index']
+        elif species == 'mm':
+            chip_index = CONFIG['index']['mouse_tf_index']
+        else:
+            pass
+    else:
+        if species == 'hs':
+            chip_index = CONFIG['index']['human_hm_index']
+        elif species == 'mm':
+            chip_index = CONFIG['index']['mouse_hm_index']
+        else:
+            pass
+
+    if feature_matrix_path.endswith('.h5'):
+        input_mat_adata = sc.read_10x_h5(feature_matrix_path, gex_only=False)
+    elif feature_matrix_path.endswith('.h5ad'):
+        input_mat_adata = sc.read_h5ad(feature_matrix_path)
+
+    impute(input_mat_adata=input_mat_adata,
+           impute_factor=factor,
+           ref_path=chip_index,
+           bed_check=True,
+           search_check=True,
+           path=f'{project}/imputation/',
+           write_mtx=True,
+           ref_baseline=ref_baseline,
+           remove_others_source=remove_others,
+           n_cores=n_cores)
+    return

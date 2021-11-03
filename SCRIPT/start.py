@@ -13,6 +13,7 @@ import sys
 import ruamel.yaml
 from SCRIPT.Constants import SCRIPT_VERSION
 from SCRIPT.enrichment.enrich import run_enrich
+from SCRIPT.imputation.impute import run_impute
 from SCRIPT.conf.config import update_setting
 from SCRIPT.utilities.utils import read_config
 yaml = ruamel.yaml.YAML()
@@ -31,7 +32,10 @@ def main():
         except MemoryError:
             sys.exit( "MemoryError occurred.")
     elif subcommand == "impute":
-        pass
+        try:
+            run_impute(args)
+        except MemoryError:
+            sys.exit("MemoryError occurred.")
     elif subcommand == "target":
         pass
     elif subcommand == "config":
@@ -56,6 +60,7 @@ def prepare_argparser():
 
     add_enrich_parser(subparsers)
     add_impute_parser(subparsers)
+    add_target_parser(subparsers)
     add_config_parser(subparsers)
 
     return argparser
@@ -107,14 +112,14 @@ def add_enrich_parser( subparsers ):
 def add_impute_parser(subparsers):
     """Add main function 'impute' argument parsers.
     """
-    argparser_impute = subparsers.add_parser("impute", help="Imputation function.")
+    argparser_impute = subparsers.add_parser("impute", help="Imputation Factor function.")
 
     # group for input files
     group_input = argparser_impute.add_argument_group("Input files arguments")
-    group_input.add_argument("-e", "--processed_experiment", dest="processed_experiment", type=str, required=True,
-                             help='A processed single cell experiment anndata. Seurat or scanpy or MAESTRO. REQUIRED.')
     group_input.add_argument("-i", "--input_feature_matrix", dest="feature_matrix", type=str, required=True,
-                             help='A cell by peak matrix . REQUIRED.')
+                             help='A cell by peak matrix. h5 or h5ad supported. REQUIRED.')
+    group_input.add_argument("-s", "--species", dest="species", choices=['hs', 'mm'], required=True,
+                             help='Species. "hs"(human) or "mm"(mouse). REQUIRED.')
 
     # group for output files
     group_output = argparser_impute.add_argument_group("Output arguments")
@@ -123,17 +128,38 @@ def add_impute_parser(subparsers):
 
     # group for impute
     group_impute = argparser_impute.add_argument_group("Peak imputation paramater arguments")
-    group_impute.add_argument("--cell_number", dest="cell_number_impute", type=str, default='auto',
-                              help='Number of cell to merge together when imputation. DEFAULT: "auto".')
-    group_impute.add_argument("--peak_confidence", dest="peak_confidence_impute", type=str, default='auto',
-                              help='Remove peak that confidence less than this number. (Not including equal to.). Recommand 0.1*cell_number_per_group. DEFAULT: "auto".')
+    group_impute.add_argument("--factor", dest="factor", type=str, default='', required=True,
+                              help='The factor you want to impute. REQUIRED.')
+    group_impute.add_argument("--ref_baseline", dest="ref_baseline", type=str, default='500',
+                              help='Remove dataset which peaks number less than this value. DEFAULT: 500.')
+    group_impute.add_argument("--remove_others", dest="remove_others", action='stort_true',  default=False,
+                              help='Remove signal not from best match. DEFAULT: False.')
 
     group_other = argparser_impute.add_argument_group("Other options")
     group_other.add_argument("-t", '--thread', dest='n_cores', type=int, default=16,
                              help="Number of cores use to run SCRIPT. DEFAULT: 16.")
-    group_other.add_argument("-y", "--yes", dest='yes', action='store_true', default=False,
-                             help="Whether ask for confirmation. DEFAULT: False.")
 
+
+def add_target_parser(subparsers):
+    """Add main function 'target' argument parsers.
+    """
+    argparser_impute = subparsers.add_parser("target", help="Calculate targets based on factor peak count.")
+
+    # group for input files
+    group_input = argparser_impute.add_argument_group("Input files arguments")
+    group_input.add_argument("-i", "--input_feature_matrix", dest="feature_matrix", type=str, required=True,
+                             help='A cell by peak matrix. h5 or h5ad supported. REQUIRED.')
+    group_input.add_argument("-s", "--species", dest="species", choices=['hs', 'mm'], required=True,
+                             help='Species. "hs"(human) or "mm"(mouse). REQUIRED.')
+
+    # group for output files
+    group_output = argparser_impute.add_argument_group("Output arguments")
+    group_output.add_argument("-o", "--output", dest="output", type=str, default="",
+                              help='output h5ad file. DEFAULT: RP.h5ad')
+
+    group_other = argparser_impute.add_argument_group("Other options")
+    group_other.add_argument("-d", '--decay', dest='decay', type=int, default=10000,
+                             help="Range to the effect of peaks. DEFAULT: 10000.")
 
 if __name__ == '__main__':
     try:

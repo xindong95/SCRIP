@@ -1,7 +1,8 @@
 import os
 import sys
-from SCRIPT.utilities.utils import read_config
 import ruamel.yaml
+from SCRIPT.utilities.utils import read_config
+
 
 def update_setting( args ):
     yaml = ruamel.yaml.YAML()

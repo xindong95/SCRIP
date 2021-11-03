@@ -30,6 +30,8 @@ def main():
         package_data={
         'SCRIPT': [
             'conf/config.yml',
+            'conf/GRCh38_refgenes.txt',
+            'conf/GRCm38_refgenes.txt',
             ],
         },
         install_requires=[
