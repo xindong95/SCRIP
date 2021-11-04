@@ -142,6 +142,9 @@ def run_impute(args):
     species = args.species
     factor = args.factor
     project = args.project
+    min_cells = args.min_cells  # for removing few features cells
+    min_peaks = args.min_peaks  # for removing few cells features
+    max_peaks = args.max_peaks  # for removing doublet cells
     remove_others = args.remove_others
     ref_baseline = args.ref_baseline
     n_cores = args.n_cores
@@ -174,19 +177,38 @@ def run_impute(args):
             pass
 
     if feature_matrix_path.endswith('.h5'):
-        input_mat_adata = sc.read_10x_h5(feature_matrix_path, gex_only=False)
+        feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
     elif feature_matrix_path.endswith('.h5ad'):
-        input_mat_adata = sc.read_h5ad(feature_matrix_path)
+        feature_matrix = sc.read_h5ad(feature_matrix_path)
 
-    sc.pp.calculate_qc_metrics(input_mat_adata, percent_top=None, log1p=False, inplace=True)
-    # feature_mean = input_mat_adata.obs.n_genes_by_counts.mean()
-    # feature_std = input_mat_adata.obs.n_genes_by_counts.std()
+    sc.pp.calculate_qc_metrics(feature_matrix, percent_top=None, log1p=False, inplace=True)
+    feature_mean = feature_matrix.obs.n_genes_by_counts.mean()
+    feature_std = feature_matrix.obs.n_genes_by_counts.std()
 
-    sc.pp.filter_genes(input_mat_adata, min_cells=1)
-    sc.pp.filter_cells(input_mat_adata, min_genes=1)  # filter by n_genes_by_counts
+    if min_cells == 'auto':
+        min_cells = int(0.005 * feature_matrix.n_obs)
+    else:
+        min_cells = int(min_cells)
+    sc.pp.filter_genes(feature_matrix, min_cells=min_cells)
 
+    if min_peaks == 'auto':
+        min_peaks = 500 if feature_mean-3*feature_std < 500 else feature_mean-3*feature_std
+    else:
+        min_peaks = int(min_peaks)
+    sc.pp.filter_cells(feature_matrix, min_genes=min_peaks)  # filter by n_genes_by_counts
 
-    impute(input_mat_adata=input_mat_adata,
+    if max_peaks == 'auto':
+        max_peaks = feature_mean+3*feature_std
+        sc.pp.filter_cells(feature_matrix, max_genes=max_peaks)
+        # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
+    elif max_peaks == 'none':
+        print_log('Skip filter by max peaks number.')
+    else:
+        max_peaks = int(max_peaks)
+        sc.pp.filter_cells(feature_matrix, max_genes=max_peaks)
+        # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
+
+    impute(input_mat_adata=feature_matrix,
            impute_factor=factor,
            ref_path=chip_index,
            bed_check=True,

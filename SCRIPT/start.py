@@ -134,12 +134,18 @@ def add_impute_parser(subparsers):
     group_impute = argparser_impute.add_argument_group("Peak imputation paramater arguments")
     group_impute.add_argument("--factor", dest="factor", type=str, default='', required=True,
                               help='The factor you want to impute. REQUIRED.')
-    group_impute.add_argument("--ref_baseline", dest="ref_baseline", type=str, default='500',
+    group_impute.add_argument("--ref_baseline", dest="ref_baseline", type=int, default=500,
                               help='Remove dataset which peaks number less than this value. DEFAULT: 500.')
     group_impute.add_argument("--remove_others", dest="remove_others", action='store_true',  default=False,
                               help='Remove signal not from best match. DEFAULT: False.')
 
     group_other = argparser_impute.add_argument_group("Other options")
+    group_other.add_argument("--min_cells", dest="min_cells", type=str, default='auto',
+                                     help='Minimal cell cutoff for features. Auto will take 0.05%% of total cell number.DEFAULT: "auto".')
+    group_other.add_argument("--min_peaks", dest="min_peaks", type=str, default='auto',
+                                     help='Minimal peak cutoff for cells. Auto will take the mean-3*std of all feature number (if less than 500 is 500). DEFAULT: "auto".')
+    group_other.add_argument("--max_peaks", dest="max_peaks", type=str, default='auto',
+                                     help='Max peak cutoff for cells. This will help you to remove the doublet cells. Auto will take the mean+5*std of all feature number. DEFAULT: "auto".')
     group_other.add_argument("-t", '--thread', dest='n_cores', type=int, default=16,
                              help="Number of cores use to run SCRIPT. DEFAULT: 16.")
 
