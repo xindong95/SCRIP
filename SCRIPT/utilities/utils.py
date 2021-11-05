@@ -10,60 +10,12 @@
 
 import os
 import sys
-# import shutil
-# import re
 import pickle
-# import random
-# import subprocess
 import time
-# from datetime import datetime, timedelta
-# import threading
-# from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
-# from multiprocessing import Process, Pool
-
 
 import ruamel.yaml
 import pandas as pd
-# import anndata as ad
-# # import h5py
-# import Bio
-# from Bio import motifs
-# import pysam
-# import pyranges
-# import pybedtools
-# import matplotlib.pyplot as plt
-# import matplotlib as mpl
-# import seaborn as sns
-# import sklearn
-# from sklearn.preprocessing import quantile_transform
 from scipy import io
-
-# from adjustText import adjust_text
-
-
-# sc.settings.verbosity = 3
-# # sc.logging.print_header()
-# sc.logging.print_versions()
-
-
-# plt.rcParams.update({
-#     'font.size' : 15,
-#     'figure.figsize': [8.0, 8.0],
-#     'font.style' : 'normal',
-#     'font.weight':'bold',
-#     'figure.titleweight': 'bold',
-#     'axes.titleweight': 'bold',
-#     'axes.labelweight': 'bold',
-#     'axes.spines.right': False,
-#     'axes.spines.top': False,
-# })
-
-# N = 256
-# vals = np.ones((N, 4))
-# vals[:, 0] = np.linspace(220/256, 34/256, N)
-# vals[:, 1] = np.linspace(220/256, 7/256, N)
-# vals[:, 2] = np.linspace(220/256, 141/256, N)
-# regulation_cmp = mpl.colors.ListedColormap(vals)
 
 
 def add_time(func):
@@ -92,7 +44,7 @@ def read_SingleCellExperiment_rds(input_RDS):
     import anndata2ri
     from rpy2.robjects import r
     anndata2ri.activate()
-    rscript = 'readRDS("{RDS_file_path}")'.format(RDS_file_path = input_RDS)
+    rscript = f'readRDS("{input_RDS}")'
     adata = r(rscript)
     return adata
 
@@ -104,9 +56,9 @@ def read_config():
         CONFIG = yaml.load(config_file.read())
     return CONFIG, CONFIG_PATH
 
-def store_to_pickle(object, path):
+def store_to_pickle(obj, path):
     with open(os.path.join(path), 'wb+') as f:
-        pickle.dump(object, f)
+        pickle.dump(obj, f)
 
 
 def read_pickle(path):
@@ -122,7 +74,7 @@ def safe_makedirs(path):
 def write_to_mtx(data, path):
     if not os.path.exists(path):
         os.makedirs(path)
-    pd.DataFrame(data.var.index).to_csv(os.path.join(path, "genes.tsv" ), sep = "\t", index=False, header=False)
+    pd.DataFrame(data.var.index, data.var.index).to_csv(os.path.join(path, "genes.tsv"), sep="\t", header=False)
     pd.DataFrame(data.obs.index).to_csv(os.path.join(path, "barcodes.tsv"), sep = "\t", index=False, header=False)
     data.obs.to_csv(os.path.join(path, "metadata.tsv"), sep = "\t", index=False, header=False)
     io.mmwrite(os.path.join(path, "matrix.mtx"), data.X.T)
