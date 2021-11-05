@@ -125,4 +125,4 @@ def write_to_mtx(data, path):
     pd.DataFrame(data.var.index).to_csv(os.path.join(path, "genes.tsv" ), sep = "\t", index=False, header=False)
     pd.DataFrame(data.obs.index).to_csv(os.path.join(path, "barcodes.tsv"), sep = "\t", index=False, header=False)
     data.obs.to_csv(os.path.join(path, "metadata.tsv"), sep = "\t", index=False, header=False)
-    io.mmwrite(os.path.join(path, "matrix.mtx"), data.X.T)
+    io.mmwrite(os.path.join(path, "matrix.mtx"), data.X)

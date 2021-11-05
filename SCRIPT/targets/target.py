@@ -142,7 +142,10 @@ def run_target(args):
     elif feature_matrix_path.endswith('.h5ad'):
         input_mat_adata = sc.read_h5ad(feature_matrix_path)
     else:
-        input_mat_adata = sc.read_10x_mtx(feature_matrix_path, gex_only=False)
+        try:
+            input_mat_adata = sc.read_10x_mtx(feature_matrix_path, gex_only=False)
+        except KeyError:
+            input_mat_adata = sc.read_10x_mtx(feature_matrix_path, var_names='gene_ids' ,gex_only=False)
 
 
     CONFIG, CONFIG_PATH = read_config()
