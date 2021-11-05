@@ -83,7 +83,7 @@ def RP_Simple(peaks_info, genes_info, decay):
             for gene_name in dlist:
                 del A[gene_name]
 
-    return(genes_peaks_score_array)
+    return genes_peaks_score_array
 
 
 def count_to_gene_by_RP(input_adata, decay=10000, refgene_path=''):
