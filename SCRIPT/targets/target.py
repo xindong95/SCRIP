@@ -127,7 +127,7 @@ def count_to_gene_by_RP(input_adata, decay=10000, refgene_path=''):
 
     score_cells_matrix = genes_cells_score_csr[matrix_row, :]
 
-    RP_adata = ad.AnnData(score_cells_matrix.T, obs=pd.DataFrame(index=cells_list.tolist()), var=pd.DataFrame(index=gene_symbol))
+    RP_adata = ad.AnnData(score_cells_matrix.T, obs=pd.DataFrame(index=cells_list), var=pd.DataFrame(index=gene_symbol))
     return RP_adata
 
 

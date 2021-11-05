@@ -75,7 +75,7 @@ def get_factor_source(table):
     max_index = ret_table.groupby("Factor").idxmax()
     return max_index
 
-def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, path='SCRIPT/imputation/', write_mtx=True, ref_baseline=500, remove_others_source=False, n_cores=8):
+def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, path='SCRIPT/imputation/', write_format='', ref_baseline=500, remove_others_source=False, n_cores=8):
     '''
     impute tf ChIP data from ATAC data
     '''
@@ -130,9 +130,12 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
             chip_cell_peak_df.loc[cellbc, exclude_chip_peak] = 0
     chip_cell_peak = sc.AnnData(chip_cell_peak_df)
     chip_cell_peak.X = scipy.sparse.csr.csr_matrix(chip_cell_peak.X)
-    print_log('Writing results...')
-    if write_mtx == True:
-        write_to_mtx(chip_cell_peak, f'{path}/imputed_{impute_factor}_mtx/')
+    if write_format != '':
+        print_log('Writing results...')
+        if write_format == 'h5ad':
+            chip_cell_peak.write_h5ad(f'{path}/imputed_{impute_factor}.h5ad')
+        elif write_format == 'mtx':
+            write_to_mtx(chip_cell_peak, f'{path}/imputed_{impute_factor}_mtx/')
     print_log('Finished!')
     return chip_cell_peak
 
@@ -142,6 +145,7 @@ def run_impute(args):
     species = args.species
     factor = args.factor
     project = args.project
+    format = args.format
     min_cells = args.min_cells  # for removing few features cells
     min_peaks = args.min_peaks  # for removing few cells features
     max_peaks = args.max_peaks  # for removing doublet cells
@@ -208,14 +212,14 @@ def run_impute(args):
         sc.pp.filter_cells(feature_matrix, max_genes=max_peaks)
         # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
 
-    impute(input_mat_adata=feature_matrix,
-           impute_factor=factor,
-           ref_path=chip_index,
-           bed_check=True,
-           search_check=True,
-           path=f'{project}/imputation/',
-           write_mtx=True,
-           ref_baseline=ref_baseline,
-           remove_others_source=remove_others,
-           n_cores=n_cores)
+    imputed_cell_peak = impute(input_mat_adata=feature_matrix,
+                                impute_factor=factor,
+                                ref_path=chip_index,
+                                bed_check=True,
+                                search_check=True,
+                                path=f'{project}/imputation/',
+                                write_format=format,
+                                ref_baseline=ref_baseline,
+                                remove_others_source=remove_others,
+                                n_cores=n_cores)
     return
