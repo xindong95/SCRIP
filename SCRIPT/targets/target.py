@@ -132,7 +132,7 @@ def count_to_gene_by_RP(input_adata, decay=10000, refgene_path=''):
 
 
 def run_target(args):
-    feature_matrix_path = args.input_feature_matrix
+    feature_matrix_path = args.feature_matrix
     species = args.species
     output = args.output
     decay = args.decay
