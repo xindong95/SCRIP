@@ -20,7 +20,8 @@ from scipy import io
 
 def add_time(func):
     def wrapper(*args, **kw):
-        sys.stdout.write('INFO {time} '.format(time=time.strftime("%Y-%m-%d %H:%M:%S")))
+        time_now = time.strftime("%Y-%m-%d %H:%M:%S")
+        sys.stdout.write(f'INFO {time_now} ')
         return func(*args, **kw)
     return wrapper
 

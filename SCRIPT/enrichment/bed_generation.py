@@ -9,14 +9,12 @@
 '''
 
 import os
-import sys
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
-import random
-import pickle
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, as_completed
+
 import pandas as pd
 import scanpy as sc
-import anndata as ad
+
 from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
 
 

@@ -12,7 +12,7 @@ import subprocess
 import random
 import time
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
-from multiprocessing import Process, Pool
+from multiprocessing import Pool
 import pandas as pd
 import scipy
 import pybedtools
@@ -115,7 +115,10 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
     store_to_pickle(factor_source, f'{path}/{impute_factor}_dataset_source.pk')
 
     chip_bed_list = [pybedtools.BedTool(os.path.join(ref_path, 'raw_beds', i + '.bed.gz')) for i in factor_source.iloc[0, :].unique()]
-    chip_bed = chip_bed_list[0].cat(*chip_bed_list[1:])
+    if len(chip_bed_list) == 1:
+        chip_bed = chip_bed_list[0]
+    else:
+        chip_bed = chip_bed_list[0].cat(*chip_bed_list[1:])
     data_bed = pybedtools.BedTool('\n'.join(['\t'.join(p.rsplit('_', maxsplit=2)) for p in input_mat_adata.var_names]), from_string=True)
     intersect_bed = data_bed.intersect(chip_bed, u=True)
     imputed_chip_peak = str(intersect_bed).replace('\t', '_').split('\n')[0:-1]
@@ -145,7 +148,7 @@ def run_impute(args):
     species = args.species
     factor = args.factor
     project = args.project
-    format = args.format
+    write_format = args.format
     min_cells = args.min_cells  # for removing few features cells
     min_peaks = args.min_peaks  # for removing few cells features
     max_peaks = args.max_peaks  # for removing doublet cells
@@ -212,14 +215,14 @@ def run_impute(args):
         sc.pp.filter_cells(feature_matrix, max_genes=max_peaks)
         # feature_matrix = feature_matrix[feature_matrix.obs.n_genes_by_counts < max_peaks, :]
 
-    imputed_cell_peak = impute(input_mat_adata=feature_matrix,
-                                impute_factor=factor,
-                                ref_path=chip_index,
-                                bed_check=True,
-                                search_check=True,
-                                path=f'{project}/imputation/',
-                                write_format=format,
-                                ref_baseline=ref_baseline,
-                                remove_others_source=remove_others,
-                                n_cores=n_cores)
+    impute(input_mat_adata=feature_matrix,
+            impute_factor=factor,
+            ref_path=chip_index,
+            bed_check=True,
+            search_check=True,
+            path=f'{project}/imputation/',
+            write_format=write_format,
+            ref_baseline=ref_baseline,
+            remove_others_source=remove_others,
+            n_cores=n_cores)
     return

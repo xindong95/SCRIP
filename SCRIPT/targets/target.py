@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import anndata as ad
 import scanpy as sc
-from SCRIPT.utilities.utils import print_log, read_config
+from SCRIPT.utilities.utils import read_config
 # from SCRIPT.enrichment.bed_generation import find_nearest_cells
 
 def geneInfoSimple(gene_bed):
@@ -162,4 +162,3 @@ def run_target(args):
                                 )
     rp_adata.write_h5ad(output)
     return
-
