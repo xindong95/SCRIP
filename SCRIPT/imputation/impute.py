@@ -104,7 +104,7 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
     factor_enrich = read_search_result_batch(f'{path}/imputed_results_{impute_factor}/', n_cores)
 
     peaks_number = pd.read_csv(os.path.join(ref_path, 'peaks_number.txt'), sep='\t', header=None, index_col=0)
-    peaks_number_factor = peaks_number.loc[[i for i in peaks_number.index if i.startswith(impute_factor)], :].copy()
+    peaks_number_factor = peaks_number.loc[[i for i in peaks_number.index if i.startswith(f'{impute_factor}_')], :].copy()
     peaks_number_baseline_index = peaks_number_factor.index[peaks_number_factor[1] > ref_baseline]
     # peaks_number_factor = peaks_number_factor.loc[peaks_number_baseline_index, :]
 

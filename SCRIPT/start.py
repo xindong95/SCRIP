@@ -166,7 +166,7 @@ def add_target_parser(subparsers):
 
     # group for output files
     group_output = argparser_impute.add_argument_group("Output arguments")
-    group_output.add_argument("-o", "--output", dest="output", type=str, default="",
+    group_output.add_argument("-o", "--output", dest="output", type=str, default="RP.h5ad",
                               help='output h5ad file. DEFAULT: RP.h5ad')
 
     group_other = argparser_impute.add_argument_group("Other options")
