@@ -125,7 +125,7 @@ Other options:
                         Number of cores use to run SCRIPT. DEFAULT: 16.
 ```
 
-### SCRIPT impute function  
+### SCRIPT impute function
 
 ```log
 usage: SCRIPT impute [-h] -i FEATURE_MATRIX -s {hs,mm} [-p PROJECT] [-f {h5ad,mtx}] --factor FACTOR [--ref_baseline REF_BASELINE] [--remove_others]
