@@ -128,7 +128,7 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
     if remove_others_source == True:
         for i in factor_source.iloc[0, :].unique():
             cellbc = factor_source.columns[factor_source.iloc[0, :] == i]
-            tmp_dataset_bed = pybedtools.BedTool(os.path.join(ref_path, i + '.bed.gz'))
+            tmp_dataset_bed = pybedtools.BedTool(os.path.join(ref_path, 'raw_beds', i + '.bed.gz'))
             exclude_chip_peak = str(intersect_bed.intersect(tmp_dataset_bed, v=True)).replace('\t', '_').split('\n')[0:-1]
             chip_cell_peak_df.loc[cellbc, exclude_chip_peak] = 0
     chip_cell_peak = sc.AnnData(chip_cell_peak_df)
