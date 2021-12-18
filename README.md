@@ -1,5 +1,8 @@
 # SCRIPT
 
+[![Documentation Status](https://readthedocs.org/projects/scriptscatac/badge/?version=latest)](https://scriptscatac.readthedocs.io/en/latest/?badge=latest)  
+
+
 SCRIPT(**S**ingle **C**ell **R**egulatory network **I**nference using ChI**P**-seq Collec**T**ion) is a tool for evaluating the binding enrichment of specific TR at single-cell resolution based on scATAC-seq.
 
 ## Documentation

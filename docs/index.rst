@@ -32,4 +32,5 @@ SCRIPT(Single Cell Regulatory network Inference using ChIP-seq CollecTion) is a 
 
    installation
    tutorials
+   examples
    release_notes/index

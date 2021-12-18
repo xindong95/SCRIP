@@ -25,14 +25,12 @@ from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
 # from SCRIPT.Constants import *
 
 
-
 def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
     folder_prefix = run_info.info['project_folder']
-    # qpeak_length_path = os.path.join(folder_prefix, 'qpeaks_length.txt')
-    # qpeak_length = pd.read_csv(qpeak_length_path, sep='\t', header=None, index_col=0)/1e4
+    qpeak_length_path = os.path.join(folder_prefix, 'qpeaks_length.txt')
+    qpeak_length = pd.read_csv(qpeak_length_path, sep='\t', header=None, index_col=0)/1e4
     peaks_number_path = os.path.join(index, 'peaks_number.txt')
     peaks_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
-    # tp(type) is 'ChIP-seq' or 'motif'
 
     run_info.safe_run(search_ref_batch, [beds_path, result_path, index, n_cores], 'bed_search')
     dataset_overlap_df = run_info.safe_run_and_store(
@@ -40,7 +38,7 @@ def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
         os.path.join(folder_prefix, 'dataset_overlap_df.pk'),
         'dataset_overlap_df_store')
     dataset_cell_norm_df = run_info.safe_run_and_store(
-        cal_score, [dataset_overlap_df, peaks_number],
+        cal_score, [dataset_overlap_df, peaks_number, qpeak_length],
         os.path.join(folder_prefix, 'dataset_cell_norm_df.pk'),
         'dataset_cell_norm_df_store')
     dataset_score_resource_df = run_info.safe_run_and_store(
