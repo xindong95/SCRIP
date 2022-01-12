@@ -15,22 +15,20 @@ Welcome to SCRIPT's documentation!
 .. |Docs| image:: https://readthedocs.org/projects/scriptscatac/badge/?version=latest
    :target: https://scriptscatac.readthedocs.io
 
-
-SCRIPT(Single Cell Regulatory network Inference using ChIP-seq CollecTion) is a tool for evaluating the binding enrichment of specific TR at single-cell resolution based on scATAC-seq.
+SCRIPT (Single Cell Regulatory network Inference using ChIP-seq CollecTion) is a tool for evaluating the binding activity of specific TR at single-cell resolution based on scATAC-seq.
 
 .. image:: _static/img/Workflow.png
+   :alt: Workflow of SCRIPT
    :width: 100%
    :align: center
 
-
-.. include:: release_notes/0.0.20211021.rst
-
+.. include:: release_notes/0.0.211219.rst
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    installation
+   usage
    tutorials
-   examples
    release_notes/index

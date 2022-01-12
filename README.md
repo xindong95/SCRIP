@@ -20,15 +20,9 @@ libpng12-0 tabix
 Install SCRIPT
 
 ```bash
-git clone git@github.com:xindong95/SCRIPT.git
+git clone git@github.com:wanglabtongji/SCRIPT.git
 cd SCRIPT
 python setup.py install
-```
-
-Auto config on *Mercury*(lab in-house server):  
-
-```bash
-bash test/config.sh
 ```
 
 ## Usage

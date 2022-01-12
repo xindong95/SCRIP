@@ -22,7 +22,7 @@ copyright = '2021, Wang Lab at Tongji'
 author = 'Xin Dong'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.20211021'
+release = '0.0.20211219'
 
 
 # -- General configuration ---------------------------------------------------
@@ -65,7 +65,10 @@ html_css_files = [
 source_suffix = ".rst"
 
 nbsphinx_thumbnails = {
-
+    "tutorials/PBMC": "_static/img/thumbnail/PBMC.png",
+    "tutorials/HSC": "_static/img/thumbnail/HSC.png",
+    "tutorials/fetal_organ": "_static/img/thumbnail/fetal_organ.png",
+    "tutorials/Tumor_microenvironment": "_static/img/thumbnail/tumor.png"
 }
 
 html_theme_options = {
