@@ -128,45 +128,6 @@ Other options:
                         Number of cores use to run SCRIPT. DEFAULT: 16.
 ```
 
-### SCRIPT impute function
-
-```log
-usage: SCRIPT impute [-h] -i FEATURE_MATRIX -s {hs,mm} [-p PROJECT] [-f {h5ad,mtx}] --factor FACTOR [--ref_baseline REF_BASELINE] [--remove_others]
-                     [--min_cells MIN_CELLS] [--min_peaks MIN_PEAKS] [--max_peaks MAX_PEAKS] [-t N_CORES]
-
-optional arguments:
-  -h, --help            show this help message and exit
-
-Input files arguments:
-  -i FEATURE_MATRIX, --input_feature_matrix FEATURE_MATRIX
-                        A cell by peak matrix. h5 or h5ad supported. REQUIRED.
-  -s {hs,mm}, --species {hs,mm}
-                        Species. "hs"(human) or "mm"(mouse). REQUIRED.
-
-Output arguments:
-  -p PROJECT, --project PROJECT
-                        Project name, which will be used to generate output files folder. DEFAULT: Random generate.
-  -f {h5ad,mtx}, --format {h5ad,mtx}
-                        Format generate for output RP count. DEFAULT: h5ad.
-
-Peak imputation paramater arguments:
-  --factor FACTOR       The factor you want to impute. REQUIRED.
-  --ref_baseline REF_BASELINE
-                        Remove dataset which peaks number less than this value. DEFAULT: 500.
-  --remove_others       Remove signal not from best match. DEFAULT: False.
-
-Other options:
-  --min_cells MIN_CELLS
-                        Minimal cell cutoff for features. Auto will take 0.05% of total cell number.DEFAULT: "auto".
-  --min_peaks MIN_PEAKS
-                        Minimal peak cutoff for cells. Auto will take the mean-3*std of all feature number (if less than 500 is 500). DEFAULT: "auto".
-  --max_peaks MAX_PEAKS
-                        Max peak cutoff for cells. This will help you to remove the doublet cells. Auto will take the mean+5*std of all feature
-                        number. DEFAULT: "auto".
-  -t N_CORES, --thread N_CORES
-                        Number of cores use to run SCRIPT. DEFAULT: 16.
-```
-
 ### SCRIPT target function  
 
 ```log
@@ -204,4 +165,3 @@ optional arguments:
   --mouse_tf_index MOUSE_TF_INDEX
   --mouse_hm_index MOUSE_HM_INDEX
 ```
-

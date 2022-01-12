@@ -28,7 +28,7 @@ from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
 def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
     folder_prefix = run_info.info['project_folder']
     qpeak_length_path = os.path.join(folder_prefix, 'qpeaks_length.txt')
-    qpeak_length = pd.read_csv(qpeak_length_path, sep='\t', header=None, index_col=0)/1e4
+    qpeak_length = pd.read_csv(qpeak_length_path, sep='\t', header=None, index_col=0)/1e8
     peaks_number_path = os.path.join(index, 'peaks_number.txt')
     peaks_number = pd.read_csv(peaks_number_path, sep='\t', header=None, index_col=0)
 
@@ -41,17 +41,17 @@ def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
         cal_score, [dataset_overlap_df, peaks_number, qpeak_length],
         os.path.join(folder_prefix, 'dataset_cell_norm_df.pk'),
         'dataset_cell_norm_df_store')
-    dataset_score_resource_df = run_info.safe_run_and_store(
+    dataset_score_source_df = run_info.safe_run_and_store(
         get_factor_source, [dataset_cell_norm_df],
-        os.path.join(folder_prefix, 'dataset_score_resource_df.pk'),
-        'dataset_score_resource_df_store')
+        os.path.join(folder_prefix, 'dataset_score_source_df.pk'),
+        'dataset_score_source_df_store')
     tf_cell_score_df = run_info.safe_run_and_store(
         score_normalization, [dataset_cell_norm_df],
         os.path.join(folder_prefix, 'tf_cell_score_df.pk'),
         'tf_cell_score_df_store')
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
     cell_tf_score_df = tf_cell_score_df.T
-    return cell_tf_score_df, run_info, dataset_score_resource_df
+    return cell_tf_score_df, run_info, dataset_score_source_df
 
 
 def enrich(cell_feature_adata, species='NA',

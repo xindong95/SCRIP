@@ -55,7 +55,7 @@ class EnrichRunInfo(object):
 
                 'dataset_overlap_df_store': 'No',
                 'dataset_cell_norm_df_store': 'No',
-                'dataset_score_resource_df_store': 'No',
+                'dataset_score_source_df_store': 'No',
                 'tf_cell_score_df_store': 'No',
 
                 'result_store': 'No'

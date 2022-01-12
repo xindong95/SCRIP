@@ -53,7 +53,7 @@ def cal_score(dataset_overlap_df, peaks_number, qpeak_length):
     dm: minus the mean
     '''
     dataset_cell_percent = (dataset_overlap_df.T/peaks_number.loc[dataset_overlap_df.index, 1]).T
-    dataset_cell_percent_dl = dataset_cell_percent*1e4/qpeak_length.loc[dataset_cell_percent.columns, 1]
+    dataset_cell_percent_dl = dataset_cell_percent/qpeak_length.loc[dataset_cell_percent.columns, 1]
     dataset_cell_percent_dl_dm = (dataset_cell_percent_dl.T - dataset_cell_percent_dl.mean(1)).T
     # dataset_cell_percent_scale = (dataset_cell_percent/dataset_cell_percent.sum())*1e4
     # dataset_cell_percent_scale_dm = (dataset_cell_percent_scale.T/dataset_cell_percent_scale.mean(1)).T
