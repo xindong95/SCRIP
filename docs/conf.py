@@ -73,6 +73,6 @@ nbsphinx_thumbnails = {
 
 html_theme_options = {
   "external_links": [
-      ("Github", "https://github.com/xindong95/SCRIPT")
+      ("Github", "https://github.com/wanglabtongji/SCRIPT")
   ]
 }

@@ -22,8 +22,6 @@ SCRIPT (Single Cell Regulatory network Inference using ChIP-seq CollecTion) is a
    :width: 100%
    :align: center
 
-.. include:: release_notes/0.0.211219.rst
-
 .. toctree::
    :maxdepth: 1
    :hidden:

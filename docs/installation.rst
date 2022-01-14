@@ -11,7 +11,7 @@ System requirements
 * tabix
 
 
-Install from GitHub:
+Install from GitHub
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: shell
