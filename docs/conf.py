@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'SCRIPT'
-copyright = '2021, Wang Lab at Tongji'
+copyright = '2021, Wang Lab at Tongji University'
 author = 'Xin Dong'
 
 # The full version, including alpha/beta/rc tags
@@ -65,10 +65,10 @@ html_css_files = [
 source_suffix = ".rst"
 
 nbsphinx_thumbnails = {
-    "tutorials/PBMC": "_static/img/thumbnail/PBMC.png",
-    "tutorials/HSC": "_static/img/thumbnail/HSC.png",
-    "tutorials/fetal_organ": "_static/img/thumbnail/fetal_organ.png",
-    "tutorials/Tumor_microenvironment": "_static/img/thumbnail/tumor.png"
+    "examples/PBMC": "_static/img/thumbnail/PBMC.png",
+    "examples/HSC": "_static/img/thumbnail/HSC.png",
+    "examples/fetal_organ": "_static/img/thumbnail/Organs.png",
+    "examples/Tumor_microenvironment": "_static/img/thumbnail/tumor.png"
 }
 
 html_theme_options = {
