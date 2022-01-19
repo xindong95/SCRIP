@@ -7,7 +7,7 @@ SCRIP(**S**ingle **C**ell **R**egulatory network **I**nference using ChI**P**-se
 
 ## Documentation
 
-For the detailed usage and examples of SCRIP, please refer to the [documentation](https://scriptscatac.readthedocs.io/en/latest/).  
+For the detailed usage and examples of SCRIP, please refer to the [documentation](https://scrip.readthedocs.io/en/latest/).  
 
 ## Installation
 
