@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'SCRIPT'
+project = 'SCRIP'
 copyright = '2021, Wang Lab at Tongji University'
 author = 'Xin Dong'
 
@@ -73,6 +73,6 @@ nbsphinx_thumbnails = {
 
 html_theme_options = {
   "external_links": [
-      ("Github", "https://github.com/wanglabtongji/SCRIPT")
+      ("Github", "https://github.com/wanglabtongji/SCRIP")
   ]
 }

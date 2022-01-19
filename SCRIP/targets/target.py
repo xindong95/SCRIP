@@ -15,8 +15,8 @@ import numpy as np
 import pandas as pd
 import anndata as ad
 import scanpy as sc
-from SCRIPT.utilities.utils import read_config
-# from SCRIPT.enrichment.bed_generation import find_nearest_cells
+from SCRIP.utilities.utils import read_config
+# from SCRIP.enrichment.bed_generation import find_nearest_cells
 
 def geneInfoSimple(gene_bed):
     genes_info = []

@@ -17,9 +17,9 @@ import pandas as pd
 import scipy
 import pybedtools
 import scanpy as sc
-from SCRIPT.enrichment.search import read_search_result_batch
-from SCRIPT.enrichment.bed_generation import generate_beds_by_matrix
-from SCRIPT.utilities.utils import print_log, safe_makedirs, excute_info, write_to_mtx, store_to_pickle, read_config
+from SCRIP.enrichment.search import read_search_result_batch
+from SCRIP.enrichment.bed_generation import generate_beds_by_matrix
+from SCRIP.utilities.utils import print_log, safe_makedirs, excute_info, write_to_mtx, store_to_pickle, read_config
 
 
 
@@ -75,7 +75,7 @@ def get_factor_source(table):
     max_index = ret_table.groupby("Factor").idxmax()
     return max_index
 
-def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, path='SCRIPT/imputation/', write_format='', ref_baseline=500, remove_others_source=False, n_cores=8):
+def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_check=True, path='SCRIP/imputation/', write_format='', ref_baseline=500, remove_others_source=False, n_cores=8):
     '''
     impute tf ChIP data from ATAC data
     '''
@@ -160,7 +160,7 @@ def run_impute(args):
         tmp_chr_list = [chr(i) for i in range(ord("A"), ord("Z") + 1)] + [chr(i) for i in range(ord("a"), ord("z") + 1)] + [chr(i) for i in range(ord("0"), ord("9") + 1)]
         random.seed(time.time())
         tmp_prefix = str(time.time())[6:13].replace('.', '') + '_' + ''.join(random.sample(tmp_chr_list, 4))
-        project = 'SCRIPT_' + tmp_prefix
+        project = 'SCRIP_' + tmp_prefix
 
     if factor in ['H3K4me3', 'H3K4me2', 'H3K27ac', 'H3K9ac', 'H3K4me1']:
         factor_type='histone'

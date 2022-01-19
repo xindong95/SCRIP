@@ -16,7 +16,7 @@ import warnings
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
 import pandas as pd
 import numpy as np
-from SCRIPT.utilities.utils import print_log, safe_makedirs
+from SCRIP.utilities.utils import print_log, safe_makedirs
 
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 

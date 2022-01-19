@@ -21,18 +21,18 @@ def install_giggle():
 def main():
     install_giggle()
     setup(
-        name='SCRIPT',
+        name='SCRIP',
         version='0.0.211219',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
-        packages=['SCRIPT', 'SCRIPT.enrichment', 'SCRIPT.enhancement', 'SCRIPT.conf', 'SCRIPT.utilities', 'SCRIPT.imputation', 'SCRIPT.targets'],
+        packages=['SCRIP', 'SCRIP.enrichment', 'SCRIP.enhancement', 'SCRIP.conf', 'SCRIP.utilities', 'SCRIP.imputation', 'SCRIP.targets'],
         package_data={
-        'SCRIPT': [
-            'conf/config.yml',
-            'conf/GRCh38_refgenes.txt',
-            'conf/GRCm38_refgenes.txt',
-            ],
+            'SCRIP': [
+                'conf/config.yml',
+                'conf/GRCh38_refgenes.txt',
+                'conf/GRCm38_refgenes.txt',
+                ],
         },
         install_requires=[
             'numba>=0.51.2',
@@ -54,7 +54,7 @@ def main():
         python_requires='>=3.8.*, !=3.9.*',
         entry_points={
             'console_scripts': [
-                'SCRIPT=SCRIPT.start:main'
+                'SCRIP=SCRIP.start:main'
             ]
         },
     )

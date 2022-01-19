@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED, as_compl
 import pandas as pd
 import scanpy as sc
 
-from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
+from SCRIP.utilities.utils import print_log, excute_info, safe_makedirs
 
 
 def generate_peak_list(cells, input_mat, peak_confidence=1):

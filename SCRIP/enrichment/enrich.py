@@ -15,14 +15,14 @@ import shutil
 import random
 import scanpy as sc
 import pandas as pd
-from SCRIPT.enrichment.bed_generation import generate_beds_by_matrix
-from SCRIPT.enrichment.validation import check_para
-from SCRIPT.enrichment.utils import EnrichRunInfo, time_estimate
-from SCRIPT.enrichment.calculation import score_normalization, cal_score, get_factor_source
-from SCRIPT.enrichment.search import search_ref_batch, read_search_result_batch
-from SCRIPT.utilities.utils import read_config, print_log, safe_makedirs
-# from SCRIPT.enhancement.enhance import determine_number_of_cells_per_group
-# from SCRIPT.Constants import *
+from SCRIP.enrichment.bed_generation import generate_beds_by_matrix
+from SCRIP.enrichment.validation import check_para
+from SCRIP.enrichment.utils import EnrichRunInfo, time_estimate
+from SCRIP.enrichment.calculation import score_normalization, cal_score, get_factor_source
+from SCRIP.enrichment.search import search_ref_batch, read_search_result_batch
+from SCRIP.utilities.utils import read_config, print_log, safe_makedirs
+# from SCRIP.enhancement.enhance import determine_number_of_cells_per_group
+# from SCRIP.Constants import *
 
 
 def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
@@ -66,7 +66,7 @@ def enrich(cell_feature_adata, species='NA',
         tmp_chr_list = [chr(i) for i in range(ord("A"), ord("Z") + 1)] + [chr(i) for i in range(ord("a"), ord("z") + 1)] + [chr(i) for i in range(ord("0"), ord("9") + 1)]
         random.seed(time.time())
         tmp_prefix = str(time.time())[6:13].replace('.','') + '_' + ''.join(random.sample(tmp_chr_list, 4))
-        project = 'SCRIPT_' + tmp_prefix
+        project = 'SCRIP_' + tmp_prefix
 
     safe_makedirs(project)
     project_abs_path = os.path.abspath(project)
@@ -102,7 +102,7 @@ def enrich(cell_feature_adata, species='NA',
     # total_peaks_path = os.path.join(project, 'enrichment', 'all_peaks.bed')
     qpeaks_length_path = os.path.join(project, 'enrichment', 'qpeaks_length.txt')
     chip_result_path = os.path.join(project, 'enrichment', 'ChIP_result')
-    result_store_path = os.path.join(project, 'enrichment', 'SCRIPT_enrichment.txt')
+    result_store_path = os.path.join(project, 'enrichment', 'SCRIP_enrichment.txt')
     safe_makedirs(beds_path)
 
     if species == 'hs':

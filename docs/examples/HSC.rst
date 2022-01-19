@@ -1,11 +1,11 @@
 Hematopoietic Stem Cells (HSC) 
 ==============================
 
-To prove that SCRIPT can infer TR activities in a complex system and could be potentially used to track cell differentiation, we applied SCRIPT on a human hematopoietic stem cell (HSC) differentiation scATAC-seq dataset `(Jason et al., Cell, 2018) <https://doi.org/10.1016/j.cell.2018.03.074>`_. Data was downloaded from GEO with accession `GSE96769 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE96769>`_.
+To prove that SCRIP can infer TR activities in a complex system and could be potentially used to track cell differentiation, we applied SCRIP on a human hematopoietic stem cell (HSC) differentiation scATAC-seq dataset `(Jason et al., Cell, 2018) <https://doi.org/10.1016/j.cell.2018.03.074>`_. Data was downloaded from GEO with accession `GSE96769 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE96769>`_.
 
 .. code:: shell
 
-    SCRIPT enrich -i example/HSC/data/HSC_peak_count.h5 -s hs -p example/HSC/SCRIPT -t 32
+    SCRIP enrich -i example/HSC/data/HSC_peak_count.h5 -s hs -p example/HSC/SCRIP -t 32
 
 .. code:: R
 
@@ -14,7 +14,7 @@ To prove that SCRIPT can infer TR activities in a complex system and could be po
     library(dplyr)
     library(ggplot2)
 
-    enri<-read.table("example/HSC/SCRIPT/enrichment/SCRIPT_enrichment.txt",header=T)
+    enri<-read.table("example/HSC/SCRIP/enrichment/SCRIP_enrichment.txt",header=T)
     meta<-read.table("example/HSC/data/metadata.txt")
     meta[which(meta$assign.celltype=="MCP"),7]<-"pDC"
     enri<-enri[rownames(enri)%in%rownames(meta),]

@@ -4,4 +4,4 @@ Release notes
 Version 0.0.211219  *2021-12-19*
 ---------------------------------
 
-- Release SCRIPT
+- Release SCRIP

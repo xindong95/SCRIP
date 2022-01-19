@@ -17,7 +17,7 @@ We used the scanpy to perform the basic QC for scRNA-seq.
     import seaborn as sns
     import scanpy as sc
 
-    from SCRIPT.utilities.utils import print_log, safe_makedirs, read_SingleCellExperiment_rds, excute_info, read_pickle, write_to_mtx
+    from SCRIP.utilities.utils import print_log, safe_makedirs, read_SingleCellExperiment_rds, excute_info, read_pickle, write_to_mtx
 
     rna_adata = sc.read_10x_h5('example/PBMC/data/pbmc_granulocyte_sorted_10k_raw_feature_bc_matrix.h5')
     rna_adata.var_names_make_unique()
@@ -145,13 +145,13 @@ MAESTRO provides the utility that can convert mtx to h5 format.
 
     MAESTRO mtx-to-h5 -d . --outprefix PBMC_granulocyte_sorted_10k_filtered_peak_count
 
-We can run SCRIPT with peak count matrix in either h5 or mtx format.
+We can run SCRIP with peak count matrix in either h5 or mtx format.
 
 .. code:: shell
 
-    SCRIPT enrich -i data/ATAC/filtered_mtx/PBMC_granulocyte_sorted_10k_filtered_peak_count.h5 -s hs -p multiome_pbmc_SCRIPT -t 32
+    SCRIP enrich -i data/ATAC/filtered_mtx/PBMC_granulocyte_sorted_10k_filtered_peak_count.h5 -s hs -p multiome_pbmc_SCRIP -t 32
 
-To check the biological finding of SCRIPT results, we use the MAESTRO to perform the basic analysis for scATAC-seq data.
+To check the biological finding of SCRIP results, we use the MAESTRO to perform the basic analysis for scATAC-seq data.
 
 .. code:: R
 
@@ -202,12 +202,12 @@ We checked the TR enrichment in cell types.
 
 .. code:: python
 
-    script_result_table = read_pickle('example/PBMC/multiome_pbmc_SCRIPT_20211219/enrichment/tf_cell_score_df.pk')
-    atac_adata.obs['SCRIPT_BCL11A'] = script_result_table.T.loc[atac_adata.obs_names,'BCL11A']
-    atac_adata.obs['SCRIPT_BCL11B'] = script_result_table.T.loc[atac_adata.obs_names,'BCL11B']
+    script_result_table = read_pickle('example/PBMC/multiome_pbmc_SCRIP_20211219/enrichment/tf_cell_score_df.pk')
+    atac_adata.obs['SCRIP_BCL11A'] = script_result_table.T.loc[atac_adata.obs_names,'BCL11A']
+    atac_adata.obs['SCRIP_BCL11B'] = script_result_table.T.loc[atac_adata.obs_names,'BCL11B']
 
     fig, ax = plt.subplots(1,1,figsize=(5,5))
-    sc.pl.umap(atac_adata, color=['SCRIPT_BCL11A'], cmap='coolwarm', ax=ax)
+    sc.pl.umap(atac_adata, color=['SCRIP_BCL11A'], cmap='coolwarm', ax=ax)
     fig.show()
 
 .. image:: ../_static/img/PBMC/PBMC_ATAC_BCL11A.png
@@ -218,7 +218,7 @@ We checked the TR enrichment in cell types.
 .. code:: python
 
     fig, ax = plt.subplots(1,1,figsize=(5,5))
-    sc.pl.umap(atac_adata, color=['SCRIPT_BCL11B'], cmap='coolwarm', ax=ax)
+    sc.pl.umap(atac_adata, color=['SCRIP_BCL11B'], cmap='coolwarm', ax=ax)
     fig.show()
 
 .. image:: ../_static/img/PBMC/PBMC_ATAC_BCL11B.png

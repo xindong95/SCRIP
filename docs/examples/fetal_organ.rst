@@ -1,13 +1,13 @@
 Human Fetal Organs
 ==============================
 
-To prove the ability that SCRIPT can be applied to diverse tissue types and infer the target genes of TRs, we applied SCRIPT to a scATAC-seq dataset of human fetal organs that covers 14 different tissues `(Domcke et al., Science, 2020) <https://doi.org/10.1126/science.aba7612>`_. Data was downloaded from GEO with accession `GSE149683 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE149683>`_.
+To prove the ability that SCRIP can be applied to diverse tissue types and infer the target genes of TRs, we applied SCRIP to a scATAC-seq dataset of human fetal organs that covers 14 different tissues `(Domcke et al., Science, 2020) <https://doi.org/10.1126/science.aba7612>`_. Data was downloaded from GEO with accession `GSE149683 <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE149683>`_.
 
 We use the lung sample as an example to suggest the process of custom analysis.
 
 .. code:: shell
 
-    SCRIPT enrich -i example/fetal_organ/data/GSM4508936_lung.h5 -s hs -p example/fetal_organ/lung_SCRIPT -t 32
+    SCRIP enrich -i example/fetal_organ/data/GSM4508936_lung.h5 -s hs -p example/fetal_organ/lung_SCRIP -t 32
 
 .. code:: r
     
@@ -33,7 +33,7 @@ We use the lung sample as an example to suggest the process of custom analysis.
     library(ggraph)
     library(tidygraph)
 
-    enri<-read.table("example/fetal_organ/lung_SCRIPT/enrichment/SCRIPT_enrichment.txt",header=T)  #25,0.5,30
+    enri<-read.table("example/fetal_organ/lung_SCRIP/enrichment/SCRIP_enrichment.txt",header=T)  #25,0.5,30
     enri_b<-t(enri)
     head(enri_b)
     seurat <- CreateSeuratObject(counts = enri_b, project = "lung")
@@ -138,20 +138,20 @@ We use the lung sample as an example to suggest the process of custom analysis.
 
 .. image:: ../_static/img/Organs/Organs_heatmap.png
     :alt: Organs heatmap
-    :width: 50%
+    :width: 100%
     :align: center
 
 .. code:: shell
 
-    SCRIPT impute -i example/fetal_organ/data/GSM4508936_lung.h5 -s hs -p example/fetal_organ/lung_SCRIPT -f h5 --factor GATA3
-    SCRIPT target -i example/fetal_organ/lung_SCRIPT/imputation/imputed_GATA3.h5ad -s hs -o GATA3_target.h5ad
+    SCRIP impute -i example/fetal_organ/data/GSM4508936_lung.h5 -s hs -p example/fetal_organ/lung_SCRIP -f h5 --factor GATA3
+    SCRIP target -i example/fetal_organ/lung_SCRIP/imputation/imputed_GATA3.h5ad -s hs -o GATA3_target.h5ad
 
 .. code:: r
 
     # GATA3 is expressed in Lymphoid
     Lymphoid_cells<-subset(lung_use,idents=c('Lymphoid cells'),invert=FALSE)
 
-    # we did a extra step to convert h5ad to 10x mtx format for easily reading into R
+    # We did a extra step to convert h5ad to 10x mtx format for easily reading into R
     GATA3<-Read10X("imputation/GATA3_10x", gene.column =1)
 
     use_GATA3<-GATA3[,colnames(GATA3)%in%rownames(Lymphoid_cells@meta.data)]  #choose lymphoid cell in GATA3 matrix

@@ -12,8 +12,8 @@ import os
 import sys
 from datetime import datetime, timedelta
 import json
-from SCRIPT.Constants import SCRIPT_VERSION
-from SCRIPT.utilities.utils import store_to_pickle, read_pickle
+from SCRIP.Constants import SCRIP_VERSION
+from SCRIP.utilities.utils import store_to_pickle, read_pickle
 
 
 def time_estimate(cell_number, core, chip_factor_number=4499):
@@ -44,7 +44,7 @@ class EnrichRunInfo(object):
                 info = json.load(jf)
         else:
             info = {}
-            info['version'] = SCRIPT_VERSION
+            info['version'] = SCRIP_VERSION
             info['file_path'] = os.path.abspath(file_path)
             info['project_folder'] = os.path.abspath(os.path.dirname(file_path))
             info['parameters'] = parameters_dict
@@ -83,7 +83,7 @@ class EnrichRunInfo(object):
             json.dump(self.info, jf, indent=2)
 
     def check_consist(self, parameters_dict):
-        if self.version != SCRIPT_VERSION:
+        if self.version != SCRIP_VERSION:
             return False
         inconsistent_key = []
         for k in self.parameters.keys():

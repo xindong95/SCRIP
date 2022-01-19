@@ -8,7 +8,7 @@
 @License :   (C)Copyright 2020-2021, XinDong
 '''
 
-from SCRIPT.utilities.utils import print_log
+from SCRIP.utilities.utils import print_log
 import re
 import os
 import sys
@@ -32,20 +32,20 @@ def check_para(cell_feature_adata, project,
     #         print_log("motif_index do not exist!")
     #         sys.exit()
     # prepare information
-    information = '\n~~~~~\nWelcome to use SCRIPT. Here are your settings:\n\n'
+    information = '\n~~~~~\nWelcome to use SCRIP. Here are your settings:\n\n'
     information += 'There are UMAP information and cluster information in your processed_adata. '
     information += 'The whole output file will be stored in {project}. '.format(project=project)
     # information += 'This will borrow peaks from {cell_number_impute} nearest cells for every cell. '.format(cell_number_impute=cell_number_impute)
     # information += 'For each cell, peaks that confidence is less than {peak_confidence_impute} will be deleted.\n'.format(peak_confidence_impute=peak_confidence_impute)
     information += 'The peaks will be stored in {beds_path}.\n'.format(beds_path=beds_path)
     # if reference_method == 'integration' or reference_method == 'both':
-    #     information += 'SCRIPT will search ChIP-seq and motif index both.\n'
+    #     information += 'SCRIP will search ChIP-seq and motif index both.\n'
     #     if reference_method == 'integration':
-    #         information += 'After that, SCRIPT will integrate into one result based on variability from each result.\n'
+    #         information += 'After that, SCRIP will integrate into one result based on variability from each result.\n'
     # elif reference_method == 'chip':
-    #     information += 'SCRIPT will search ChIP-seq index.\n'
+    #     information += 'SCRIP will search ChIP-seq index.\n'
     # elif reference_method == 'motif':
-    #     information += 'SCRIPT will search motif index.\n'
+    #     information += 'SCRIP will search motif index.\n'
     # if reference_method != 'motif':
     #     information += 'ChIP-seq index locates at {chip_index}.\n'.format(chip_index=chip_index)
     #     information += 'ChIP-seq intervals intersection result will be stored in {chip_result_path}'.format(chip_result_path=chip_result_path)

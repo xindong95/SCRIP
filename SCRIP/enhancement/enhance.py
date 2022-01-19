@@ -12,8 +12,8 @@
 from sklearn.neighbors import BallTree
 from sklearn.neighbors import KDTree
 import sys
-from SCRIPT.utilities.utils import print_log, excute_info, safe_makedirs
-# from SCRIPT.enrichment.bed_generation import generate_beds
+from SCRIP.utilities.utils import print_log, excute_info, safe_makedirs
+# from SCRIP.enrichment.bed_generation import generate_beds
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
 import scanpy as sc
 import anndata as ad
@@ -21,7 +21,7 @@ import random
 import scipy
 import numpy as np
 import pandas as pd
-from SCRIPT.enrichment.bed_generation import generate_peak_list
+from SCRIP.enrichment.bed_generation import generate_peak_list
 from multiprocessing import Pool
 
 
@@ -160,7 +160,7 @@ def cal_neighbor_cell_peak_mat_batch(input_mat, impute_n=5, KD_leafsize=80, nPC=
 #     return map_dict
 
 
-def enhance(input_mat, impute_n=5, KD_leafsize=80, nPC=50, path='SCRIPT/enhancement/', binarize=True, n_cores=8):
+def enhance(input_mat, impute_n=5, KD_leafsize=80, nPC=50, path='SCRIP/enhancement/', binarize=True, n_cores=8):
     '''
     input_mat:
     a csr sparse matrix

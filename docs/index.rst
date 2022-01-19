@@ -1,9 +1,9 @@
-.. SCRIPT documentation master file, created by
+.. SCRIP documentation master file, created by
    sphinx-quickstart on Tue Aug  3 19:13:29 2021.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SCRIPT's documentation!
+Welcome to SCRIP's documentation!
 ==================================
 
 .. toctree::
@@ -12,13 +12,13 @@ Welcome to SCRIPT's documentation!
 
 |Docs|
 
-.. |Docs| image:: https://readthedocs.org/projects/scriptscatac/badge/?version=latest
-   :target: https://scriptscatac.readthedocs.io
+.. |Docs| image:: https://readthedocs.org/projects/scrip/badge/?version=latest
+   :target: https://scrip.readthedocs.io
 
-SCRIPT (Single Cell Regulatory network Inference using ChIP-seq CollecTion) is a tool for evaluating the binding activity of specific TR at single-cell resolution based on scATAC-seq.
+SCRIP (Single Cell Regulatory network Inference using ChIP-seq) is a tool for evaluating the binding activity of specific TR at single-cell resolution based on scATAC-seq.
 
 .. image:: _static/img/Workflow.png
-   :alt: Workflow of SCRIPT
+   :alt: Workflow of SCRIP
    :width: 100%
    :align: center
 

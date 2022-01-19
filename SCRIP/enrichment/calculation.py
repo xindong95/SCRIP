@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 # import scipy
 from sklearn import preprocessing
-from SCRIPT.utilities.utils import excute_info
+from SCRIP.utilities.utils import excute_info
 # from multiprocessing import Process, Pool
 
 

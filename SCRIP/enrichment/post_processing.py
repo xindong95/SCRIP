@@ -12,7 +12,7 @@
 import numpy as np
 import pandas as pd
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED
-from SCRIPT.utilities.utils import excute_info
+from SCRIP.utilities.utils import excute_info
 
 
 
