@@ -1,6 +1,6 @@
 # SCRIP
 
-[![Documentation Status](https://readthedocs.org/projects/scrip/badge/?version=latest)](https://scrip.readthedocs.io/en/latest/?badge=latest)  
+[![Documentation Status](https://readthedocs.org/projects/scrip/badge/?version=latest)](https://scrip.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/SCRIP.svg)](https://badge.fury.io/py/SCRIP)
 
 
 SCRIP(**S**ingle **C**ell **R**egulatory network **I**nference using ChI**P**-seq) is a tool for evaluating the binding enrichment of specific TR at single-cell resolution based on scATAC-seq.

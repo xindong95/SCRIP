@@ -10,12 +10,14 @@ Welcome to SCRIP's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-|Docs|
+|Docs| |pypi|
 
 .. |Docs| image:: https://readthedocs.org/projects/scrip/badge/?version=latest
    :target: https://scrip.readthedocs.io
 
-SCRIP (Single Cell Regulatory network Inference using ChIP-seq) is a tool for evaluating the binding activity of specific TR at single-cell resolution based on scATAC-seq.
+.. |pypi| image:: https://badge.fury.io/py/SCRIP.svg
+
+SCRIP (Single Cell Regulatory network Inference using ChIP-seq) is a toolkit for elucidating the gene regulation pattern based on scATAC-seq leveraing a huge amount of bulk ChIP-seq data. It supports (1) evaluating the TR activities in single-cell based on the integration of the scATAC-seq dataset and curated reference; (2) determining the target genes of TR at single-cell resolution; (3) constructing the GRN in single-cell and identifying cell-specific regulation.
 
 .. image:: _static/img/Workflow.png
    :alt: Workflow of SCRIP
