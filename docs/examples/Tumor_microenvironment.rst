@@ -87,7 +87,7 @@ We applied SCRIP to a Basal Cell Carcinoma (BCC) tumor microenvironment (TME) da
     test_omit_table <- na.omit(test_omit_table)
     psudotime_table <- df2[rownames(test_omit_table),]
 
-    #将enrichment_table rownames替换为其对应的cluster并且标准化，构造seurat对象
+    # rename enrichment_table rownames to their cluster and normalization，construct Seurat object
     cluster <- mapvalues(rownames(tcell_table_norm),se@colData@listData[["Group_Barcode"]],se@colData@listData[["T_Cell_Cluster"]])
     rownames(tcell_table_norm) <- paste(cluster,1:length(rownames(tcell_table_norm)),sep = "_")
     tcell_table_norm <- apply(tcell_table_norm, 2, function (x) (x-min(x))/(max(x)-min(x)))
@@ -96,7 +96,7 @@ We applied SCRIP to a Basal Cell Carcinoma (BCC) tumor microenvironment (TME) da
     all.genes <- rownames(cluster_tcell_seurat)
     cluster_tcell_seurat <- ScaleData(cluster_tcell_seurat, features = all.genes)
 
-    #分别计算naivet，earlyTEx，interTEx，TEx的特异TF
+    # calculate specific TF of naivet，earlyTEx，interTEx，TEx 
     cluster_markers_naivet <- FindMarkers(cluster_tcell_seurat, 
                                     ident.1 = "Cluster13", 
                                     ident.2 = c("Cluster15","Cluster16","Cluster17"),
@@ -159,7 +159,7 @@ We applied SCRIP to a Basal Cell Carcinoma (BCC) tumor microenvironment (TME) da
 
 .. code:: r
 
-    cluster_markers_all <- FindMarkers(test_seurat, 
+    cluster_markers_all <- FindMarkers(naive_tex_seurat, 
                                      ident.1 = "Cluster13", 
                                      ident.2 = "Cluster17",
                                      logfc.threshold = 0.1)
@@ -190,6 +190,43 @@ We applied SCRIP to a Basal Cell Carcinoma (BCC) tumor microenvironment (TME) da
     library(org.Hs.eg.db)
     library(dplyr)
 
+    tex_use<-Read10X("example/TME/Tcell_SCRIP/imputation/JUNB_10x",gene.column =1)
+    tex_USE<-t(tex_use)
+
+    tex_ENTREZID<-c()
+    GO <- g_n
+    for (i in GO){
+    t<-unique((as.character(unlist(strsplit(GO[i,8],split="/")))))
+    tex_ENTREZID<-append(tex_ENTREZID,t)
+    tex_ENTREZID<-unique(tex_ENTREZID)
+    }
+    tex_trans <- bitr(tex_ENTREZID, fromType="ENTREZID", toType=c("SYMBOL"), OrgDb="org.Hs.eg.db")
+
+    eg_naive <- bitr(naive_target, 
+                 fromType="SYMBOL", 
+                 toType=c("ENTREZID","ENSEMBL",'SYMBOL'),
+                 OrgDb="org.Hs.eg.db")
+    go_naive <- enrichGO(eg_naive$ENTREZID, 
+                        OrgDb = org.Hs.eg.db, 
+                        ont='BP',
+                        pAdjustMethod = 'BH',
+                        pvalueCutoff = 0.1,
+                        keyType = 'ENTREZID')
+    go_naive <- go_naive[order(go_naive[,9],decreasing = TRUE),]
+
+    eg_tex <- bitr(tex_target, 
+               fromType="SYMBOL", 
+               toType=c("ENTREZID","ENSEMBL",'SYMBOL'),
+               OrgDb="org.Hs.eg.db")
+    # Run GO enrichment analysis 
+    go_tex <- enrichGO(eg_tex$ENTREZID, 
+                    OrgDb = org.Hs.eg.db, 
+                    ont='BP',
+                    pAdjustMethod = 'BH',
+                    pvalueCutoff = 0.1,
+                    keyType = 'ENTREZID')
+    go_tex <- go_tex[order(go_tex[,9],decreasing = TRUE),]
+    go_tex <- go_tex[grep("negative",go_tex$Description),][c(1:6),]
 
 
 .. image:: ../_static/img/Tumors/junb_go.png

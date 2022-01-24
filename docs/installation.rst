@@ -10,7 +10,9 @@ System requirements
 * libpng12-0
 * tabix
 
-We recommend to create an independent conda environment for STRIDE. If users do not have conda, please install Miniconda first:
+The reference files can be downloaded from `zenodo <https://zenodo.org/record/5840810>`_.  
+
+We recommend to create an independent conda environment for SCRIP. If users do not have conda, please install Miniconda first:
 
 .. code:: shell
 
