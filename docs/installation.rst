@@ -28,4 +28,9 @@ Install from GitHub
    cd SCRIP
    python setup.py install
 
+Install from pypi
+~~~~~~~~~~~~~~~~~~~~~
 
+.. code:: shell
+
+   pip install scrip

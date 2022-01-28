@@ -1,9 +1,9 @@
 Peripheral Blood Mononuclear Cells (PBMC) 
 ==========================================
 
-The PBMC multiome data was downloaded on the `10X genomics website <https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-10-k-1-standard-2-0-0>`_. We downloaded the h5 file of scRNA-seq and scATAC-seq and processed with following codes. Since there is no annotation in scRNA-seq data, we first annatate the scRNA-seq dataset.
+The PBMC multiome data was downloaded on the `10X genomics website <https://www.10xgenomics.com/resources/datasets/pbmc-from-a-healthy-donor-granulocytes-removed-through-cell-sorting-10-k-1-standard-2-0-0>`_. We downloaded the h5 file of scRNA-seq and scATAC-seq and processed with following codes. 
 
-We used the scanpy to perform the basic QC for scRNA-seq.
+Since there is no annotation in scRNA-seq data, we first annatate the scRNA-seq dataset. First, We used the scanpy to perform the basic QC for scRNA-seq.
 
 .. code:: python
 
