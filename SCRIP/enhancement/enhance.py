@@ -12,7 +12,7 @@
 from sklearn.neighbors import BallTree
 from sklearn.neighbors import KDTree
 import sys
-from SCRIP.utilities.utils import print_log, excute_info, safe_makedirs
+from SCRIP.utilities.utils import print_log, excute_info, safe_makedirs, store_to_pickle
 # from SCRIP.enrichment.bed_generation import generate_beds
 # from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, wait, ALL_COMPLETED, as_completed
 import scanpy as sc
@@ -170,7 +170,7 @@ def enhance(input_mat, impute_n=5, KD_leafsize=80, nPC=50, path='SCRIP/enhanceme
     imputed_csr = cal_neighbor_cell_peak_mat_batch(input_mat, impute_n=impute_n, KD_leafsize=KD_leafsize, nPC=nPC, n_cores=n_cores)
     if binarize == True:
         imputed_csr[imputed_csr > 1] = 1
-    utils.store_to_pickle(imputed_csr, path + 'imputed.csr.pk')
+    store_to_pickle(imputed_csr, path + 'imputed.csr.pk')
     return imputed_csr
 
 def run(args):

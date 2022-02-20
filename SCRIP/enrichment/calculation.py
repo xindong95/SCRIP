@@ -10,10 +10,8 @@
 
 import numpy as np
 import pandas as pd
-# import scipy
 from sklearn import preprocessing
 from SCRIP.utilities.utils import excute_info
-# from multiprocessing import Process, Pool
 
 
 def standardScaler(t):
@@ -59,19 +57,6 @@ def cal_score(dataset_overlap_df, peaks_number, qpeak_length):
     # dataset_cell_percent_scale_dm = (dataset_cell_percent_scale.T/dataset_cell_percent_scale.mean(1)).T
     return dataset_cell_percent_dl_dm
 
-
-# def adjust_outlier(mat, r=5):
-#     '''
-#     columns are cells
-#     rows are factors
-#     '''
-#     ret = mat.copy()
-#     max_v = (mat.mean(1)+r*mat.std(1))
-#     min_v = (mat.mean(1)-r*mat.std(1))
-#     for i in mat.index:
-#         ret.loc[i, ret.columns[ret.loc[i, :] > max_v[i]]] = max_v[i]
-#         ret.loc[i, ret.columns[ret.loc[i, :] < min_v[i]]] = min_v[i]
-#     return ret
 
 def score_normalization(dataset_cell_df):
     tf_cell_df = map_factor_on_ChIP(dataset_cell_df)

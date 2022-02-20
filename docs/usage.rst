@@ -3,7 +3,7 @@ Usage
 
 First, please download the reference files from `zenodo <https://zenodo.org/record/5840810>`_. 
 
-Then, run the ``SCRIP config`` function.
+Then, extract the archive files with ``tar xvzf`` and run the ``SCRIP config`` function with the folders.
 
 SCRIP includes 4 main commands.
 
@@ -30,6 +30,17 @@ Detailed usages are listed as follows:
 
 SCRIP enrich
 ~~~~~~~~~~~~~~~~~~
+
+In this function, you can input a peak count matrix in H5 or MTX format, with basic parameters of quality control. This function will output a folder including these files:
+
+- ``beds``: bed files of all cells
+- ``ChIP_result``: txt files of Giggle search results
+- ``qpeaks_length.txt``: peak total length of each cell
+- ``SCRIP_enrichment.txt``: the result of the SCRIP score
+- ``dataset_overlap_df.pk``: the raw number of overlaps of each cell to each dataset
+- ``dataset_cell_norm_df.pk``: normalized scores
+- ``dataset_score_source_df.pk``: matched reference datasets
+- ``tf_cell_score_df.pk``: the same table to ``SCRIP_enrichment.txt`` but untransposed and in pickle format
 
 .. code:: 
 
@@ -68,6 +79,8 @@ SCRIP enrich
 SCRIP impute
 ~~~~~~~~~~~~~~~~~~
 
+In this function, you can input a peak count matrix of scATAC-seq in H5 or MTX format and a TR or HM you are interested in, with basic parameters of quality control. This function will output the matrix of pseudo-ChIP-seq peak in H5AD or MTX format. The output can be the input of the ``SCRIP target`` function.
+
 .. code:: shell
 
    usage: SCRIP impute [-h] -i FEATURE_MATRIX -s {hs,mm} [-p PROJECT] [-f {h5ad,mtx}] --factor FACTOR [--ref_baseline REF_BASELINE] [--remove_others] [--min_cells MIN_CELLS] [--min_peaks MIN_PEAKS] [--max_peaks MAX_PEAKS] [-t N_CORES]
@@ -85,7 +98,7 @@ SCRIP impute
    -p PROJECT, --project PROJECT
                            Project name, which will be used to generate output files folder. DEFAULT: Random generate.
    -f {h5ad,mtx}, --format {h5ad,mtx}
-                           Format generate for output RP count. DEFAULT: h5ad.
+                           Format generate for output peak count. DEFAULT: h5ad.
 
    Peak imputation paramater arguments:
    --factor FACTOR       The factor you want to impute. REQUIRED.
@@ -106,6 +119,8 @@ SCRIP impute
 
 SCRIP target
 ~~~~~~~~~~~~~~~~~~
+
+In this function, you can input a peak count matrix of scATAC-seq in H5 format or scChIP-seq peak count. This function will output the RP matrix in H5AD. The output can be used to determine the direct target genes.
 
 .. code:: shell
 
@@ -130,6 +145,8 @@ SCRIP target
 
 SCRIP config
 ~~~~~~~~~~~~~~~~~~
+
+This function is used to config the reference files that SCRIP uses. The reference files can be downloaded from `zenodo <https://zenodo.org/record/5840810>`_. The index path should be the folder after extract.
 
 .. code:: shell
 

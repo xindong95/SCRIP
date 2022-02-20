@@ -130,7 +130,7 @@ def add_impute_parser(subparsers):
     group_output.add_argument("-p", "--project", dest="project", type=str, default="",
                               help='Project name, which will be used to generate output files folder. DEFAULT: Random generate.')
     group_output.add_argument("-f", "--format", dest="format", choices=['h5ad', 'mtx'], default="h5ad",
-                              help='Format generate for output RP count. DEFAULT: h5ad.')
+                              help='Format generate for output peak count. DEFAULT: h5ad.')
 
     # group for impute
     group_impute = argparser_impute.add_argument_group("Peak imputation paramater arguments")

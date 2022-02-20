@@ -104,7 +104,7 @@ Output arguments:
   -p PROJECT, --project PROJECT
                         Project name, which will be used to generate output files folder. DEFAULT: Random generate.
   -f {h5ad,mtx}, --format {h5ad,mtx}
-                        Format generate for output RP count. DEFAULT: h5ad.
+                        Format generate for output peak count. DEFAULT: h5ad.
 
 Peak imputation paramater arguments:
   --factor FACTOR       The factor you want to impute. REQUIRED.
