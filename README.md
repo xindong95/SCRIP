@@ -27,6 +27,8 @@ cd SCRIP
 python setup.py install
 ```
 
+Then, please download the [reference files](https://zenodo.org/record/5840810) and config them with `SCRIP config`.
+
 ## Usage
 
 ### SCRIP all functions
