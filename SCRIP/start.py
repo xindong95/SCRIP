@@ -10,11 +10,13 @@
 
 import argparse
 import sys
+from numpy import require
 import ruamel.yaml
 from SCRIP.Constants import SCRIP_VERSION
 from SCRIP.enrichment.enrich import run_enrich
 from SCRIP.imputation.impute import run_impute
 from SCRIP.targets.target import run_target
+from SCRIP.index.index import run_index
 from SCRIP.conf.config import update_setting
 from SCRIP.utilities.utils import read_config
 yaml = ruamel.yaml.YAML()
@@ -47,6 +49,11 @@ def main():
             update_setting( args )
         except:
             sys.exit("Setting set wrong.")
+    elif subcommand == "index":
+        try:
+            run_index(args)
+        except MemoryError:
+            sys.exit("MemoryError occurred.")
     elif subcommand == "format":
         pass
 
@@ -66,17 +73,10 @@ def prepare_argparser():
     add_impute_parser(subparsers)
     add_target_parser(subparsers)
     add_config_parser(subparsers)
+    add_index_parser(subparsers)
+
 
     return argparser
-
-
-def add_config_parser(subparsers):
-    argparser_setting = subparsers.add_parser("config", help="Configuration.")
-    argparser_setting.add_argument( "--show", dest = "show", action = 'store_true', default=False, help = "" )
-    argparser_setting.add_argument("--human_tf_index", dest="human_tf_index", type=str, help="")
-    argparser_setting.add_argument("--human_hm_index", dest="human_hm_index", type=str, help="")
-    argparser_setting.add_argument("--mouse_tf_index", dest="mouse_tf_index", type=str, help="")
-    argparser_setting.add_argument("--mouse_hm_index", dest="mouse_hm_index", type=str, help="")
 
 
 def add_enrich_parser( subparsers ):
@@ -172,6 +172,23 @@ def add_target_parser(subparsers):
     group_other = argparser_impute.add_argument_group("Other options")
     group_other.add_argument("-d", '--decay', dest='decay', type=int, default=10000,
                              help="Range to the effect of peaks. DEFAULT: 10000.")
+
+
+def add_config_parser(subparsers):
+    argparser_setting = subparsers.add_parser("config", help="Configuration.")
+    argparser_setting.add_argument( "--show", dest = "show", action = 'store_true', default=False, help = "" )
+    argparser_setting.add_argument("--human_tf_index", dest="human_tf_index", type=str, help="")
+    argparser_setting.add_argument("--human_hm_index", dest="human_hm_index", type=str, help="")
+    argparser_setting.add_argument("--mouse_tf_index", dest="mouse_tf_index", type=str, help="")
+    argparser_setting.add_argument("--mouse_hm_index", dest="mouse_hm_index", type=str, help="")
+
+
+def add_index_parser(subparsers):
+    argparser_setting = subparsers.add_parser("index", help="Build index with custom intervals.")
+    argparser_setting.add_argument("-i", "--input", dest="input", type=str, required=True,
+                                   help='Path to the folder that includes all your bed files. The bed files should be named in "TRName_ID.bed", e.g. "AR_1.bed".')
+    argparser_setting.add_argument("-o", "--output", dest="output", type=str, required=True,
+                                   help='Path to the output folder.')
 
 if __name__ == '__main__':
     try:
