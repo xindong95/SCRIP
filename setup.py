@@ -37,7 +37,7 @@ def main():
         install_requires=[
             'numba>=0.51.2',
             'numpy',
-            'pandas>=1.1.1',
+            'pandas>=1.3.3',
             'cython>=0.29.22',
             'ruamel.yaml',
             'anndata',

@@ -25,7 +25,7 @@ from SCRIP.utilities.utils import read_config, print_log, safe_makedirs
 # from SCRIP.Constants import *
 
 
-def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
+def search_and_read_result(run_info, beds_path, result_path, index, mode, n_cores):
     folder_prefix = run_info.info['project_folder']
     qpeak_length_path = os.path.join(folder_prefix, 'qpeaks_length.txt')
     qpeak_length = pd.read_csv(qpeak_length_path, sep='\t', header=None, index_col=0)/1e8
@@ -41,12 +41,15 @@ def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
         cal_score, [dataset_overlap_df, peaks_number, qpeak_length],
         os.path.join(folder_prefix, 'dataset_cell_norm_df.pk'),
         'dataset_cell_norm_df_store')
-    dataset_score_source_df = run_info.safe_run_and_store(
-        get_factor_source, [dataset_cell_norm_df],
-        os.path.join(folder_prefix, 'dataset_score_source_df.pk'),
-        'dataset_score_source_df_store')
+    if mode == 'max':
+        dataset_score_source_df = run_info.safe_run_and_store(
+            get_factor_source, [dataset_cell_norm_df],
+            os.path.join(folder_prefix, 'dataset_score_source_df.pk'),
+            'dataset_score_source_df_store')
+    else:
+        dataset_score_source_df = 'NA'
     tf_cell_score_df = run_info.safe_run_and_store(
-        score_normalization, [dataset_cell_norm_df],
+        score_normalization, [dataset_cell_norm_df, mode],
         os.path.join(folder_prefix, 'tf_cell_score_df.pk'),
         'tf_cell_score_df_store')
     # transpose is used to better merge table to h5ad (anndata.obs's row is cell, col is variable)
@@ -57,6 +60,7 @@ def search_and_read_result(run_info, beds_path, result_path, index, n_cores):
 def enrich(cell_feature_adata, species='NA',
            project='',
            chip_index='',
+           mode='max',
            store_result_adata=True,
            n_cores=8,
            yes=False,
@@ -147,7 +151,7 @@ def enrich(cell_feature_adata, species='NA',
     ##################################
     ### Search giggle and compute enrich score
     ##################################
-    cell_tf_score_df, run_info, _ = search_and_read_result(run_info, beds_path, chip_result_path, chip_index, n_cores)
+    cell_tf_score_df, run_info, _ = search_and_read_result(run_info, beds_path, chip_result_path, chip_index, mode, n_cores)
     ##################################
     ### Summary results
     ##################################
@@ -173,6 +177,7 @@ def run_enrich(args):
     min_cells = args.min_cells  # for removing few features cells
     min_peaks = args.min_peaks  # for removing few cells features
     max_peaks = args.max_peaks  # for removing doublet cells
+    mode = args.mode
     yes = args.yes
     clean = args.clean
     n_cores = args.n_cores
@@ -186,7 +191,12 @@ def run_enrich(args):
         pass
 
     print_log('Reading Files, Please wait ...')
-    feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
+    if feature_matrix_path.endswith('.h5'):
+        feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
+    elif feature_matrix_path.endswith('.h5ad'):
+        feature_matrix = sc.read_h5ad(feature_matrix_path)
+    else:
+        feature_matrix = sc.read_10x_mtx(feature_matrix_path)
 
     sc.pp.calculate_qc_metrics(feature_matrix, percent_top=None, log1p=False, inplace=True)
     feature_mean = feature_matrix.obs.n_genes_by_counts.mean()
@@ -220,6 +230,7 @@ def run_enrich(args):
            species=species,
            project=project,
            chip_index=chip_index,
+           mode=mode,
            store_result_adata=True,
            n_cores=n_cores,
            yes=yes,

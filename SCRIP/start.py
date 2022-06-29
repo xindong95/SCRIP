@@ -107,6 +107,8 @@ def add_enrich_parser( subparsers ):
     group_other = argparser_enrich.add_argument_group( "Other options" )
     group_other.add_argument( "-t", '--thread', dest='n_cores', type = int, default = 16,
                               help="Number of cores use to run SCRIP. DEFAULT: 16.")
+    group_other.add_argument( "-m", '--mode', dest='mode', choices= ['max', 'mean'], default = 'max',
+                              help="Deduplicate strategy. DEFAULT: max.")
     group_other.add_argument( "-y", "--yes", dest='yes', action = 'store_true', default = False,
                               help="Whether ask for confirmation. DEFAULT: False.")
     group_other.add_argument( "--clean", dest = "clean", action = 'store_true', default = False,
@@ -170,8 +172,10 @@ def add_target_parser(subparsers):
                               help='output h5ad file. DEFAULT: RP.h5ad')
 
     group_other = argparser_impute.add_argument_group("Other options")
-    group_other.add_argument("-d", '--decay', dest='decay', type=int, default=10000,
-                             help="Range to the effect of peaks. DEFAULT: 10000.")
+    group_other.add_argument("-d", '--decay', dest='decay', type=str, default='auto',
+                             help="Range to the effect of peaks. DEFAULT: auto.")
+    group_other.add_argument("-m", '--model', dest='model', type=str, default='simple',
+                             help="RP model chosen. DEFAULT: simple.")
 
 
 def add_config_parser(subparsers):

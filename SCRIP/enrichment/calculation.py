@@ -8,6 +8,7 @@
 @License :   (C)Copyright 2020-2021, XinDong
 '''
 
+import sys
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
@@ -21,7 +22,7 @@ def standardScaler(t):
 
 
 @excute_info('Summary result from dataset level to factor level.')
-def map_factor_on_ChIP(table):
+def map_factor_on_ChIP(table, mode):
     ret_table = table.copy()
     # map factor by id "_"
     factor_index_list = []
@@ -29,7 +30,12 @@ def map_factor_on_ChIP(table):
         factor_name = i.split("_")
         factor_index_list.append(factor_name[0])
     ret_table.loc[:, "Factor"] = factor_index_list
-    factor_table = ret_table.groupby("Factor").max()
+    if mode == 'max':
+        factor_table = ret_table.groupby("Factor").max()
+    elif mode == 'mean':
+        factor_table = ret_table.groupby("Factor").mean()
+    else:
+        sys.exit(205)
     return factor_table
 
 @excute_info('Getting the best reference for each cell.')
@@ -58,8 +64,8 @@ def cal_score(dataset_overlap_df, peaks_number, qpeak_length):
     return dataset_cell_percent_dl_dm
 
 
-def score_normalization(dataset_cell_df):
-    tf_cell_df = map_factor_on_ChIP(dataset_cell_df)
+def score_normalization(dataset_cell_df, mode):
+    tf_cell_df = map_factor_on_ChIP(dataset_cell_df, mode)
     tmp = standardScaler(tf_cell_df.T).T
     tf_cell_df_lsn = 1/(1+np.exp(-tmp))  # LSN(Logistic Sigmoid Normalisation)
     tf_cell_df_lsn_std = standardScaler(tf_cell_df_lsn)

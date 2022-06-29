@@ -93,15 +93,15 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
         generate_beds_by_matrix(input_mat_adata, f'{path}/imputed_beds/', f'{path}/imputed_beds_peaks_number.txt', n_cores)
 
     if search_check == True:
-        if not os.path.exists(f'{path}/imputed_results_{impute_factor}/'):
-            search_ref_factor_batch(f'{path}/imputed_beds/', f'{path}/imputed_results_{impute_factor}/', ref_path, impute_factor, n_cores)
+        if not os.path.exists(f'{path}/{impute_factor}/imputed_results_{impute_factor}/'):
+            search_ref_factor_batch(f'{path}/imputed_beds/', f'{path}/{impute_factor}/imputed_results_{impute_factor}/', ref_path, impute_factor, n_cores)
         else:
             print_log('Skip searching beds...')
     else:
-        search_ref_factor_batch(f'{path}/imputed_beds/', f'{path}/imputed_results_{impute_factor}/', ref_path, impute_factor, n_cores)
+        search_ref_factor_batch(f'{path}/imputed_beds/', f'{path}/{impute_factor}/imputed_results_{impute_factor}/', ref_path, impute_factor, n_cores)
 
     print_log('Calculating score...')
-    factor_enrich = read_search_result_batch(f'{path}/imputed_results_{impute_factor}/', n_cores)
+    factor_enrich = read_search_result_batch(f'{path}/{impute_factor}/imputed_results_{impute_factor}/', n_cores)
 
     peaks_number = pd.read_csv(os.path.join(ref_path, 'peaks_number.txt'), sep='\t', header=None, index_col=0)
     peaks_number_factor = peaks_number.loc[[i for i in peaks_number.index if i.startswith(f'{impute_factor}_')], :].copy()
@@ -136,9 +136,9 @@ def impute(input_mat_adata, impute_factor, ref_path, bed_check=True, search_chec
     if write_format != '':
         print_log('Writing results...')
         if write_format == 'h5ad':
-            chip_cell_peak.write_h5ad(f'{path}/imputed_{impute_factor}.h5ad')
+            chip_cell_peak.write_h5ad(f'{path}/{impute_factor}/imputed_{impute_factor}.h5ad')
         elif write_format == 'mtx':
-            write_to_mtx(chip_cell_peak, f'{path}/imputed_{impute_factor}_mtx/')
+            write_to_mtx(chip_cell_peak, f'{path}/{impute_factor}/imputed_{impute_factor}_mtx/')
     print_log('Finished!')
     return chip_cell_peak
 
