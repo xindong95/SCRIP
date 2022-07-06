@@ -35,20 +35,24 @@ Since there is no annotation in scRNA-seq data, we first annatate the scRNA-seq 
 We clustered the cells with the louvain algorithm.
 
 .. code:: python
-
+    rna_adata = rna_adata[rna_adata.obs.n_genes_by_counts < 6000, :]
+    rna_adata = rna_adata[rna_adata.obs.pct_counts_mt < 20, :]
+    rna_adata = rna_adata[keep_cell_index,:]
     sc.pp.normalize_total(rna_adata, target_sum=1e4)
     sc.pp.log1p(rna_adata)
     sc.pp.highly_variable_genes(rna_adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    sc.pp.regress_out(rna_adata, ['total_counts', 'pct_counts_mt'])
+    rna_adata.raw = rna_adata
+    sc.pp.regress_out(rna_adata, ['total_counts'])
     sc.pp.scale(rna_adata, max_value=10)
     sc.tl.pca(rna_adata, svd_solver='arpack')
     sc.pp.neighbors(rna_adata, n_neighbors=10, n_pcs=40)
     sc.tl.umap(rna_adata)
     sc.tl.louvain(rna_adata)
+    sc.tl.rank_genes_groups(rna_adata, 'louvain', method='wilcoxon')
     fig, ax = plt.subplots(1,1,figsize=(8,8))
-    sc.pl.umap(rna_adata, color=['louvain'], legend_loc='on data', title='RNA Cluster', legend_fontsize=15, ax=ax)
+    sc.pl.umap(rna_adata, color=['louvain'], legend_loc='on data', title='PBMC RNA Cluster', legend_fontsize=15, ax=ax)
     fig.show()
-
+    
 .. image:: ../_static/img/PBMC/PBMC_RNA_louvain.png
     :alt: RNA cluster
     :width: 50%
@@ -58,28 +62,24 @@ We annotated the cells with well-known gene markers.
 
 .. code:: python
 
-    marker_dict = {  
-                 'B': ['CD79A', 'CD79B', 'CD19', 'MS4A1', 'CR2'],
-                 'Plasma': ['SLAMF7', 'IGKC'],
-                 'T': ['CD3D', 'CD3G', 'CD3E', 'CD2'],
-                 'CD8T': ['CD8A', 'CD8B','GZMA','GZMB'],
-                 'CD4T': ['CD4', 'STAT4', 'STAT1'],
-                 'T_Reg': ['FOXP3'],
-                 'T_Exhausted': ['LAG3', 'PDCD1', 'CTLA4', 'HAVCR2'],
-                 'NK': ['KLRC1', 'KLRD1', 'KIR2DL4'],
-                 'Mono': ['CD68', 'CSF1R', 'ADGRE1', 'ACE'],
-                 'CD14Mono': ['CD14'],
-                 'CD16Mono': ['FCGR3A', 'TEK', 'SELL'], 
-                 'Macrophages': ['FCGR2A', 'CSF1R', 'CD163', 'CD68', 'MRC1', 'MSR1'],
-                 'DC': ['CD86', 'ITGAX', 'FLT3', 'GZMB', 'IL3RA'],
-                 'pDC': ['CLEC4C'], 
-                 'Endothelial': ['PECAM1', 'NKAIN2'],
-                 'Neutrophils': ['S100A9', 'CSF1R'],
-                 'Others':['BCL11A', 'BCL11B']
-                  }
-    fig, ax = plt.subplots(1,1,figsize=(20,8))
-    sc.pl.dotplot(rna_adata, marker_dict, 'louvain', dendrogram=True, ax=ax)
-    fig.show()
+    marker_dict = {  'B': ['CD79A', 'CD79B', 'CD19', 'MS4A1', 'CR2'],
+                    'Plasma': ['SLAMF7', 'IGKC'],
+                    'T': ['CD3D', 'CD3G', 'CD3E', 'CD2'], # T
+                    'CD8T': ['CD8A', 'CD8B','GZMA','GZMB'], # cd8
+                    'CD4T': ['CD4', 'STAT4', 'STAT1'], # cd4
+                    'NK': ['KLRC1', 'KLRD1'], #NK
+                    'Mono': ['CD68', 'CSF1R', 'ADGRE1'],
+                    'CD14Mono': ['CD14'], #mono
+                    'CD16Mono': ['FCGR3A', 'TEK', 'SELL'], #mono
+                    'DC': ['CD86', 'ITGAX', 'FLT3', 'GZMB', 'IL3RA'], #dc
+                    'pDC': ['CLEC4C'], # pdc
+                    'Endothelial': ['PECAM1', 'NKAIN2'],  # endothelial
+                    'Others':['BCL11A', 'BCL11B']
+                    }
+
+
+fig, ax = plt.subplots(1,1,figsize=(20,8))
+sc.pl.dotplot(rna_adata,marker_dict, 'louvain', dendrogram=True, ax=ax)
 
 .. image:: ../_static/img/PBMC/PBMC_RNA_Marker_louvain.png
     :alt: RNA marker
@@ -90,24 +90,15 @@ We annotated the cells with well-known gene markers.
 
     rna_adata.obs['louvain_cell_type'] = rna_adata.obs['louvain'].astype("str")
 
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '1') | (rna_adata.obs['louvain'] == '16') ].index,'louvain_cell_type'] = 'CD8T'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '2') | (rna_adata.obs['louvain'] == '3')].index,'louvain_cell_type'] = 'CD4T'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '12')| (rna_adata.obs['louvain'] == '14')].index,'louvain_cell_type'] = 'Treg'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '5') | (rna_adata.obs['louvain'] == '7') | (rna_adata.obs['louvain'] == '13')].index,'louvain_cell_type'] = 'NK'
-
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '4')].index,'louvain_cell_type'] = 'B'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '18')].index,'louvain_cell_type'] = 'Plasma'
-
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '0')| (rna_adata.obs['louvain'] == '8')].index,'louvain_cell_type'] = 'CD14Mono'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '6')].index,'louvain_cell_type'] = 'CD16Mono'
-
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '15')].index,'louvain_cell_type'] = 'pDC'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '11')].index,'louvain_cell_type'] = 'DC'
-
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '17') ].index,'louvain_cell_type'] = 'Endothelial'
-
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '9')].index,'louvain_cell_type'] = 'UNK1'
-    rna_adata.obs.loc[rna_adata.obs[(rna_adata.obs['louvain'] == '10') ].index,'louvain_cell_type'] = 'UNK2'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [11,14,3,12]])].index, 'louvain_cell_type'] = 'CD8T'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [1,2,13,15]])].index, 'louvain_cell_type'] = 'CD4T'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [6,7]])].index, 'louvain_cell_type'] = 'NK'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [5,10]])].index, 'louvain_cell_type'] = 'B'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [18]])].index, 'louvain_cell_type'] = 'Plasma'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [4,0,9]])].index, 'louvain_cell_type'] = 'CD14Mono'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [8]])].index, 'louvain_cell_type'] = 'CD16Mono'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [16]])].index, 'louvain_cell_type'] = 'pDC'
+    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [17]])].index, 'louvain_cell_type'] = 'Endothelial'
 
     rna_adata.obs['louvain_cell_type'] = rna_adata.obs['louvain_cell_type'].astype("category")
 

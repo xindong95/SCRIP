@@ -174,7 +174,7 @@ def add_target_parser(subparsers):
     group_other = argparser_impute.add_argument_group("Other options")
     group_other.add_argument("-d", '--decay', dest='decay', type=str, default='auto',
                              help="Range to the effect of peaks. DEFAULT: auto.")
-    group_other.add_argument("-m", '--model', dest='model', type=str, default='simple',
+    group_other.add_argument("-m", '--model', dest='model', choices=['simple', 'enhanced'], default='simple',
                              help="RP model chosen. DEFAULT: simple.")
 
 
