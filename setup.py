@@ -51,7 +51,7 @@ def main():
             'scipy',
             'scanpy>=1.7.1',
         ],
-        python_requires='>=3.8.*, !=3.9.*',
+        python_requires='==3.8.12',
         entry_points={
             'console_scripts': [
                 'SCRIP=SCRIP.start:main'
