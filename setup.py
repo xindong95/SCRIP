@@ -36,22 +36,22 @@ def main():
         },
         install_requires=[
             'numba>=0.51.2',
-            'numpy',
+            'numpy<1.24,>=1.18',
             'pandas>=1.3.3',
             'cython>=0.29.22',
             'ruamel.yaml',
-            'anndata',
-            'anndata2ri',
+            'anndata<=0.7.6',
+            'anndata2ri<=1.0.6',
             # 'Bio',
             'pyranges>=0.0.95',
             'pybedtools>=0.8.2',
-            # 'matplotlib',
+            'matplotlib>=3.1.2, <=3.3.2',
             # 'seaborn',
             'sklearn',
             'scipy',
-            'scanpy>=1.7.1',
+            'scanpy>=1.7.1, <=1.8.1',
         ],
-        python_requires='==3.8.12',
+        python_requires='>=3.8.12, !=3.9',
         entry_points={
             'console_scripts': [
                 'SCRIP=SCRIP.start:main'
