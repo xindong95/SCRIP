@@ -10,7 +10,9 @@ SCRIP (**S**ingle **C**ell **R**egulatory network **I**nference using ChI**P**-s
 ## Documentation
 
 For the detailed usage and examples of SCRIP, please refer to the [documentation](https://scrip.readthedocs.io/en/latest/).  
-For the analysis codes in the paper, please refer to the [Notebook](https://github.com/xindong95/SCRIP_notebook/).
+For the analysis codes in the paper, please refer to the [Notebook](https://github.com/xindong95/SCRIP_notebook/).  
+For any problems encountered in using, feel free to open an [issue](https://github.com/xindong95/SCRIP/issues).  
+If SCRIP helps in your work, please cite: [Single-cell gene regulation network inference by large-scale data integration](https://academic.oup.com/nar/advance-article/doi/10.1093/nar/gkac819/6717821).  
 
 ## Installation
 

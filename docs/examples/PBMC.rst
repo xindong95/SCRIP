@@ -90,17 +90,29 @@ sc.pl.dotplot(rna_adata,marker_dict, 'louvain', dendrogram=True, ax=ax)
 
     rna_adata.obs['louvain_cell_type'] = rna_adata.obs['louvain'].astype("str")
 
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [11,14,3,12]])].index, 'louvain_cell_type'] = 'CD8T'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [1,2,13,15]])].index, 'louvain_cell_type'] = 'CD4T'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [6,7]])].index, 'louvain_cell_type'] = 'NK'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [5,10]])].index, 'louvain_cell_type'] = 'B'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [18]])].index, 'louvain_cell_type'] = 'Plasma'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [4,0,9]])].index, 'louvain_cell_type'] = 'CD14Mono'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [8]])].index, 'louvain_cell_type'] = 'CD16Mono'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [16]])].index, 'louvain_cell_type'] = 'pDC'
-    rna_adata.obs.loc[rna_adata.obs[rna_adata.obs['louvain'].isin([str(i) for i in [17]])].index, 'louvain_cell_type'] = 'Endothelial'
+    cluster2annotation = {
+        '0': 'CD14Mono',
+        '1': 'CD4T',
+        '2': 'CD4T',
+        '3': 'CD8T',
+        '4': 'CD14Mono',
+        '5': 'B',
+        '6': 'CD4T',
+        '7': 'CD4T',
+        '8': 'CD16Mono',
+        '9': 'CD14Mono',
+        '10': 'B',
+        '11': 'CD8T',
+        '12': 'CD8T',
+        '13': 'CD4T',
+        '14': 'CD8T',
+        '15': 'CD4T',
+        '16': 'pDC',
+        '17': 'Endothelial',
+        '18': 'Plasma'
+    }
 
-    rna_adata.obs['louvain_cell_type'] = rna_adata.obs['louvain_cell_type'].astype("category")
+    rna_adata.obs['louvain_cell_type'] = rna_adata.obs['louvain'].map(cluster2annotation).astype('category')
 
     fig, ax = plt.subplots(1,1,figsize=(8,8))
     sc.pl.umap(rna_adata, color=['louvain_cell_type'], title='RNA Annotation', legend_fontsize=15,ax=ax)
