@@ -10,6 +10,8 @@
 
 import argparse
 import sys
+import os
+import subprocess
 from numpy import require
 import ruamel.yaml
 from SCRIP.Constants import SCRIP_VERSION
@@ -54,8 +56,13 @@ def main():
             run_index(args)
         except MemoryError:
             sys.exit("MemoryError occurred.")
-    elif subcommand == "format":
-        pass
+    elif subcommand == "install_giggle":
+        try:
+            install_giggle()
+        except MemoryError:
+            sys.exit("MemoryError occurred.")
+    else:
+        sys.exit("No function.")
 
     return
 
@@ -65,7 +72,7 @@ def prepare_argparser():
 
     # top-level parser
     argparser = argparse.ArgumentParser( description = description, epilog = epilog )
-    argparser.add_argument( "--version", action="version", version="%(prog)s "+SCRIP_VERSION )
+    argparser.add_argument("--version", action="version", version="%(prog)s "+SCRIP_VERSION )
     subparsers = argparser.add_subparsers( dest = 'subcommand' )
     subparsers.required = True
 
@@ -74,7 +81,7 @@ def prepare_argparser():
     add_target_parser(subparsers)
     add_config_parser(subparsers)
     add_index_parser(subparsers)
-
+    add_install_giggle_parser(subparsers)
 
     return argparser
 
@@ -123,7 +130,7 @@ def add_impute_parser(subparsers):
     # group for input files
     group_input = argparser_impute.add_argument_group("Input files arguments")
     group_input.add_argument("-i", "--input_feature_matrix", dest="feature_matrix", type=str, required=True,
-                             help='A cell by peak matrix. h5 or h5ad supported. REQUIRED.')
+                             help='A cell by peak matrix. h5, h5ad or MTX supported. REQUIRED.')
     group_input.add_argument("-s", "--species", dest="species", choices=['hs', 'mm'], required=True,
                              help='Species. "hs"(human) or "mm"(mouse). REQUIRED.')
 
@@ -193,6 +200,14 @@ def add_index_parser(subparsers):
                                    help='Path to the folder that includes all your bed files. The bed files should be named in "TRName_ID.bed", e.g. "AR_1.bed".')
     argparser_setting.add_argument("-o", "--output", dest="output", type=str, required=True,
                                    help='Path to the output folder.')
+
+def add_install_giggle_parser(subparsers):
+    argparser_setting = subparsers.add_parser("install_giggle", help="Install giggle.")
+
+def install_giggle():
+    prefix = os.environ['PATH'].split(':')[0]
+    cmd = f'git clone git@github.com:ryanlayer/giggle.git; cd giggle; make; cp bin/giggle {prefix}/; cd ..'
+    subprocess.run(cmd, shell=True)
 
 if __name__ == '__main__':
     try:

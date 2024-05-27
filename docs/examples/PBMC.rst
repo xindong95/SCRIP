@@ -78,8 +78,8 @@ We annotated the cells with well-known gene markers.
                     }
 
 
-fig, ax = plt.subplots(1,1,figsize=(20,8))
-sc.pl.dotplot(rna_adata,marker_dict, 'louvain', dendrogram=True, ax=ax)
+    fig, ax = plt.subplots(1,1,figsize=(20,8))
+    sc.pl.dotplot(rna_adata,marker_dict, 'louvain', dendrogram=True, ax=ax)
 
 .. image:: ../_static/img/PBMC/PBMC_RNA_Marker_louvain.png
     :alt: RNA marker

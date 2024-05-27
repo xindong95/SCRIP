@@ -187,6 +187,8 @@ def run_impute(args):
         feature_matrix = sc.read_10x_h5(feature_matrix_path, gex_only=False)
     elif feature_matrix_path.endswith('.h5ad'):
         feature_matrix = sc.read_h5ad(feature_matrix_path)
+    else:
+        feature_matrix = sc.read_10x_mtx(feature_matrix_path)
 
     sc.pp.calculate_qc_metrics(feature_matrix, percent_top=None, log1p=False, inplace=True)
     feature_mean = feature_matrix.obs.n_genes_by_counts.mean()

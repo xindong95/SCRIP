@@ -145,3 +145,32 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
                         Path to the output folder.
 ```
+
+
+## Manually install GIGGLE
+
+SCRIP fast searching is based on [GIGGLE](https://github.com/ryanlayer/giggle). Please install GIGGLE manually first.
+
+```bash
+git clone git@github.com:ryanlayer/giggle.git
+cd giggle
+make
+export PATH=$PATH:`pwd` # or cp bin/giggle to your environment
+cd ..
+```
+
+Next, validate the installation:
+
+```bash
+giggle
+```
+
+It should return:
+```
+giggle, v0.6.3
+usage:   giggle <command> [options]
+     index     Create an index
+     search    Search an index
+```
+
+Besides manually installation, you can try `SCRIP install_giggle` too.

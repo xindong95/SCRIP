@@ -13,16 +13,16 @@ import sys
 import subprocess
 
 
-def install_giggle():
-    prefix = os.environ['PATH'].split(':')[0]
-    cmd = f'cd refpkg/giggle; make; cp bin/giggle {prefix}/; cd ../..'
-    subprocess.run(cmd, shell=True)
+# def install_giggle():
+#     prefix = os.environ['PATH'].split(':')[0]
+#     cmd = f'cd refpkg/giggle; make; cp bin/giggle {prefix}/; cd ../..'
+#     subprocess.run(cmd, shell=True)
 
 def main():
-    install_giggle()
+    # install_giggle()
     setup(
         name='SCRIP',
-        version='0.1.220630',
+        version='0.1.240527',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
@@ -47,7 +47,7 @@ def main():
             'pybedtools>=0.8.2',
             'matplotlib>=3.1.2, <=3.3.2',
             # 'seaborn',
-            'sklearn',
+            'scikit-learn',
             'scipy',
             'scanpy>=1.7.1, <=1.8.1',
         ],

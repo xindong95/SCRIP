@@ -34,3 +34,31 @@ Install from pypi
 .. code:: shell
 
    pip install scrip
+
+
+Install GIGGLE
+~~~~~~~~~~~~~~~~~~~~~
+
+SCRIP fast searching is based on `GIGGLE <https://github.com/ryanlayer/giggle>`_. Please install GIGGLE manually first.
+
+.. code:: shell
+   git clone git@github.com:ryanlayer/giggle.git
+   cd giggle
+   make
+   export PATH=$PATH:`pwd` # or cp bin/giggle to your environment
+   cd ..
+
+Next, validate the installation:
+
+.. code:: shell
+   giggle
+
+
+It should return:
+.. code:: 
+   giggle, v0.6.3
+   usage:   giggle <command> [options]
+      index     Create an index
+      search    Search an index
+
+Besides manually installation, you can try `SCRIP install_giggle` too.
