@@ -42,6 +42,7 @@ Install GIGGLE
 SCRIP fast searching is based on `GIGGLE <https://github.com/ryanlayer/giggle>`_. Please install GIGGLE manually first.
 
 .. code:: shell
+
    git clone git@github.com:ryanlayer/giggle.git
    cd giggle
    make
@@ -51,11 +52,14 @@ SCRIP fast searching is based on `GIGGLE <https://github.com/ryanlayer/giggle>`_
 Next, validate the installation:
 
 .. code:: shell
+
    giggle
 
 
 It should return:
+
 .. code:: 
+   
    giggle, v0.6.3
    usage:   giggle <command> [options]
       index     Create an index
