@@ -22,7 +22,7 @@ def main():
     # install_giggle()
     setup(
         name='SCRIP',
-        version='0.1.240527',
+        version='0.1.240603',
         author='Xin Dong',
         author_email='xindong9511@gmail.com',
         description='A package for single cell ATAC-seq analysis',
