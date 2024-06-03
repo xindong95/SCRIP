@@ -154,7 +154,7 @@ We applied SCRIP to a Basal Cell Carcinoma (BCC) tumor microenvironment (TME) da
 
 .. code:: shell
 
-    SCRIP impute -i example/TME/data/Tcell_peak_count.h5 -s hs -p example/TME/Tcell_SCRIP/ -f h5 --factor JUNB
+    SCRIP impute -i example/TME/data/Tcell_peak_count.h5 -s hs -p example/TME/Tcell_SCRIP/ -f h5ad --factor JUNB
     SCRIP target -i example/TME/Tcell_SCRIP/imputation/imputed_JUNB.h5ad -s hs -o JUNB_target.h5ad
 
 .. code:: r

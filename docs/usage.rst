@@ -27,6 +27,16 @@ SCRIP includes 5 main commands.
 
    For command line options of each command, type: SCRIP COMMAND -h
 
+
+Simple usage
+~~~~~~~~~~~~~~~~~~
+
+.. code:: shell
+
+   SCRIP enrich -i {peak_count.h5} -s hs -p {result_SCRIP_path} -t 32
+   SCRIP impute -i {peak_count.h5} -s hs -p {result_SCRIP_path} -f h5ad --factor {factor}
+   SCRIP target -i {result_SCRIP_path}/imputation/{factor}/imputed_{factor}.h5ad -s hs -o {result_SCRIP_path}/target/{factor}_target.h5ad
+
 Detailed usages are listed as follows:
 
 SCRIP enrich
@@ -182,3 +192,4 @@ This function is used to create the SCRIP index with users' peaks.
                            Path to the folder that includes all your bed files. The bed files should be named in "TRName_ID.bed", e.g. "AR_1.bed".
    -o OUTPUT, --output OUTPUT
                            Path to the output folder.
+                           

@@ -143,7 +143,7 @@ We use the lung sample as an example to suggest the process of custom analysis.
 
 .. code:: shell
 
-    SCRIP impute -i example/fetal_organ/data/GSM4508936_lung.h5 -s hs -p example/fetal_organ/lung_SCRIP -f h5 --factor GATA3
+    SCRIP impute -i example/fetal_organ/data/GSM4508936_lung.h5 -s hs -p example/fetal_organ/lung_SCRIP -f h5ad --factor GATA3
     SCRIP target -i example/fetal_organ/lung_SCRIP/imputation/imputed_GATA3.h5ad -s hs -o GATA3_target.h5ad
 
 .. code:: r
