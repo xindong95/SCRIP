@@ -150,3 +150,5 @@ refpkg/seqpare/bin/
 
 refpkg/iGD/obj/
 refpkg/iGD/bin/
+tmp/
+giggle/

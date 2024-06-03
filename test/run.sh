@@ -1,0 +1,3 @@
+SCRIP enrich -i /fs/home/dongxin/Projects/SCRIPT/scATAC/example/PBMC/data/ATAC/filtered_mtx/PBMC_granulocyte_sorted_10k_filtered_peak_count.h5 -s hs -p tmp/multiome_pbmc_SCRIP -t 32
+SCRIP impute -i /fs/home/dongxin/Projects/SCRIPT/scATAC/example/PBMC/data/ATAC/filtered_mtx/PBMC_granulocyte_sorted_10k_filtered_peak_count.h5 -s hs -p tmp/multiome_pbmc_SCRIP -f h5ad --factor GATA3
+SCRIP target -i tmp/multiome_pbmc_SCRIP/imputation/GATA3/imputed_GATA3.h5ad -s hs -o tmp/multiome_pbmc_SCRIP/imputation/GATA3/GATA3_target.h5ad
