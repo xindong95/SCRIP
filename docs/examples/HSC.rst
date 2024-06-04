@@ -59,7 +59,7 @@ To prove that SCRIP can infer TR activities in a complex system and could be pot
     tmp <- data.frame(DC1 = dm$DC1,
                      DC2 = dm$DC2,
                      timepoint = cell_type,
-                     dpt = dpt$DPT1)    
+                     dpt = dpt$DPT1)
     set.seed(2020)
     options(repr.plot.width = 10, repr.plot.height = 10)
     p<-ggplot(tmp, aes(x = DC1, 

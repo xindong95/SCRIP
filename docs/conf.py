@@ -18,11 +18,11 @@
 # -- Project information -----------------------------------------------------
 
 project = 'SCRIP'
-copyright = '2021, Wang Lab at Tongji University'
+copyright = '2024, Wang Lab at Tongji University'
 author = 'Xin Dong'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.240527'
+release = '0.1.240603'
 
 
 # -- General configuration ---------------------------------------------------

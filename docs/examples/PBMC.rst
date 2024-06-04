@@ -35,6 +35,7 @@ Since there is no annotation in scRNA-seq data, we first annatate the scRNA-seq 
 We clustered the cells with the louvain algorithm.
 
 .. code:: python
+
     rna_adata = rna_adata[rna_adata.obs.n_genes_by_counts < 6000, :]
     rna_adata = rna_adata[rna_adata.obs.pct_counts_mt < 20, :]
     rna_adata = rna_adata[keep_cell_index,:]
@@ -52,7 +53,7 @@ We clustered the cells with the louvain algorithm.
     fig, ax = plt.subplots(1,1,figsize=(8,8))
     sc.pl.umap(rna_adata, color=['louvain'], legend_loc='on data', title='PBMC RNA Cluster', legend_fontsize=15, ax=ax)
     fig.show()
-    
+
 .. image:: ../_static/img/PBMC/PBMC_RNA_louvain.png
     :alt: RNA cluster
     :width: 50%
