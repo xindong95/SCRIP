@@ -41,7 +41,7 @@ Install GIGGLE
 
 SCRIP fast searching is based on `GIGGLE <https://github.com/ryanlayer/giggle>`_. Please install GIGGLE manually first.
 
-Simply you can use ``SCRIP install_giggle`` to install GIGGLE. 
+Simply you can use ``SCRIP install_giggle`` to install GIGGLE.
 
 Or try manually installation:
 

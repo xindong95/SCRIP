@@ -62,19 +62,17 @@ To prove that SCRIP can infer TR activities in a complex system and could be pot
                      dpt = dpt$DPT1)
     set.seed(2020)
     options(repr.plot.width = 10, repr.plot.height = 10)
-    p<-ggplot(tmp, aes(x = DC1, 
-                    y = DC2, 
-                    colour = cell_type)) +
-        geom_point(size=2)+ 
+    p <- ggplot(tmp, aes(x = DC1, y = DC2, colour = cell_type)) +
+        geom_point(size=2) + 
         xlab("Diffusion component 1") + 
         ylab("Diffusion component 2") +
         theme_classic()
-    figure1<-p+ scale_color_manual(values=c(HSC="#2D6A4F",MPP="#85BC07",LMPP="#74c69d",
-                CLP="#95A0FF",pDC="#4cc9f0",CMP="#F0ED4A",
-                GMP="#F9C1F8",MEP="#FAA300",mono="#EE85F6",UNK="#e9ecef"))+
-                theme(axis.title=element_text(size=25),axis.text=element_text(size=25),
-                    legend.text=element_text(size=20),legend.title=element_text(size=25),text = element_text(family="myfont"))+
-                guides(colour = guide_legend(override.aes = list(size=5)))
+    figure1 <- p + scale_color_manual(values=c(HSC="#2D6A4F",MPP="#85BC07",LMPP="#74c69d",
+                                               CLP="#95A0FF",pDC="#4cc9f0",CMP="#F0ED4A",
+                                               GMP="#F9C1F8",MEP="#FAA300",mono="#EE85F6",UNK="#e9ecef")) +
+                    theme(axis.title=element_text(size=25),axis.text=element_text(size=25),
+                    legend.text=element_text(size=20),legend.title=element_text(size=25),text = element_text(family="myfont")) +
+                    guides(colour = guide_legend(override.aes = list(size=5)))
     figure1
 
 .. image:: ../_static/img/HSC/HSC_celltype.png
